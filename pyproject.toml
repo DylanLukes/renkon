@@ -6,25 +6,24 @@ build-backend = "hatchling.build"
 name = "renkon"
 description = 'Robust likely invariant analysis over columnar data'
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = "BSD-3-Clause"
 keywords = []
 authors = [
-  { name = "Dylan Lukes", email = "lukes.dylan@gmail.com" },
+    { name = "Dylan Lukes", email = "lukes.dylan@gmail.com" },
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    #"Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "click",
+    "click",
+    "deal"
 ]
 dynamic = ["version"]
 
@@ -40,27 +39,40 @@ renkon = "renkon.cli:renkon"
 path = "src/renkon/__about__.py"
 
 [tool.hatch.envs.default]
+python = "3.11"
 dependencies = [
-  "pytest",
-  "pytest-cov",
+    "deal[all]",
+    "mypy",
+    "pytest",
+    "pytest-cov",
 ]
+
 [tool.hatch.envs.default.scripts]
 cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/renkon --cov=tests {args}"
 no-cov = "cov --no-cov {args}"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["37", "38", "39", "310", "311"]
+python = ["39", "310", "311"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
 
 [tool.coverage.run]
 branch = true
 parallel = true
 omit = [
-  "src/renkon/__about__.py",
+    "src/renkon/__about__.py",
 ]
 
 [tool.coverage.report]
 exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
 ]
