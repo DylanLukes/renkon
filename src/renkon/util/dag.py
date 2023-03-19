@@ -6,7 +6,6 @@ import deal
 T_ = TypeVar("T_")
 
 
-@deal.inv(lambda self: not self.has_cycle())
 class DAG(Generic[T_]):
     """
     Generic append-only doubly-linked directed acyclic graph implementation.
@@ -75,24 +74,24 @@ class DAG(Generic[T_]):
         return self._roots
 
     @deal.pre(lambda self, node_index: node_index < len(self))
-    def get_dependencies(self, node_index: int) -> List[int]:
+    def get_dependencies(self, node_index: int) -> Set[int]:
         """
         Get the indices of the nodes that a node depends on.
 
         :param node_index: The index of the node.
         :return: The indices of the nodes that the node depends on.
         """
-        return list(self._fwd_edges[node_index])
+        return self._rev_edges[node_index]
 
     @deal.pre(lambda self, node_index: node_index < len(self))
-    def get_dependents(self, node_index: int) -> List[int]:
+    def get_dependents(self, node_index: int) -> Set[int]:
         """
         Get the indices of the nodes that depend on a node.
 
         :param node_index: The index of the node.
         :return: The indices of the nodes that depend on the node.
         """
-        return list(self._rev_edges[node_index])
+        return self._fwd_edges[node_index]
 
     def has_cycle(self) -> bool:
         """
