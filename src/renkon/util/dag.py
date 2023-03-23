@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from collections import defaultdict
+from io import StringIO
 from typing import Generic, TypeVar, List, Set, Dict, Iterable
 
 import deal
@@ -93,6 +96,23 @@ class DAG(Generic[T_]):
         """
         return self._fwd_edges[node_index]
 
+    @deal.pre(lambda self, node_index: node_index < len(self))
+    def get_descendants(self, node_index: int) -> Set[int]:
+        """
+        Get the indices of the nodes that are descendants of a node.
+
+        :param node_index: The index of the node.
+        :return: The indices of the nodes that are descendants of the node.
+        """
+        descendants = set()
+        stack = [node_index]
+        while stack:
+            idx = stack.pop()
+            descendants.add(idx)
+            stack.extend(self._fwd_edges[idx])
+        descendants.remove(node_index)
+        return descendants
+
     def has_cycle(self) -> bool:
         """
         Check if the graph has a cycle.
@@ -116,32 +136,3 @@ class DAG(Generic[T_]):
             visited.add(node_index)
             stack.extend(self._fwd_edges[node_index])
         return False
-
-    def sorted(self) -> DAG[T_]:
-        """
-        Return a new DAG with the same nodes, but topologically sorted,
-        such that each node appears before all of its dependents.
-
-        This can be useful for scheduling.
-        """
-
-        # We perform a depth-first search of the graph, starting from the
-        # root nodes. We keep track of the order in which we visit the
-        # nodes, and then use that order to create a new DAG.
-        visited = set()
-        stack = self._roots.copy()
-        sorted_indices = []
-
-        while stack:
-            node_index = stack.pop()
-            if node_index in visited:
-                continue
-            visited.add(node_index)
-            stack.extend(self._fwd_edges[node_index])
-            sorted_indices.append(node_index)
-
-        sorted_dag = DAG[T_]()
-        for node_index in sorted_indices:
-            sorted_dag.add_node(self._nodes[node_index], self._fwd_edges[node_index])
-
-        return sorted_dag

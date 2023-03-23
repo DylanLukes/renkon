@@ -23,7 +23,8 @@ classifiers = [
 ]
 dependencies = [
     "click",
-    "deal"
+    "deal",
+    "loguru"
 ]
 dynamic = ["version"]
 
@@ -52,7 +53,7 @@ cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/re
 no-cov = "cov --no-cov {args}"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["39", "310", "311"]
+python = ["310", "311"]
 
 [tool.mypy]
 python_version = "3.11"
