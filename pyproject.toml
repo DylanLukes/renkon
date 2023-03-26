@@ -59,6 +59,10 @@ python = ["310", "311"]
 python_version = "3.11"
 strict = true
 
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",

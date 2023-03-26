@@ -1,24 +1,19 @@
-import os
-import sys
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
-from multiprocessing import Event, Pool, current_process, Queue
-from pprint import pprint, pformat
+from multiprocessing import Event, Pool, current_process
+from pprint import pformat
 from typing import Callable, Any, List, Dict, Tuple, TypeAlias, TypeVar, Generic
 
-from renkon.util.dag import DAG
 from loguru import logger
+
+from renkon.core.result import Result, Ok, Err, Unk
+from renkon.core.tasks import Task
+from renkon.util.dag import DAG
 
 # Return type of the tasks.
 _RT = TypeVar("_RT")
-
-
-@dataclass
-class Task(Generic[_RT]):
-    name: str
-    func: Callable[..., _RT]
-
 
 TaskSpec: TypeAlias = Tuple[str, Callable[..., _RT], List[str]]
 
@@ -37,13 +32,13 @@ class TaskGraph(Generic[_RT]):
     task_dag: DAG[Task[_RT]]
 
     task_id_to_name: Dict[int, str]
-    task_id_to_result: Dict[int, _RT]
+    task_id_to_result: Dict[int, Result[_RT]]
     task_name_to_id: Dict[str, int]
 
     def __init__(self) -> None:
         self.task_dag = DAG[Task[_RT]]()
         self.task_id_to_name = {}
-        self.task_id_to_result = {}
+        self.task_id_to_result = defaultdict(Unk)
         self.task_name_to_id = {}
 
     def add_task(self,
@@ -107,7 +102,7 @@ class TaskGraph(Generic[_RT]):
                 nonlocal tasks_remaining
 
                 # Store the result
-                self.task_id_to_result[task_id] = result
+                self.task_id_to_result[task_id] = Ok(result)
 
                 # First, check if we're all done.
                 tasks_remaining.remove(task_id)
@@ -128,7 +123,9 @@ class TaskGraph(Generic[_RT]):
 
             def on_error(task_id: int, error: Exception) -> None:
                 nonlocal tasks_remaining
+
                 logger.error(f"Task {task_id} failed: {error}")
+                self.task_id_to_result[task_id] = Err(error)
 
                 # Compute the set of tasks that depend on this one.
                 pruned_tasks = self.task_dag.get_descendants(task_id)
@@ -187,5 +184,8 @@ if __name__ == "__main__":
     ])
 
     logger.info("Added tasks:\n" + pformat(name_to_tid))
-
     g.run()
+
+    for name in sorted(name_to_tid.keys()):
+        task_id = name_to_tid[name]
+        logger.info(f"Task {name} has result {g.get_result(task_id)}.")
