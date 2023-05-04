@@ -24,8 +24,6 @@ def main():
                     data = raw_package_data[package_name]
                     break
             else:
-                print(filename)
-                print(PACKAGES)
                 message = f"unknown package: {module}"
                 raise ValueError(message)
 
