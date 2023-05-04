@@ -46,8 +46,7 @@ dependencies = [
     "mypy",
     "pytest",
     "pytest-cov",
-    "pyarrow",
-    ""
+    "pyarrow"
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -55,7 +54,7 @@ cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/re
 no-cov = "cov --no-cov {args}"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["310", "311"]
+python = ["39", "310", "311"]
 
 [tool.mypy]
 python_version = "3.11"

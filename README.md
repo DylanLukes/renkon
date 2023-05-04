@@ -2,6 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/renkon.svg)](https://pypi.org/project/renkon)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/renkon.svg)](https://pypi.org/project/renkon)
+[![Tests](https://github.com/DylanLukes/renkon/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/DylanLukes/renkon/actions/workflows/test.yml)
 
 -----
 

@@ -5,6 +5,8 @@ import pytest as pytest
 
 from renkon.store.store import Store
 
+TESTS_DIR = Path(__file__).parent
+
 SEMICOLON_WITH_TYPE_ROW = {
     "parse_options": csv.ParseOptions(delimiter=";"),
     "read_options": csv.ReadOptions(skip_rows_after_names=1),
@@ -35,6 +37,6 @@ SAMPLES = {
 def store(tmp_path: Path) -> Store:
     store = Store(tmp_path)
     for name, options in SAMPLES.items():
-        data = csv.read_csv(f"samples/{name}.csv", **options)
+        data = csv.read_csv(TESTS_DIR / "samples" / f"{name}.csv", **options)
         store.put_input_table(name, data)
     return store
