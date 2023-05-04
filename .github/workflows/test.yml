@@ -1,4 +1,4 @@
-name: Run Python Tests
+name: Tests
 
 on:
   push:
@@ -105,7 +105,7 @@ jobs:
 
   # https://github.com/marketplace/actions/alls-green#why
   check: # This job does nothing and is only used for the branch protection
-    name: "Check All Green"
+    name: "Check all green"
     if: always()
 
     needs:

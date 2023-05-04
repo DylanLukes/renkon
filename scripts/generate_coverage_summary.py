@@ -5,8 +5,7 @@ from pathlib import Path
 from lxml import etree  # nosec B410
 
 PACKAGES = {
-    "backend/src/hatchling/": "hatchling",
-    "src/hatch/": "hatch",
+    "src/renkon/": "renkon",
     "tests/": "tests",
 }
 
@@ -25,6 +24,8 @@ def main():
                     data = raw_package_data[package_name]
                     break
             else:
+                print(filename)
+                print(PACKAGES)
                 message = f"unknown package: {module}"
                 raise ValueError(message)
 
