@@ -128,10 +128,10 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = [
-    "aiosql",
-    "loguru",
-    "pyarrow",
-    "pytest"
+    "aiosql.*",
+    "loguru.*",
+    "pyarrow.*",
+    "pytest.*"
 ]
 ignore_missing_imports = true
 
