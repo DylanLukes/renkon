@@ -1,12 +1,10 @@
 import atexit
 import sqlite3
-from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
 
-import aiosql
 from pyarrow.fs import SubTreeFileSystem
 
-queries = aiosql.from_path(Path(__file__).with_name("store.sql"), "sqlite3")
+from renkon.store.queries import queries
 
 
 class Registry:
@@ -14,6 +12,7 @@ class Registry:
     Handles all things related to metadata, composed by Store.
     You should generally not need to interact with this class directly.
     """
+
     base_path: str
     fs: SubTreeFileSystem
     conn: SQLiteConnection
@@ -23,7 +22,7 @@ class Registry:
         atexit.register(self.conn.close)
         self._create_tables()
 
-    def _create_tables(self, commit: bool = True) -> None:
+    def _create_tables(self, *, commit: bool = True) -> None:
         """
         Create tables in the metadata store.
         """
@@ -35,7 +34,7 @@ class Registry:
         """
         Register an input table.
         """
-        x = queries.put_input_table(self.conn, name=name, path=path)
+        queries.put_input_table(self.conn, name=name, path=path)
         self.conn.commit()
 
     def lookup_input_path(self, name: str) -> str | None:

@@ -1,7 +1,7 @@
-from pyarrow import csv
 from pathlib import Path
 
-import pytest as pytest
+import pytest
+from pyarrow import csv
 
 from renkon.store.store import Store
 
@@ -29,7 +29,7 @@ SAMPLES = {
     "factbook": SEMICOLON_WITH_TYPE_ROW,
     "films": SEMICOLON_WITH_TYPE_ROW,
     "gini": DEFAULT,
-    "smallwikipedia": SEMICOLON_WITH_TYPE_ROW
+    "smallwikipedia": SEMICOLON_WITH_TYPE_ROW,
 }
 
 

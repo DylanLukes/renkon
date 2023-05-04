@@ -4,8 +4,6 @@ Pandas, Arrow, and Numpy types all differ in their coverage and semantics.
 Here, we overlay our own set of types on top of them, to make it easier to
 work with them.
 """
-from typing import TypeAlias, Union
-
 from enum import Enum
 
 
@@ -13,6 +11,7 @@ class Type(Enum):
     """
     The type of a column in a DataFrame or Arrow array.
     """
+
     INT = 1
     FLOAT = 2
     BOOL = 3

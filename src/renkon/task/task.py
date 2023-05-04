@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Callable, TypeVar
+from typing import Generic, TypeVar
 
 _RT = TypeVar("_RT")
 
@@ -9,6 +10,7 @@ class Task(Generic[_RT]):
     """
     Generic task class, with a name and a function to run.
     """
+
     name: str
     func: Callable[..., _RT]
 

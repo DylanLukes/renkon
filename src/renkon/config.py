@@ -1,5 +1,7 @@
 from functools import lru_cache
 
+from loguru import logger
+
 
 class Config:
     """
@@ -19,4 +21,4 @@ def global_config() -> Config:
 
 
 if __name__ == "__main__":
-    print(global_config().DATA_DIR)
+    logger.info(global_config().DATA_DIR)

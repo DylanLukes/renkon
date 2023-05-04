@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from io import StringIO
-from typing import Generic, TypeVar, List, Set, Dict, Iterable
-
-import deal
+from collections.abc import Iterable
+from typing import Generic, TypeVar
 
 T_ = TypeVar("T_")
 
@@ -24,10 +21,10 @@ class DAG(Generic[T_]):
 
     """
 
-    _nodes: List[T_]
-    _roots: List[int]
-    _fwd_edges: Dict[int, Set[int]]
-    _rev_edges: Dict[int, Set[int]]
+    _nodes: list[T_]
+    _roots: list[int]
+    _fwd_edges: dict[int, set[int]]
+    _rev_edges: dict[int, set[int]]
 
     def __init__(self) -> None:
         self._nodes = []
@@ -38,7 +35,6 @@ class DAG(Generic[T_]):
     def __len__(self) -> int:
         return len(self._nodes)
 
-    @deal.pre(lambda self, _, deps: all(dep < len(self) for dep in deps))
     def add_node(self, node: T_, dependencies: Iterable[int]) -> int:
         """
         Add a new node to the graph.
@@ -58,7 +54,6 @@ class DAG(Generic[T_]):
             self._roots.append(node_index)
         return node_index
 
-    @deal.pre(lambda self, node_index: node_index < len(self))
     def get_node(self, node_index: int) -> T_:
         """
         Get a node from the graph.
@@ -68,7 +63,7 @@ class DAG(Generic[T_]):
         """
         return self._nodes[node_index]
 
-    def get_roots(self) -> List[int]:
+    def get_roots(self) -> list[int]:
         """
         Get the indices of the root nodes in the graph.
 
@@ -76,8 +71,7 @@ class DAG(Generic[T_]):
         """
         return self._roots
 
-    @deal.pre(lambda self, node_index: node_index < len(self))
-    def get_dependencies(self, node_index: int) -> Set[int]:
+    def get_dependencies(self, node_index: int) -> set[int]:
         """
         Get the indices of the nodes that a node depends on.
 
@@ -86,8 +80,7 @@ class DAG(Generic[T_]):
         """
         return self._rev_edges[node_index]
 
-    @deal.pre(lambda self, node_index: node_index < len(self))
-    def get_dependents(self, node_index: int) -> Set[int]:
+    def get_dependents(self, node_index: int) -> set[int]:
         """
         Get the indices of the nodes that depend on a node.
 
@@ -96,8 +89,7 @@ class DAG(Generic[T_]):
         """
         return self._fwd_edges[node_index]
 
-    @deal.pre(lambda self, node_index: node_index < len(self))
-    def get_descendants(self, node_index: int) -> Set[int]:
+    def get_descendants(self, node_index: int) -> set[int]:
         """
         Get the indices of the nodes that are descendants of a node.
 

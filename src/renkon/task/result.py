@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypeAlias, Generic, TypeVar
+from typing import Generic, TypeAlias, TypeVar
 
 _T = TypeVar("_T")
 
@@ -9,6 +9,7 @@ class Ok(Generic[_T]):
     """
     Represents a successful result, carrying the value.
     """
+
     value: _T
 
     def __repr__(self) -> str:
@@ -20,6 +21,7 @@ class Err:
     """
     Represents an error result, carrying the responsible exception.
     """
+
     cause: Exception
 
     def __repr__(self) -> str:

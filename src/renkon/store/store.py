@@ -26,8 +26,7 @@ class Store:
 
     def __init__(self, base_path: Path) -> None:
         self.base_path = base_path
-        self.fs = fs.SubTreeFileSystem(str(base_path),
-                                       fs.LocalFileSystem(use_mmap=True))
+        self.fs = fs.SubTreeFileSystem(str(base_path), fs.LocalFileSystem(use_mmap=True))
         self.metadata = Registry(self.fs)
         self.data = DataStore(self.fs)
 
@@ -36,9 +35,10 @@ class Store:
         Get data from the store.
         """
         # First, check if the data is in the metadata store.
-        if path := self.metadata.lookup_input_path(name):
+        if self.metadata.lookup_input_path(name):
             return self.data.get(name)
-        raise LookupError(f"Input table '{name}' not found in metadata store.")
+        msg = f"Input table '{name}' not found in metadata store."
+        raise LookupError(msg)
 
     def get_input_table_path(self, name: str) -> Path:
         """
@@ -46,7 +46,8 @@ class Store:
         """
         if path := self.metadata.lookup_input_path(name):
             return Path(path)
-        raise LookupError(f"Input table '{name}' not found in metadata store.")
+        msg = f"Input table '{name}' not found in metadata store."
+        raise LookupError(msg)
 
     def put_input_table(self, name: str, data: Table) -> None:
         """
@@ -64,4 +65,4 @@ def get_store() -> Store:
     config = global_config()
     data_dir = config.DATA_DIR
 
-    return Store(base_path=data_dir)
+    return Store(base_path=Path(data_dir))

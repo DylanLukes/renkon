@@ -1,5 +1,5 @@
 from pyarrow import Table, ipc
-from pyarrow.fs import SubTreeFileSystem, FileSystem
+from pyarrow.fs import FileSystem, SubTreeFileSystem
 
 
 class DataStore:
@@ -7,11 +7,12 @@ class DataStore:
     Handles all things related to data, composed by Store. Recommended to
     initialize with a FileSystem with memory-mapping enabled.
     """
+
     base_path: str
     fs: SubTreeFileSystem
 
     def __init__(self, fs: FileSystem) -> None:
-        fs.create_dir(f"data", recursive=True)
+        fs.create_dir("data", recursive=True)
         self.fs = SubTreeFileSystem("data", fs)
 
     def get(self, name: str) -> Table:

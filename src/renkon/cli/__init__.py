@@ -1,6 +1,6 @@
 import click
 
-from ..__about__ import __version__
+from renkon.__about__ import __version__
 
 
 @click.group(
@@ -9,5 +9,5 @@ from ..__about__ import __version__
 )
 @click.version_option(version=__version__, prog_name="renkon")
 @click.pass_context
-def renkon(ctx: click.Context) -> None:
+def renkon(_ctx: click.Context) -> None:
     click.echo("Hello world!")

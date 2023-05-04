@@ -1,21 +1,21 @@
 import time
 from collections import defaultdict
-from dataclasses import dataclass
+from collections.abc import Callable
 from functools import partial
 from multiprocessing import Event, Pool, current_process
 from pprint import pformat
-from typing import Callable, Any, List, Dict, Tuple, TypeAlias, TypeVar, Generic
+from typing import Any, Generic, TypeAlias, TypeVar
 
 from loguru import logger
 
-from renkon.task.result import Result, Ok, Err, Unk
+from renkon.task.result import Err, Ok, Result, Unk
 from renkon.task.task import Task
 from renkon.util.dag import DAG
 
 # Return type of the tasks.
 _RT = TypeVar("_RT")
 
-TaskSpec: TypeAlias = Tuple[str, Callable[..., _RT], List[str]]
+TaskSpec: TypeAlias = tuple[str, Callable[..., _RT], list[str]]
 
 
 class TaskGraph(Generic[_RT]):
@@ -31,9 +31,9 @@ class TaskGraph(Generic[_RT]):
 
     task_dag: DAG[Task[_RT]]
 
-    task_id_to_name: Dict[int, str]
-    task_id_to_result: Dict[int, Result[_RT]]
-    task_name_to_id: Dict[str, int]
+    task_id_to_name: dict[int, str]
+    task_id_to_result: dict[int, Result[_RT]]
+    task_name_to_id: dict[str, int]
 
     def __init__(self) -> None:
         self.task_dag = DAG[Task[_RT]]()
@@ -41,15 +41,13 @@ class TaskGraph(Generic[_RT]):
         self.task_id_to_result = defaultdict(Unk)
         self.task_name_to_id = {}
 
-    def add_task(self,
-                 name: str,
-                 func: Callable[..., Any],
-                 dependencies: List[int]) -> int:
+    def add_task(self, name: str, func: Callable[..., Any], dependencies: list[int]) -> int:
         """
         Add a single task to the graph to be run after the dependencies.
         """
         if name in self.task_name_to_id:
-            raise ValueError(f"Task {name} already exists!")
+            msg = f"Task {name} already exists!"
+            raise ValueError(msg)
 
         # Wrap the task in a Task object.
         task = Task(name, func)
@@ -61,7 +59,7 @@ class TaskGraph(Generic[_RT]):
 
         return task_id
 
-    def add_tasks(self, specs: List[TaskSpec[_RT]]) -> Dict[str, int]:
+    def add_tasks(self, specs: list[TaskSpec[_RT]]) -> dict[str, int]:
         """
         Add a batch of tasks to the graph. The task names are the keys of the
         dictionary, and the values are tuples of (name, func, dependencies).
@@ -73,7 +71,7 @@ class TaskGraph(Generic[_RT]):
         # We return a mapping from task names to task ids.
         task_name_to_id = {}
 
-        for (name, func, dependency_names) in specs:
+        for name, func, dependency_names in specs:
             dep_ids = [self.task_name_to_id[name] for name in dependency_names]
             self.add_task(name, func, dep_ids)
             task_name_to_id[name] = self.task_name_to_id[name]
@@ -98,6 +96,7 @@ class TaskGraph(Generic[_RT]):
             logger.info(f"{task_id} <- {deps}.")
 
         with Pool() as pool:
+
             def on_complete(task_id: int, result: Any) -> None:
                 nonlocal tasks_remaining
 
@@ -129,8 +128,7 @@ class TaskGraph(Generic[_RT]):
 
                 # Compute the set of tasks that depend on this one.
                 pruned_tasks = self.task_dag.get_descendants(task_id)
-                pruned_task_names = [self.get_task(task_id).name for task_id in
-                                     pruned_tasks]
+                pruned_task_names = [self.get_task(task_id).name for task_id in pruned_tasks]
                 logger.error(f"Pruning tasks: {pruned_task_names}")
 
                 # Remove the failed task and all of its descendants.
@@ -145,7 +143,8 @@ class TaskGraph(Generic[_RT]):
             def submit(task_id: int) -> None:
                 task = self.get_task(task_id)
                 pool.apply_async(
-                    task.func, args=[task.name],
+                    task.func,
+                    args=[task.name],
                     callback=partial(on_complete, task_id),
                     error_callback=partial(on_error, task_id),
                 )
@@ -165,23 +164,26 @@ def dummy_task(name: str) -> int:
 
 
 def fail_task(name: str) -> int:
-    proc = current_process()
+    current_process()
     logger.info(f"START {name}...")
-    raise RuntimeError("Uh oh, SNAFU!")
+    msg = "Uh oh, SNAFU!"
+    raise RuntimeError(msg)
 
 
 if __name__ == "__main__":
     g = TaskGraph[int]()
 
-    name_to_tid = g.add_tasks([
-        ("Task-0", dummy_task, []),
-        ("Task-1", dummy_task, ["Task-0"]),
-        ("Task-2", dummy_task, []),
-        ("Task-3", dummy_task, ["Task-1", "Task-2"]),
-        ("Task-4", fail_task, ["Task-3"]),
-        ("Task-5", dummy_task, ["Task-4"]),
-        ("Task-6", dummy_task, ["Task-1", "Task-5"]),
-    ])
+    name_to_tid = g.add_tasks(
+        [
+            ("Task-0", dummy_task, []),
+            ("Task-1", dummy_task, ["Task-0"]),
+            ("Task-2", dummy_task, []),
+            ("Task-3", dummy_task, ["Task-1", "Task-2"]),
+            ("Task-4", fail_task, ["Task-3"]),
+            ("Task-5", dummy_task, ["Task-4"]),
+            ("Task-6", dummy_task, ["Task-1", "Task-5"]),
+        ]
+    )
 
     logger.info("Added tasks:\n" + pformat(name_to_tid))
     g.run()
