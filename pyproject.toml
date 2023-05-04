@@ -70,7 +70,7 @@ full = "_cov -n auto --reruns 5 --reruns-delay 3 -r aR {args:tests}"
 # -----------------------
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11"]
+python = ["3.10", "3.11"]
 
 # Coverage Environemnt
 # --------------------
