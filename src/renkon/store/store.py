@@ -1,8 +1,7 @@
-import os
 from functools import lru_cache
+from pathlib import Path
 
-from pyarrow import Table, fs, ipc, csv
-from pyarrow import compute as pc
+from pyarrow import Table, fs
 
 from renkon.config import global_config
 from renkon.store.datastore import DataStore
@@ -15,17 +14,20 @@ class Store:
 
     Composes a DataStore and a Registry.
 
-    Runs in its own process, with methods communicating with it via IPC (queues).
+    The DataStore is responsible for storing and retrieving data on disk.
+    The Registry is responsible for metadata queries, such as retrieving the path
+    for a given input or output result.
     """
 
-    base_path: str
+    base_path: Path
 
     data: DataStore
     metadata: Registry
 
-    def __init__(self, base_path: str) -> None:
+    def __init__(self, base_path: Path) -> None:
         self.base_path = base_path
-        self.fs = fs.SubTreeFileSystem(base_path, fs.LocalFileSystem(use_mmap=True))
+        self.fs = fs.SubTreeFileSystem(str(base_path),
+                                       fs.LocalFileSystem(use_mmap=True))
         self.metadata = Registry(self.fs)
         self.data = DataStore(self.fs)
 
@@ -34,10 +36,17 @@ class Store:
         Get data from the store.
         """
         # First, check if the data is in the metadata store.
-        path = self.metadata.lookup_input_path(name)
-        if path is None:
-            raise LookupError(f"Input table '{name}' not found in metadata store.")
-        return self.data.get(name)
+        if path := self.metadata.lookup_input_path(name):
+            return self.data.get(name)
+        raise LookupError(f"Input table '{name}' not found in metadata store.")
+
+    def get_input_table_path(self, name: str) -> Path:
+        """
+        Get data from the store.
+        """
+        if path := self.metadata.lookup_input_path(name):
+            return Path(path)
+        raise LookupError(f"Input table '{name}' not found in metadata store.")
 
     def put_input_table(self, name: str, data: Table) -> None:
         """
@@ -56,19 +65,3 @@ def get_store() -> Store:
     data_dir = config.DATA_DIR
 
     return Store(base_path=data_dir)
-
-
-if __name__ == "__main__":
-    os.chdir("/Users/Dylan/PycharmProjects/renkon")
-    store = get_store()
-
-    name = "cereals-corrupt"
-
-    local = fs.LocalFileSystem()
-    data = csv.read_csv(f'etc/{name}.csv',
-                        parse_options=csv.ParseOptions(delimiter=';'),
-                        read_options=csv.ReadOptions(skip_rows_after_names=1))
-
-    store.put_input_table("cereals-corrupt", data)
-    data = store.get_input_table("cereals-corrupt")
-    print(data)

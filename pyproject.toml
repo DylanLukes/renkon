@@ -46,6 +46,8 @@ dependencies = [
     "mypy",
     "pytest",
     "pytest-cov",
+    "pyarrow",
+    ""
 ]
 
 [tool.hatch.envs.default.scripts]

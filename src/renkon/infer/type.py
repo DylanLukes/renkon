@@ -20,4 +20,3 @@ class Type(Enum):
     DATETIME = 5
     CATEGORICAL = 6
     UNKNOWN = 7
-

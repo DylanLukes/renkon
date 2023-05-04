@@ -6,12 +6,13 @@ from sqlite3 import Connection as SQLiteConnection
 import aiosql
 from pyarrow.fs import SubTreeFileSystem
 
+queries = aiosql.from_path(Path(__file__).with_name("store.sql"), "sqlite3")
+
 
 class Registry:
     """
     Handles all things related to metadata, composed by Store.
-
-    Uses DuckDB as a backing for a metadata file.
+    You should generally not need to interact with this class directly.
     """
     base_path: str
     fs: SubTreeFileSystem
@@ -22,11 +23,13 @@ class Registry:
         atexit.register(self.conn.close)
         self._create_tables()
 
-    def _create_tables(self, commit=True) -> None:
+    def _create_tables(self, commit: bool = True) -> None:
         """
         Create tables in the metadata store.
         """
         queries.create_tables(self.conn)
+        if commit:
+            self.conn.commit()
 
     def register_input(self, name: str, path: str) -> None:
         """
@@ -40,6 +43,3 @@ class Registry:
         Get the path to the data file.
         """
         return queries.get_input_table_path(self.conn, name=name)
-
-
-queries = aiosql.from_path(Path(__file__).with_name("store.sql"), "sqlite3")

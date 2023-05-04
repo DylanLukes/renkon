@@ -42,7 +42,7 @@ values (:name, :path)
 on conflict (name) do update set path = :path
 returning id;
 
--- name: get-input-table-path^
+-- name: get-input-table-path$
 -- Get the path of an input table by name.
 select path
 from input_tables

@@ -8,8 +8,8 @@ from typing import Callable, Any, List, Dict, Tuple, TypeAlias, TypeVar, Generic
 
 from loguru import logger
 
-from renkon.core.result import Result, Ok, Err, Unk
-from renkon.core.tasks import Task
+from renkon.task.result import Result, Ok, Err, Unk
+from renkon.task.task import Task
 from renkon.util.dag import DAG
 
 # Return type of the tasks.

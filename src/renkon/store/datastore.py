@@ -1,10 +1,11 @@
 from pyarrow import Table, ipc
-from pyarrow._fs import SubTreeFileSystem, FileSystem
+from pyarrow.fs import SubTreeFileSystem, FileSystem
 
 
 class DataStore:
     """
-    Handles all things related to data, composed by Store.
+    Handles all things related to data, composed by Store. Recommended to
+    initialize with a FileSystem with memory-mapping enabled.
     """
     base_path: str
     fs: SubTreeFileSystem
