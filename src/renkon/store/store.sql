@@ -48,9 +48,16 @@ select path
 from input_tables
 where name = :name;
 
-
--- name: insert-output-table^
+-- name: put-output-table^
 -- Insert a new output table into the database
 insert into output_tables (name, path)
 values (:name, :path)
+on conflict (name) do update set path = :path
 returning id;
+
+
+-- name: get-output-table-path$
+-- Get the path of an input table by name.
+select path
+from output_tables
+where name = :name;
