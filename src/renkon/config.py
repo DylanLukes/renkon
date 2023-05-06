@@ -3,8 +3,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
-
 
 @dataclass(frozen=True, slots=True)
 class Config:

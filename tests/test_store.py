@@ -1,10 +1,9 @@
 from pathlib import Path
 
 import pytest
-from pytest import raises as assert_raises
 
-from renkon.config import Config, get_config
-from renkon.store.store import Store, get_store
+from renkon.config import Config
+from renkon.store.store import Store
 from tests.conftest import SAMPLES
 
 
