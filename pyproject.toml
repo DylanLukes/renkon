@@ -23,6 +23,7 @@ classifiers = [
 dependencies = [
     "aiosql",
     "click",
+    "dask",
     "loguru",
     "pyarrow"
 ]
@@ -48,9 +49,11 @@ strict = true
 [[tool.mypy.overrides]]
 module = [
     "aiosql.*",
+    "dask.*",
     "loguru.*",
     "pyarrow.*",
-    "pytest.*"
+    "pytest.*",
+    "toolz.*"
 ]
 ignore_missing_imports = true
 

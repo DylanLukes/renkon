@@ -4,7 +4,7 @@ from sqlite3 import Connection as SQLiteConnection
 import aiosql.queries
 
 
-class Queries(aiosql.queries.Queries):  # type: ignore[misc]
+class Queries(aiosql.queries.Queries):  # type: ignore[misc] # pragma: no cover
     """
     Queries for the store.
 

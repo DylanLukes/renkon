@@ -4,7 +4,7 @@ from typing import Generic, TypeAlias, TypeVar
 _T = TypeVar("_T")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Ok(Generic[_T]):
     """
     Represents a successful result, carrying the value.
@@ -16,7 +16,7 @@ class Ok(Generic[_T]):
         return f"Ok({self.value!r})"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Err:
     """
     Represents an error result, carrying the responsible exception.

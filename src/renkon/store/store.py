@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pyarrow import Table, fs
 
-from renkon.config import global_config
+from renkon.config import Config, get_config
 from renkon.store.datastore import DataStore
 from renkon.store.registry import Registry
 
@@ -19,14 +19,14 @@ class Store:
     for a given input or output result.
     """
 
-    base_path: Path
+    root_dir: Path
 
     data: DataStore
     metadata: Registry
 
-    def __init__(self, base_path: Path) -> None:
-        self.base_path = base_path
-        self.fs = fs.SubTreeFileSystem(str(base_path), fs.LocalFileSystem(use_mmap=True))
+    def __init__(self, root_dir: Path) -> None:
+        self.root_dir = root_dir
+        self.fs = fs.SubTreeFileSystem(str(root_dir), fs.LocalFileSystem(use_mmap=True))
         self.metadata = Registry(self.fs)
         self.data = DataStore(self.fs)
 
@@ -58,11 +58,12 @@ class Store:
 
 
 @lru_cache(1)
-def get_store() -> Store:
+def get_store(config: Config | None = None) -> Store:
     """
-    Return the store.
+    Return the store. By default, uses the global configuration, but can be
+    overridden by passing a custom configuration (useful for testing, etc).
     """
-    config = global_config()
-    data_dir = config.DATA_DIR
+    config = config or get_config()
+    data_dir = config.store_dir
 
-    return Store(base_path=Path(data_dir))
+    return Store(root_dir=Path(data_dir))

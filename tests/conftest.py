@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 from pyarrow import csv
 
-from renkon.store.store import Store
+from renkon.config import Config, get_config
+from renkon.store.store import Store, get_store
 
 TESTS_DIR = Path(__file__).parent
 
@@ -34,8 +35,13 @@ SAMPLES = {
 
 
 @pytest.fixture
-def store(tmp_path: Path) -> Store:
-    store = Store(tmp_path)
+def config(tmp_path: Path) -> Config:
+    return get_config(store_dir=tmp_path)
+
+
+@pytest.fixture
+def store(config: Config) -> Store:
+    store = get_store(config)
     for name, options in SAMPLES.items():
         data = csv.read_csv(TESTS_DIR / "samples" / f"{name}.csv", **options)
         store.put_input_table(name, data)
