@@ -63,13 +63,13 @@ class DAG(Generic[T_]):
         """
         return self._nodes[node_index]
 
-    def get_roots(self) -> list[int]:
+    def get_roots(self) -> set[int]:
         """
         Get the indices of the root nodes in the graph.
 
         :return: The indices of the root nodes.
         """
-        return self._roots
+        return set(self._roots)
 
     def get_dependencies(self, node_index: int) -> set[int]:
         """
@@ -104,27 +104,3 @@ class DAG(Generic[T_]):
             stack.extend(self._fwd_edges[idx])
         descendants.remove(node_index)
         return descendants
-
-    def has_cycle(self) -> bool:
-        """
-        Check if the graph has a cycle.
-
-        There's no actual reason to call this, as it should always be true.
-        This method is provided in order to express the class invariant to deal.
-
-        :return: True if the graph has a cycle, False otherwise.
-        """
-
-        # We perform a depth-first search of the graph, starting from the
-        # root nodes. If we encounter a node that we have already visited
-        # then we have found a cycle.
-
-        visited = set()
-        stack = self._roots.copy()
-        while stack:
-            node_index = stack.pop()
-            if node_index in visited:
-                return True
-            visited.add(node_index)
-            stack.extend(self._fwd_edges[node_index])
-        return False

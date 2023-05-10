@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import TypeVar
 
 import pytest
 from toolz import curry, identity
@@ -10,12 +10,12 @@ from renkon.task.result import Err, Ok, Unk
 T = TypeVar("T")
 
 
-def identitwo(x: T, _: Any) -> T:
+def identitwo(x: T, _: object) -> T:
     """Like identity, but with an extra argument that is ignored."""
     return x
 
 
-def const(x: T) -> Callable[[Any], T]:
+def const(x: T) -> Callable[[object], T]:
     return curry(identitwo, x)  # type: ignore
 
 

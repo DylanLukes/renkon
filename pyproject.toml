@@ -45,6 +45,7 @@ renkon = "renkon.cli:renkon"
 [tool.mypy]
 python_version = "3.10"
 strict = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 
 [[tool.mypy.overrides]]
 module = [

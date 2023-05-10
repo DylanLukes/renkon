@@ -2,7 +2,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from functools import partial
 from multiprocessing import Event, Pool
-from typing import Any, Generic, TypeAlias, TypeVar
+from typing import Generic, TypeAlias, TypeVar
 
 from loguru import logger
 
@@ -40,7 +40,7 @@ class TaskGraph(Generic[_T]):
         self.task_id_to_result = defaultdict(Unk)
         self.task_name_to_id = {}
 
-    def add_task(self, name: str, func: Callable[..., Any], dependencies: list[int]) -> int:
+    def add_task(self, name: str, func: Callable[..., _T], dependencies: list[int]) -> int:
         """
         Add a single task to the graph to be run after the dependencies.
         """
@@ -80,7 +80,7 @@ class TaskGraph(Generic[_T]):
     def get_task(self, task_id: int) -> Task[_T]:
         return self.task_dag.get_node(task_id)
 
-    def get_result(self, task_id: int) -> Any:
+    def get_result(self, task_id: int) -> object:
         return self.task_id_to_result[task_id]
 
     def run(self) -> None:
@@ -98,7 +98,7 @@ class TaskGraph(Generic[_T]):
         with Pool() as pool:
             # pool = MultiprocessingPoolExecutor(_pool)
 
-            def on_complete(task_id: int, result: Any) -> None:
+            def on_complete(task_id: int, result: _T) -> None:
                 nonlocal tasks_remaining
 
                 # Store the result
@@ -121,13 +121,13 @@ class TaskGraph(Generic[_T]):
             def on_error(task_id: int, error: Exception) -> None:
                 nonlocal tasks_remaining
 
-                logger.error(f"Task {task_id} failed: {error}")
+                logger.info(f"Task {task_id} failed: {error}")
                 self.task_id_to_result[task_id] = Err(error)
 
                 # Compute the set of tasks that depend on this one.
                 pruned_tasks = self.task_dag.get_descendants(task_id)
                 pruned_task_names = [self.get_task(task_id).name for task_id in pruned_tasks]
-                logger.error(f"Pruning tasks: {pruned_task_names}")
+                logger.info(f"Pruning tasks: {pruned_task_names}")
 
                 # Remove the failed task and all of its descendants.
                 tasks_remaining.remove(task_id)
