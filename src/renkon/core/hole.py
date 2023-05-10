@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Generic, Literal, TypeAlias, TypeVar, overload
+from typing import Generic, Literal, TypeVar, overload
 
 import pyarrow as pa
 
@@ -44,7 +44,7 @@ class Hole(Generic[_RkTy_Co, _IsFilled]):
     """
 
     name: str
-    _type: _RkTy_Co
+    type_: _RkTy_Co
     _value: int | float | str | bool | None = None
 
     @staticmethod
@@ -155,7 +155,7 @@ class Hole(Generic[_RkTy_Co, _IsFilled]):
         ...
 
     def arrow_value(self) -> pa.Scalar | None:
-        return pa.scalar(self._value, type=self._type.as_arrow())
+        return pa.scalar(self._value, type=self.type_.as_arrow())
 
     @overload
     def is_filled(self: Hole[RkAnyTy, Literal[Filled.YES]]) -> Literal[True]:
