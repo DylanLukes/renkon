@@ -1,5 +1,6 @@
 __all__ = [
     "Type",
+    "AnyType",
     "Storage",
     "Kind",
     "UInt",

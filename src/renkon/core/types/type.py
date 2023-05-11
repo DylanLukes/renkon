@@ -98,6 +98,17 @@ class Type(Generic[_K, _S]):
             case _:
                 raise NotImplementedError()
 
+    def __str__(self) -> str:
+        match self.kind:
+            case kind.uint | kind.int_ | kind.float_:
+                return f"{self.kind}({self.storage.bit_width()})"
+            case kind.string:
+                return "string"
+            case kind.bool_:
+                return "bool"
+
+
+AnyType: TypeAlias = Type[Kind, Storage]
 
 UInt: TypeAlias = Type[UIntKind, Storage]
 Int: TypeAlias = Type[kind.IntKind, Storage]

@@ -16,3 +16,6 @@ class Hole(Generic[_T]):
 
     name: str
     type_: _T
+
+    def __str__(self) -> str:
+        return f"{self.name}: {self.type_}"
