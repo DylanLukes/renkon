@@ -1,25 +1,25 @@
-from pyarrow import lib as pal
+import pyarrow as pa
 
-from renkon.core import rkty
-from renkon.core.rkty import RkTy
+from renkon.core import types
+from renkon.core.types import Type
 
 
 def test_this_crap() -> None:
-    assert RkTy.from_py(bool) == rkty.bool_()
-    assert RkTy.from_py(int) == rkty.sint64()
-    assert RkTy.from_py(float) == rkty.float64()
-    assert RkTy.from_py(str) == rkty.string()
+    assert Type.from_py(int) == types.int64
+    assert Type.from_py(float) == types.float64
+    assert Type.from_py(str) == types.string
+    assert Type.from_py(bool) == types.bool_
 
-    assert RkTy.from_arrow(pal.uint8()) == rkty.uint8()
-    assert RkTy.from_arrow(pal.uint16()) == rkty.uint16()
-    assert RkTy.from_arrow(pal.uint32()) == rkty.uint32()
-    assert RkTy.from_arrow(pal.uint64()) == rkty.uint64()
-    assert RkTy.from_arrow(pal.int8()) == rkty.sint8()
-    assert RkTy.from_arrow(pal.int16()) == rkty.sint16()
-    assert RkTy.from_arrow(pal.int32()) == rkty.sint32()
-    assert RkTy.from_arrow(pal.int64()) == rkty.sint64()
-    assert RkTy.from_arrow(pal.float16()) == rkty.float16()
-    assert RkTy.from_arrow(pal.float32()) == rkty.float32()
-    assert RkTy.from_arrow(pal.float64()) == rkty.float64()
-    assert RkTy.from_arrow(pal.bool_()) == rkty.bool_()
-    assert RkTy.from_arrow(pal.string()) == rkty.string()
+    assert Type.from_arrow(pa.uint8()) == types.uint8
+    assert Type.from_arrow(pa.uint16()) == types.uint16
+    assert Type.from_arrow(pa.uint32()) == types.uint32
+    assert Type.from_arrow(pa.uint64()) == types.uint64
+    assert Type.from_arrow(pa.int8()) == types.int8
+    assert Type.from_arrow(pa.int16()) == types.int16
+    assert Type.from_arrow(pa.int32()) == types.int32
+    assert Type.from_arrow(pa.int64()) == types.int64
+    assert Type.from_arrow(pa.float16()) == types.float16
+    assert Type.from_arrow(pa.float32()) == types.float32
+    assert Type.from_arrow(pa.float64()) == types.float64
+    assert Type.from_arrow(pa.bool_()) == types.bool_
+    assert Type.from_arrow(pa.string()) == types.string

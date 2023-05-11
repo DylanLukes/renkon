@@ -1,18 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Literal, TypeVar
+from typing import Literal
 
-from renkon.core import rkty
-from renkon.core.hole import Filled, Hole
-from renkon.core.rkty import (
-    RkAnyTy,
-    RkFloatTy,
-    RkNumberTy,
-)
-
-_RkTy = TypeVar("_RkTy", bound=RkAnyTy, covariant=True)
-_RkNumTy = TypeVar("_RkNumTy", bound=RkNumberTy, covariant=True)
+from renkon.core import types
+from renkon.core.hole import Hole
+from renkon.core.types import Float, Type
 
 
 class Sketch(ABC):
@@ -26,7 +19,7 @@ class Sketch(ABC):
     __slots__ = ("arity", "holes")
 
     arity: int
-    holes: tuple[Hole[Any, Literal[Filled.NO]], ...]
+    holes: tuple[Hole[Type], ...]
 
 
 class Linear(Sketch):
@@ -39,8 +32,8 @@ class Linear(Sketch):
     """
 
     arity: int
-    holes: tuple[Hole[RkFloatTy, Literal[Filled.NO]], ...]
+    holes: tuple[Hole[Float], ...]
 
     def __init__(self, n_vars: int) -> None:
         self.arity = n_vars + 1
-        self.holes = tuple(Hole.empty(f"a_{i}", rkty.float64()) for i in range(n_vars + 1))
+        self.holes = tuple(Hole(f"a_{i}", types.float64) for i in range(n_vars + 1))
