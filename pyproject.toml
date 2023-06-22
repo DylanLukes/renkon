@@ -7,7 +7,7 @@ name = "renkon"
 dynamic = ["version"]
 description = 'Robust likely invariant analysis over columnar data'
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-3-Clause"
 keywords = []
 authors = [
@@ -16,16 +16,17 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
     "aiosql",
     "click",
-    "dask",
     "loguru",
-    "pyarrow"
+    "pyarrow",
+    "polars",
+    "phantom-types",
+    "rich"
 ]
 
 [project.urls]
@@ -43,18 +44,17 @@ renkon = "renkon.cli:renkon"
 # ----
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 
 [[tool.mypy.overrides]]
 module = [
     "aiosql.*",
-    "dask.*",
     "loguru.*",
     "pyarrow.*",
     "pytest.*",
-    "toolz.*"
+    "rich.*"
 ]
 ignore_missing_imports = true
 
@@ -72,7 +72,7 @@ disable_error_code = ["misc"]
 # -----
 
 [tool.black]
-target-version = ["py310"]
+target-version = ["py311"]
 line-length = 120
 skip-string-normalization = true
 
@@ -80,7 +80,7 @@ skip-string-normalization = true
 # ----
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 120
 select = [
     "A",

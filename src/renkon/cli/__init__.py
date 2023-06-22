@@ -11,5 +11,5 @@ from renkon.__about__ import __version__
 @click.version_option(version=__version__, prog_name="renkon")
 @click.option("-v", "--verbose", count=True)
 @click.pass_context
-def renkon(_ctx: click.Context, _verbose: int) -> None:
+def renkon(_ctx: click.Context, verbose: int) -> None:  # noqa: ARG001
     logger.debug("hello world")

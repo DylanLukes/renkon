@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+import polars as pl
 from pyarrow import Table, fs
 
 from renkon.config import Config, get_config
@@ -26,6 +27,7 @@ class Store:
 
     def __init__(self, root_dir: Path) -> None:
         self.root_dir = root_dir
+        root_dir.mkdir(exist_ok=True)
         self.fs = fs.SubTreeFileSystem(str(root_dir), fs.LocalFileSystem(use_mmap=True))
         self.metadata = Registry(self.fs)
         self.data = DataStore(self.fs)
@@ -39,6 +41,9 @@ class Store:
             return self.data.get(name)
         msg = f"Input table '{name}' not found in metadata store."
         raise LookupError(msg)
+
+    def get_input_dataframe(self, name: str) -> pl.DataFrame:
+        return pl.from_arrow(self.get_input_table(name))
 
     def get_input_table_path(self, name: str) -> Path:
         """

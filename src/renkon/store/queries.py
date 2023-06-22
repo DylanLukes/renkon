@@ -19,6 +19,9 @@ class Queries(aiosql.queries.Queries):  # type: ignore[misc] # pragma: no cover
     def get_input_table_path(self, conn: SQLiteConnection, *, name: str) -> str | None:
         ...
 
+    def list_input_tables(self, conn: SQLiteConnection) -> list[tuple[str, str]]:
+        ...
+
     def put_output_table(self, conn: SQLiteConnection, *, name: str, path: str) -> None:
         ...
 

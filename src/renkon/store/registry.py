@@ -37,6 +37,12 @@ class Registry:
         queries.put_input_table(self.conn, name=name, path=path)
         self.conn.commit()
 
+    def list_input_tables(self) -> list[tuple[str, str]]:
+        """
+        List all input tables.
+        """
+        return queries.list_input_tables(self.conn)
+
     def lookup_input_path(self, name: str) -> str | None:
         """
         Get the path to the data file.
