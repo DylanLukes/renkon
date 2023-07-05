@@ -25,8 +25,8 @@ dependencies = [
     "loguru",
     "pyarrow",
     "polars",
-    "phantom-types",
-    "rich"
+    "rich",
+    "toolz"
 ]
 
 [project.urls]
@@ -54,7 +54,8 @@ module = [
     "loguru.*",
     "pyarrow.*",
     "pytest.*",
-    "rich.*"
+    "rich.*",
+    "toolz.*"
 ]
 ignore_missing_imports = true
 

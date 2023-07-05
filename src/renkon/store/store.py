@@ -43,7 +43,11 @@ class Store:
         raise LookupError(msg)
 
     def get_input_dataframe(self, name: str) -> pl.DataFrame:
-        return pl.from_arrow(self.get_input_table(name))
+        df = pl.from_arrow(self.get_input_table(name))
+        if not isinstance(df, pl.DataFrame):
+            msg = f"Expected a polars.DataFrame, got {type(df)}"
+            raise TypeError(msg)
+        return df
 
     def get_input_table_path(self, name: str) -> Path:
         """
