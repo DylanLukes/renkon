@@ -8,7 +8,7 @@ from tests.conftest import SAMPLES
 
 
 def test_get_store(tmp_path: Path, config: Config, store: Store) -> None:
-    assert store.root_dir == config.store_dir == tmp_path
+    assert store.root_dir == config.store.path.resolve() == tmp_path / ".renkon"
 
 
 def test_get_sample_input_paths(store: Store) -> None:

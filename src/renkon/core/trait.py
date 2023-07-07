@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
@@ -91,7 +91,7 @@ class Trait(Protocol):
         ...
 
 
-class TypeTrait(Trait, Protocol):
+class TypeTrait(Trait, ABC):
     """
     A trait representing a type, e.g. "x is a string" or "x is a number".
 
@@ -103,7 +103,7 @@ class TypeTrait(Trait, Protocol):
     pass
 
 
-class PropTrait(Trait, Protocol):
+class PropTrait(Trait, ABC):
     """
     A trait representing a logical proposition, e.g. "x != 0" or "x < y".
     """
@@ -126,7 +126,7 @@ class PropTrait(Trait, Protocol):
         raise NotImplementedError
 
 
-class StatTrait(Trait, Protocol):
+class StatTrait(Trait, ABC):
     """
     A trait representing a statistical property, e.g. "x is normally distributed" or "x is linearly correlated with y".
     """

@@ -32,7 +32,7 @@ class InferenceStrategy(Protocol):
         raise NotImplementedError
 
 
-@dataclass(eq=True, frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class RANSACInferenceStrategy(InferenceStrategy):
     min_sample: int
     max_iterations: int = 3
@@ -49,7 +49,7 @@ class RANSACInferenceStrategy(InferenceStrategy):
         raise NotImplementedError  # todo: implement
 
 
-@dataclass(eq=True, frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class SimpleInferenceStrategy(InferenceStrategy):
     """
     Simple inference strategy which evaluates a simple predicate on the data.
@@ -70,7 +70,7 @@ class SimpleInferenceStrategy(InferenceStrategy):
         raise NotImplementedError  # todo: implement
 
 
-@dataclass(eq=True, frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class ThreeSigmaInferenceStrategy(InferenceStrategy):
     def infer(self, sketch: TraitSketch[_TraitT], data: DataFrame) -> _TraitT:
         raise NotImplementedError  # todo: implement

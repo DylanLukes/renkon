@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pyarrow import csv
 
-from renkon.config import Config, get_config
+from renkon.config import Config, load_config
 from renkon.store.store import Store, get_store
 
 TESTS_DIR = Path(__file__).parent
@@ -36,7 +36,7 @@ SAMPLES = {
 
 @pytest.fixture
 def config(tmp_path: Path) -> Config:
-    return get_config(store_dir=tmp_path)
+    return load_config(store={"path": tmp_path / ".renkon"})
 
 
 @pytest.fixture

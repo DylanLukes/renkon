@@ -4,7 +4,7 @@ from pathlib import Path
 import polars as pl
 from pyarrow import Table, fs
 
-from renkon.config import Config, get_config
+from renkon.config import Config, load_config
 from renkon.store.datastore import DataStore
 from renkon.store.registry import Registry
 
@@ -72,7 +72,5 @@ def get_store(config: Config | None = None) -> Store:
     Return the store. By default, uses the global configuration, but can be
     overridden by passing a custom configuration (useful for testing, etc).
     """
-    config = config or get_config()
-    data_dir = config.store_dir
-
-    return Store(root_dir=Path(data_dir))
+    config = config or load_config()
+    return Store(root_dir=config.store.path)

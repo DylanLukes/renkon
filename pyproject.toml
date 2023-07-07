@@ -21,7 +21,8 @@ classifiers = [
 ]
 dependencies = [
     "aiosql",
-    "click",
+    "click==8.1.3",
+    "dacite",
     "loguru",
     "pyarrow",
     "polars",
