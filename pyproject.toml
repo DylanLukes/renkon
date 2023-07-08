@@ -36,7 +36,7 @@ Issues = "https://github.com/DylanLukes/renkon/issues"
 Source = "https://github.com/DylanLukes/renkon"
 
 [project.scripts]
-renkon = "renkon.cli:renkon"
+renkon = "renkon.cli:cli"
 
 # Tool Configurations
 # ===================

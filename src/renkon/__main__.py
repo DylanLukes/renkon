@@ -38,7 +38,7 @@ for name, options in SAMPLES.items():
     logger.info(f"Loaded sample {name} into the store.")
 
 if __name__ == "__main__":
-    from renkon.cli import renkon
+    from renkon.cli import cli
 
     for name in ["cereals"]:
         table = store.get_input_dataframe(name)
@@ -46,4 +46,4 @@ if __name__ == "__main__":
         console.print(table)
         console.print()
 
-    sys.exit(renkon())
+    sys.exit(cli(,)

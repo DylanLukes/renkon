@@ -2,11 +2,23 @@ from __future__ import annotations
 
 import tomllib
 from dataclasses import dataclass, field
+from ipaddress import IPv4Address
 from pathlib import Path
 from typing import Any
 
 from dacite import Config as DaciteConfig
 from dacite import from_dict
+
+# todo: load this from a default renkon.toml
+DEFAULTS: dict[str, dict[str, Any]] = {
+    "store": {
+        "path": Path(".renkon"),
+    },
+    "server": {
+        "hostname": IPv4Address("127.0.0.1"),
+        "port": 1410,  # stroke counts of 蓮根 (renkon)
+    },
+}
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -15,7 +27,17 @@ class StoreConfig:
     Renkon store configuration class.
     """
 
-    path: Path = Path.cwd() / ".renkon"
+    path: Path = field(default=DEFAULTS["store"]["path"])
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class ServerConfig:
+    """
+    Renkon server configuration class.
+    """
+
+    hostname: IPv4Address = field(default=DEFAULTS["server"]["hostname"])
+    port: int = field(default=DEFAULTS["server"]["port"])
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -25,6 +47,7 @@ class Config:
     """
 
     store: StoreConfig = field(default_factory=StoreConfig)
+    server: ServerConfig = field(default_factory=ServerConfig)
 
 
 def load_config(*, update_global: bool = False, **overrides: Any) -> Config:
@@ -45,7 +68,7 @@ def load_config(*, update_global: bool = False, **overrides: Any) -> Config:
     # Apply overrides.
     conf_data.update(overrides)
 
-    conf = from_dict(data_class=Config, data=conf_data, config=DaciteConfig(cast=[Path]))
+    conf = from_dict(data_class=Config, data=conf_data, config=DaciteConfig(cast=[Path, IPv4Address]))
 
     if update_global:
         global config  # noqa: PLW0603
