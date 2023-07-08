@@ -46,4 +46,4 @@ if __name__ == "__main__":
         console.print(table)
         console.print()
 
-    sys.exit(cli(,)
+    sys.exit(cli())
