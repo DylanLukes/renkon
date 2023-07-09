@@ -4,7 +4,7 @@ import pytest
 from pyarrow import csv
 
 from renkon.config import Config, load_config
-from renkon.store.store import Store, get_store
+from renkon.repo.repo import Repo, get_repo
 
 TESTS_DIR = Path(__file__).parent
 
@@ -40,8 +40,8 @@ def config(tmp_path: Path) -> Config:
 
 
 @pytest.fixture
-def store(config: Config) -> Store:
-    store = get_store(config)
+def repo(config: Config) -> Repo:
+    store = get_repo(config)
     for name, options in SAMPLES.items():
         data = csv.read_csv(TESTS_DIR / "samples" / f"{name}.csv", **options)
         store.put_input_table(name, data)

@@ -11,7 +11,7 @@ from dacite import from_dict
 
 # todo: load this from a default renkon.toml
 DEFAULTS: dict[str, dict[str, Any]] = {
-    "store": {
+    "repository": {
         "path": Path(".renkon"),
     },
     "server": {
@@ -22,12 +22,12 @@ DEFAULTS: dict[str, dict[str, Any]] = {
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class StoreConfig:
+class RepoConfig:
     """
-    Renkon store configuration class.
+    Renkon repository configuration class.
     """
 
-    path: Path = field(default=DEFAULTS["store"]["path"])
+    path: Path = field(default=DEFAULTS["repository"]["path"])
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -46,7 +46,7 @@ class Config:
     Renkon configuration class.
     """
 
-    store: StoreConfig = field(default_factory=StoreConfig)
+    repository: RepoConfig = field(default_factory=RepoConfig)
     server: ServerConfig = field(default_factory=ServerConfig)
 
 

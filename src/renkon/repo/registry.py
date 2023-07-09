@@ -4,12 +4,12 @@ from sqlite3 import Connection as SQLiteConnection
 
 from pyarrow.fs import SubTreeFileSystem
 
-from renkon.store.queries import queries
+from renkon.repo.queries import queries
 
 
 class Registry:
     """
-    Handles all things related to metadata, composed by Store.
+    Handles all things related to metadata, composed by Repo.
     You should generally not need to interact with this class directly.
     """
 
@@ -24,7 +24,7 @@ class Registry:
 
     def _create_tables(self, *, commit: bool = True) -> None:
         """
-        Create tables in the metadata store.
+        Create tables in the metadata repository.
         """
         queries.create_tables(self.conn)
         if commit:
