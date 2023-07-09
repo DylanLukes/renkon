@@ -1,5 +1,5 @@
 from pyarrow.flight import FlightClient
 
 
-class RenkonFlightClient(FlightClient):
+class RenkonFlightClient(FlightClient):  # type: ignore[misc]
     pass

@@ -4,9 +4,7 @@ from typing import Any
 
 import click
 from loguru import logger
-from pyarrow.flight import FlightClient
 from rich.logging import RichHandler
-from rich.pretty import pprint
 
 from renkon.__about__ import __version__
 from renkon.client import RenkonFlightClient
@@ -31,20 +29,19 @@ def setup_default_logging() -> None:
     context_settings={"help_option_names": ["-h", "--help"]},
     invoke_without_command=True,
 )
-@click.option(
-    "-d", "--data-dir", type=click.Path(), default=DEFAULTS["repository"]["path"], help="Path for data repository"
-)
 @click.version_option(version=__version__, prog_name="renkon")
 @click.pass_context
-def cli(ctx: click.Context, data_dir: Path) -> None:
+def cli(ctx: click.Context) -> None:
     """
     Starts a renkon server as a subprocess, and then connects a client to it.
 
-    This is intended for convenience, and is started with the default configuration.
+    This is intended to be used only by an end-user for inspecting a repository,
+    and is started with the default configuration. For real-world use, please
+    use the server and client subcommands.
 
-    To override the configuration, use the `server` command, `renkon.toml` configuration, or (todo) environment variables.
+    If you must override the configuration, `renkon.toml` is loaded from the current working directory.
 
-    By default, renkon runs on 127.0.0.1:1410, and stores data in .renkon in the current working directory.
+    By default, renkon runs on 127.0.0.1:1410, and uses the repository .renkon in the current working directory.
     """
     # If there is a subcommand, do nothing.
     if ctx.invoked_subcommand:
