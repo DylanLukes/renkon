@@ -8,8 +8,8 @@ from rich.logging import RichHandler
 
 from renkon.__about__ import __version__
 from renkon.config import DEFAULTS, load_config
+from renkon.repo import get_repo
 from renkon.server import RenkonFlightServer
-from renkon.store import get_store
 
 
 def setup_server_logging() -> None:
@@ -37,20 +37,21 @@ def cli(_ctx: click.Context) -> None:
 @cli.command(context_settings={"show_default": True})
 @click.argument("hostname", type=str, default=DEFAULTS["server"]["hostname"])
 @click.argument("port", type=int, default=DEFAULTS["server"]["port"])
-@click.option("-s", "--store-path", type=click.Path(), default=DEFAULTS["store"]["path"], help="Path for data store")
+@click.option(
+    "-d", "--data-dir", type=click.Path(), default=DEFAULTS["repository"]["path"], help="Path for data repository"
+)
 @click.pass_context
-def server(_ctx: click.Context, hostname: str, port: int, store_path: Path | None) -> None:
+def server(_ctx: click.Context, hostname: str, port: int, repo_path: Path | None) -> None:
     # Configuration.
     config_overrides: dict[str, Any] = {
-        "store": {},
+        "repository": {
+            "path": repo_path,
+        },
         "server": {
             "hostname": hostname,
             "port": port,
         },
     }
-
-    if store_path:
-        config_overrides["store"]["path"] = store_path
 
     config = load_config(update_global=True, **config_overrides)
 
@@ -58,9 +59,9 @@ def server(_ctx: click.Context, hostname: str, port: int, store_path: Path | Non
     setup_server_logging()
 
     # Store initialization.
-    if not config.store.path.exists():
-        config.store.path.mkdir(parents=True, exist_ok=True)
-    store = get_store(config)
+    if not config.repository.path.exists():
+        config.repository.path.mkdir(parents=True, exist_ok=True)
+    store = get_repo(config)
 
     # Start server.
     logger.info(f"Starting Renkon server at {config.server.hostname}:{config.server.port}")

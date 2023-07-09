@@ -2,10 +2,14 @@ from pyarrow import Table, ipc
 from pyarrow.fs import FileSystem, SubTreeFileSystem
 
 
-class DataStore:
+class Store:
     """
-    Handles all things related to data, composed by Store. Recommended to
-    initialize with a FileSystem with memory-mapping enabled.
+    Abstracts details of disk storage of data away from the Repo.
+
+    Recommended to initialize with a FileSystem with memory-mapping enabled,
+    such as pyarrow.fs.LocalFileSystem(use_mmap=True), to avoid unnecessary
+    memory copies (if the data is already memory-mapped by another process,
+    and the OS optimizes for this).
     """
 
     base_path: str
@@ -17,7 +21,7 @@ class DataStore:
 
     def get(self, name: str) -> Table:
         """
-        Get data from the store.
+        Get data from the repository.
         """
         with self.fs.open_input_stream(f"{name}.arrow") as stream:
             data: Table = ipc.open_stream(stream).read_all()
@@ -25,7 +29,7 @@ class DataStore:
 
     def put(self, name: str, data: Table) -> str:
         """
-        Put data into the store.
+        Put data into the repository.
         """
         with self.fs.open_output_stream(f"{name}.arrow") as stream:
             writer = ipc.new_stream(stream, data.schema)
