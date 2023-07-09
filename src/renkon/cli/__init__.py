@@ -41,11 +41,11 @@ def cli(_ctx: click.Context) -> None:
     "-d", "--data-dir", type=click.Path(), default=DEFAULTS["repository"]["path"], help="Path for data repository"
 )
 @click.pass_context
-def server(_ctx: click.Context, hostname: str, port: int, repo_path: Path | None) -> None:
+def server(_ctx: click.Context, hostname: str, port: int, data_dir: Path | None) -> None:
     # Configuration.
     config_overrides: dict[str, Any] = {
         "repository": {
-            "path": repo_path,
+            "path": data_dir,
         },
         "server": {
             "hostname": hostname,
