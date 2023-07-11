@@ -2,9 +2,12 @@ from pathlib import Path
 
 import pytest
 from pyarrow import csv
+from pyarrow import fs as pa_fs
 
 from renkon.config import Config, load_config
+from renkon.repo import Storage
 from renkon.repo.repository import Repository, get_repo
+from renkon.repo.storage import FileSystemStorage
 
 TESTS_DIR = Path(__file__).parent
 
@@ -36,7 +39,15 @@ SAMPLES = {
 
 @pytest.fixture
 def config(tmp_path: Path) -> Config:
-    return load_config(store={"path": tmp_path / ".renkon"})
+    return load_config(repository={"path": tmp_path / ".renkon"})
+
+
+@pytest.fixture
+def storage(config: Config) -> Storage:
+    path = config.repository.path / "data"
+    path.mkdir(parents=True, exist_ok=True)
+    fs = pa_fs.LocalFileSystem(use_mmap=True)
+    return FileSystemStorage(fs)
 
 
 @pytest.fixture

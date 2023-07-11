@@ -1,14 +1,14 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Literal, NewType, Protocol, cast
+from typing import Literal, Protocol, TypeAlias, cast
 
 import pyarrow as pa
-import pyarrow.fs as pafs
-import pyarrow.ipc as paipc
-import pyarrow.parquet as papq
+import pyarrow.fs as pa_fs
+import pyarrow.ipc as pa_ipc
+import pyarrow.parquet as pa_pq
 
-StoragePath = NewType("StoragePath", PurePath)
+StoragePath: TypeAlias = PurePath
 StorageFormat = Literal["parquet", "ipc"]
 
 
@@ -28,7 +28,7 @@ class StoredTableInfo:
     size: int = -1
 
 
-class Storage(Protocol):
+class Storage(Protocol):  # pragma: no cover
     """
     Protocol for a storage backend for a :class:`renkon.repo.Repo`.
 
@@ -57,6 +57,12 @@ class Storage(Protocol):
         """
         ...
 
+    def delete(self, path: StoragePath) -> None:
+        """
+        Delete the data at the given path from the storage backend.
+        """
+        ...
+
     def info(self, path: StoragePath) -> StoredTableInfo | None:
         """
         Return a StoredTableInfo with metadata about the given table, such as
@@ -81,48 +87,53 @@ class FileSystemStorage(Storage):
     and the OS optimizes for this).
     """
 
-    fs: pafs.FileSystem
+    fs: pa_fs.FileSystem
 
-    def __init__(self, fs: pafs.FileSystem) -> None:
+    def __init__(self, fs: pa_fs.FileSystem) -> None:
         self.fs = fs
 
     def read(self, path: StoragePath) -> pa.Table | None:
         match path.suffix:
             case ".parquet":
-                return papq.read_table(path, filesystem=self.fs)
+                return pa_pq.read_table(path, filesystem=self.fs)
             case ".arrow":
                 with self.fs.open_input_file(str(path)) as file:
-                    reader = paipc.RecordBatchStreamReader(file)
+                    reader = pa_ipc.RecordBatchStreamReader(file)
                     return reader.read_all()
             case _:
                 msg = f"Unknown file extension: {path.suffix}"
                 raise ValueError(msg)
 
     def write(self, path: StoragePath, table: pa.Table) -> None:
+        self.fs.create_dir(str(path.parent), recursive=True)
         match path.suffix:
             case ".parquet":
-                papq.write_table(table, path, filesystem=self.fs)
+                pa_pq.write_table(table, path, filesystem=self.fs)
             case ".arrow":
                 with self.fs.open_output_stream(str(path)) as stream:
-                    writer = paipc.RecordBatchStreamWriter(stream, table.schema)
+                    writer = pa_ipc.RecordBatchStreamWriter(stream, table.schema)
                     writer.write(table)
                     writer.close()
             case _:
                 msg = f"Unknown file extension: {path.suffix}"
                 raise ValueError(msg)
 
+    def delete(self, path: StoragePath) -> None:
+        self.fs.delete_file(str(path))
+
     def info(self, path: StoragePath) -> StoredTableInfo | None:
         match path.suffix:
             case ".parquet":
-                metadata: papq.FileMetaData = papq.read_metadata(path, filesystem=self.fs)
+                metadata: pa_pq.FileMetaData = pa_pq.read_metadata(path, filesystem=self.fs)
+                file_info = self.fs.get_file_info(str(path))
                 return StoredTableInfo(
                     schema=metadata.schema,
                     rows=metadata.num_rows,
-                    size=metadata.serialized_size,
+                    size=file_info.size,
                 )
             case ".arrow":
                 with self.fs.open_input_file(str(path)) as file:
-                    reader = paipc.RecordBatchStreamReader(file)
+                    reader = pa_ipc.RecordBatchStreamReader(file)
                     table = reader.read_all()  # todo: ensure this plays well with use_mmap
 
                     return StoredTableInfo(
@@ -135,5 +146,5 @@ class FileSystemStorage(Storage):
                 raise ValueError(msg)
 
     def exists(self, path: StoragePath) -> bool:
-        file_info: pafs.FileInfo = self.fs.get_file_info(path)
+        file_info: pa_fs.FileInfo = self.fs.get_file_info(str(path))
         return cast(bool, file_info.is_file)
