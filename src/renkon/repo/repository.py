@@ -1,15 +1,18 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal, TypeAlias
 
 import polars as pl
 from pyarrow import Table, fs
 
 from renkon.config import Config, load_config
-from renkon.repo.registry import Registry
-from renkon.repo.store import Store
+from renkon.repo.registry import Registry, SQLiteRegistry
+from renkon.repo.storage import FileSystemStorage, Storage
+
+TableIntent: TypeAlias = Literal["processing", "storage"]
 
 
-class Repo:
+class Repository:
     """
     The repository is the state of the system, containing all submitted inputs and
     computed outputs.
@@ -23,8 +26,8 @@ class Repo:
 
     path: Path
 
-    data: Store
-    metadata: Registry
+    registry: Registry
+    storage: Storage
 
     def __init__(self, path: Path) -> None:
         """
@@ -33,16 +36,16 @@ class Repo:
         self.path = path
         path.mkdir(exist_ok=True)
         root_fs = fs.SubTreeFileSystem(str(path), fs.LocalFileSystem(use_mmap=True))
-        self.metadata = Registry(root_fs)
-        self.data = Store(root_fs)
+        self.registry = SQLiteRegistry(root_fs)
+        self.storage = FileSystemStorage(SubTreeFileSystem("data", root_fs))
 
     def get_input_table(self, name: str) -> Table:
         """
         Get data from the repository.
         """
         # First, check if the data is in the metadata repository.
-        if self.metadata.lookup_input_path(name):
-            return self.data.get(name)
+        if self.registry.lookup_input_path(name):
+            return self.storage.get(name)
         msg = f"Input table '{name}' not found in metadata repository."
         raise LookupError(msg)
 
@@ -57,7 +60,7 @@ class Repo:
         """
         Get data from the repository.
         """
-        if path := self.metadata.lookup_input_path(name):
+        if path := self.registry.lookup_input_path(name):
             return Path(path)
         msg = f"Input table '{name}' not found in metadata repository."
         raise LookupError(msg)
@@ -66,15 +69,15 @@ class Repo:
         """
         Put data into the repository.
         """
-        path = self.data.put(name, data)
-        self.metadata.register_input(name, path)
+        path = self.storage.put(name, data)
+        self.registry.register_input(name, path)
 
 
 @lru_cache(1)
-def get_repo(config: Config | None = None) -> Repo:
+def get_repo(config: Config | None = None) -> Repository:
     """
     Return the repository. By default, uses the global configuration, but can be
     overridden by passing a custom configuration (useful for testing, etc).
     """
     config = config or load_config()
-    return Repo(path=config.repository.path)
+    return Repository(path=config.repository.path)

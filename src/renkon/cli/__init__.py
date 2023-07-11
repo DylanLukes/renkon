@@ -98,10 +98,11 @@ def client(_ctx: click.Context, hostname: str, port: int) -> None:
     # Start client.
     # client = FlightClient(location=f"grpc://{hostname}:{port}")
     client = RenkonFlightClient(location=f"grpc://{hostname}:{port}")
-    #
+
     logger.info(f"Connecting to {hostname}:{port}...")
     client.wait_for_available()
     logger.info("Connected!")
+    logger.info(f"Flights: {list(client.list_flights())}")
     client.close()
 
 

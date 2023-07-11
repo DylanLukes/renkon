@@ -1,13 +1,18 @@
 import atexit
 import sqlite3
 from sqlite3 import Connection as SQLiteConnection
+from typing import Protocol
 
 from pyarrow.fs import SubTreeFileSystem
 
 from renkon.repo.queries import queries
 
 
-class Registry:
+class Registry(Protocol):
+    pass
+
+
+class SQLiteRegistry(Registry):
     """
     Handles all things related to metadata, composed by Repo.
     You should generally not need to interact with this class directly.
