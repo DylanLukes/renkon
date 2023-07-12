@@ -3,13 +3,15 @@ from pathlib import Path
 from typing import Any
 
 import click
+import pyarrow.fs as pa_fs
 from loguru import logger
 from rich.logging import RichHandler
 
 from renkon.__about__ import __version__
 from renkon.client import RenkonFlightClient
 from renkon.config import DEFAULTS, load_config
-from renkon.repo import get_repo
+from renkon.repo import FileSystemStorage, Repository
+from renkon.repo.registry import SQLiteRegistry
 from renkon.server import RenkonFlightServer
 
 
@@ -63,7 +65,7 @@ def server(_ctx: click.Context, hostname: str, port: int, data_dir: Path) -> Non
     # Configuration.
     config_overrides: dict[str, Any] = {
         "repository": {
-            "path": data_dir,
+            "path": data_dir.resolve(),
         },
         "server": {
             "hostname": hostname,
@@ -76,14 +78,20 @@ def server(_ctx: click.Context, hostname: str, port: int, data_dir: Path) -> Non
     # Logging.
     setup_default_logging()
 
-    # Store initialization.
-    if not config.repository.path.exists():
-        config.repository.path.mkdir(parents=True, exist_ok=True)
-    store = get_repo(config)
+    # Repository.
+    repo_path = config.repository.path
+    repo_path.mkdir(parents=True, exist_ok=True)
+
+    fs = pa_fs.SubTreeFileSystem(str(repo_path / "data"), pa_fs.LocalFileSystem(use_mmap=True))
+
+    repository = Repository(
+        registry=SQLiteRegistry(repo_path / "metadata.db"),
+        storage=FileSystemStorage(fs),
+    )
 
     # Start server.
     logger.info(f"Starting Renkon server at {config.server.hostname}:{config.server.port}")
-    server = RenkonFlightServer(store, config.server)
+    server = RenkonFlightServer(repository, config.server)
     server.serve()
 
 

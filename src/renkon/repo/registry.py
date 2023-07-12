@@ -1,9 +1,10 @@
 import atexit
 import sqlite3
+from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
 from typing import Protocol
 
-from pyarrow.fs import SubTreeFileSystem
+from pyarrow import fs as pa_fs
 
 from renkon.repo.queries import queries
 
@@ -18,12 +19,11 @@ class SQLiteRegistry(Registry):
     You should generally not need to interact with this class directly.
     """
 
-    base_path: str
-    fs: SubTreeFileSystem
+    path: Path
     conn: SQLiteConnection
 
-    def __init__(self, fs: SubTreeFileSystem) -> None:
-        self.conn = sqlite3.connect(fs.base_path + "/metadata.db")
+    def __init__(self, path: Path) -> None:
+        self.conn = sqlite3.connect(path)
         atexit.register(self.conn.close)
         self._create_tables()
 

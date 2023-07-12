@@ -1,11 +1,12 @@
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Literal, TypeAlias
 
 import polars as pl
-from pyarrow import Table, fs
+import pyarrow as pa
+from pyarrow import fs as pa_fs
 
-from renkon.config import Config, load_config
+from renkon.config import Config, RepositoryConfig, load_config
 from renkon.repo.registry import Registry, SQLiteRegistry
 from renkon.repo.storage import FileSystemStorage, Storage
 
@@ -24,22 +25,17 @@ class Repository:
     for a given input or output result.
     """
 
-    path: Path
-
     registry: Registry
     storage: Storage
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, registry: Registry, storage: Storage) -> None:
         """
         Open a repository at the given path.
         """
-        self.path = path
-        path.mkdir(exist_ok=True)
-        root_fs = fs.SubTreeFileSystem(str(path), fs.LocalFileSystem(use_mmap=True))
-        self.registry = SQLiteRegistry(root_fs)
-        self.storage = FileSystemStorage(SubTreeFileSystem("data", root_fs))
+        self.registry = registry
+        self.storage = storage
 
-    def get_input_table(self, name: str) -> Table:
+    def get_input_table(self, name: str) -> pa.Table:
         """
         Get data from the repository.
         """
@@ -65,19 +61,9 @@ class Repository:
         msg = f"Input table '{name}' not found in metadata repository."
         raise LookupError(msg)
 
-    def put_input_table(self, name: str, data: Table) -> None:
+    def put_input_table(self, name: str, data: pa.Table) -> None:
         """
         Put data into the repository.
         """
         path = self.storage.put(name, data)
         self.registry.register_input(name, path)
-
-
-@lru_cache(1)
-def get_repo(config: Config | None = None) -> Repository:
-    """
-    Return the repository. By default, uses the global configuration, but can be
-    overridden by passing a custom configuration (useful for testing, etc).
-    """
-    config = config or load_config()
-    return Repository(path=config.repository.path)

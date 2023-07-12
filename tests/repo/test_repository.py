@@ -1,14 +1,13 @@
 from pathlib import Path
 
-import pytest
+from pytest import MonkeyPatch
 
 from renkon.config import Config
 from renkon.repo.repository import Repository
 from tests.conftest import SAMPLES
 
 
-def test_get_store(tmp_path: Path, config: Config, repo: Repository, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.chdir(tmp_path)
+def test_get_store(tmp_path: Path, config: Config, repo: Repository) -> None:
     assert repo.path.resolve() == config.repository.path.resolve() == tmp_path / ".renkon"
 
 

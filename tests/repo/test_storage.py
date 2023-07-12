@@ -49,7 +49,7 @@ def test_write_read_delete_arrow(storage: Storage) -> None:
 
 
 def test_info_parquet(storage: Storage) -> None:
-    path = Path("foo/bar.parquet")
+    path = PurePath("foo/bar.parquet")
 
     storage.write(path, TABLE)
     assert storage.exists(path)
@@ -58,7 +58,7 @@ def test_info_parquet(storage: Storage) -> None:
     assert info is not None
     assert info.schema.names == ["a", "b", "c"]
     assert info.rows == TABLE.num_rows
-    assert info.size == path.stat().st_size
+    assert info.size == (Path.cwd() / "data" / path).stat().st_size
 
     storage.delete(path)
     assert not storage.exists(path)

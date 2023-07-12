@@ -95,7 +95,7 @@ class FileSystemStorage(Storage):
     def read(self, path: StoragePath) -> pa.Table | None:
         match path.suffix:
             case ".parquet":
-                return pa_pq.read_table(path, filesystem=self.fs)
+                return pa_pq.read_table(str(path), filesystem=self.fs)
             case ".arrow":
                 with self.fs.open_input_file(str(path)) as file:
                     reader = pa_ipc.RecordBatchStreamReader(file)
@@ -108,7 +108,7 @@ class FileSystemStorage(Storage):
         self.fs.create_dir(str(path.parent), recursive=True)
         match path.suffix:
             case ".parquet":
-                pa_pq.write_table(table, path, filesystem=self.fs)
+                pa_pq.write_table(table, str(path), filesystem=self.fs)
             case ".arrow":
                 with self.fs.open_output_stream(str(path)) as stream:
                     writer = pa_ipc.RecordBatchStreamWriter(stream, table.schema)
@@ -124,7 +124,7 @@ class FileSystemStorage(Storage):
     def info(self, path: StoragePath) -> StoredTableInfo | None:
         match path.suffix:
             case ".parquet":
-                metadata: pa_pq.FileMetaData = pa_pq.read_metadata(path, filesystem=self.fs)
+                metadata: pa_pq.FileMetaData = pa_pq.read_metadata(str(path), filesystem=self.fs)
                 file_info = self.fs.get_file_info(str(path))
                 return StoredTableInfo(
                     schema=metadata.schema,
