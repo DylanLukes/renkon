@@ -68,5 +68,5 @@ def repo(registry: Registry, storage: Storage) -> Repository:
     repo = Repository(registry=registry, storage=storage)
     for name, options in SAMPLES.items():
         data = csv.read_csv(TESTS_DIR / "samples" / f"{name}.csv", **options)
-        repo.put_input_table(name, data)
+        repo.put(name, data)
     return repo

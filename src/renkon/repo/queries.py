@@ -1,10 +1,10 @@
 from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
-from typing import Protocol, TypeAlias, cast
+from typing import Literal, Protocol, TypeAlias, cast
 
 import aiosql.queries
 
-TableTuple: TypeAlias = tuple[int, str, str, bytes, int, int]
+TableTuple: TypeAlias = tuple[str, str, str, bytes, int, int]
 
 
 class RegistryQueries(Protocol):
@@ -21,17 +21,16 @@ class RegistryQueries(Protocol):
         ...
 
     def register_table(
-        self, conn: SQLiteConnection, *, name: str, path: str, schema: bytes, rows: int, size: int
-    ) -> int:
+        self, conn: SQLiteConnection, *, path: str, name: str, filetype: str, schema: bytes, rows: int, size: int
+    ) -> None:
         ...
 
     def unregister_table(self, conn: SQLiteConnection, *, name: str) -> None:
         ...
 
-    def get_table_by_id(self, conn: SQLiteConnection, *, table_id: int) -> TableTuple:
-        ...
-
-    def get_table_by_name(self, conn: SQLiteConnection, *, name: str) -> TableTuple:
+    def get_table(
+        self, conn: SQLiteConnection, *, name: str, filetype: Literal["parquet"] | Literal["arrow"]
+    ) -> TableTuple:
         ...
 
     def get_table_by_path(self, conn: SQLiteConnection, *, path: str) -> TableTuple:
@@ -40,10 +39,10 @@ class RegistryQueries(Protocol):
     def list_tables(self, conn: SQLiteConnection) -> TableTuple:
         ...
 
-    def list_tables_matching_name(self, conn: SQLiteConnection, *, name: str) -> TableTuple:
+    def list_tables_matching_path(self, conn: SQLiteConnection, *, path: str) -> TableTuple:
         ...
 
-    def list_tables_matching_path(self, conn: SQLiteConnection, *, path: str) -> TableTuple:
+    def list_tables_matching_name(self, conn: SQLiteConnection, *, name: str) -> TableTuple:
         ...
 
 

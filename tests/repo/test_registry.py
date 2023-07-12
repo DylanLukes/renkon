@@ -1,3 +1,5 @@
+from pathlib import PurePath
+
 import pyarrow as pa
 
 from renkon.repo import Registry
@@ -11,16 +13,17 @@ def test_register_table(registry: Registry):
         size=100,  # this is a made up number
     )
 
-    registry.register("df[13]", "cells/13/df.arrow", store_table_info)
+    path = PurePath("cells/13/df.arrow")
+    registry.register("df[13]", path, store_table_info)
 
     reg_table_info = registry.lookup("df[13]", by="name")
     assert reg_table_info is not None
     assert reg_table_info.name == "df[13]"
-    assert reg_table_info.path == "cells/13/df.arrow"
+    assert reg_table_info.path == path
     assert reg_table_info.schema == store_table_info.schema
     assert reg_table_info.rows == store_table_info.rows
     assert reg_table_info.size == store_table_info.size
 
     registry.unregister("df[13]")
     assert registry.lookup("df[13]", by="name") is None
-    assert registry.lookup("cells/13/df.arrow", by="path") is None
+    assert registry.lookup(str(path), by="path") is None

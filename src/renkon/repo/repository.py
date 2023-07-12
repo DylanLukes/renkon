@@ -1,16 +1,9 @@
-from functools import lru_cache
-from pathlib import Path, PurePath
-from typing import Literal, TypeAlias
+from pathlib import PurePath
 
-import polars as pl
 import pyarrow as pa
-from pyarrow import fs as pa_fs
 
-from renkon.config import Config, RepositoryConfig, load_config
-from renkon.repo.registry import Registry, SQLiteRegistry
-from renkon.repo.storage import FileSystemStorage, Storage
-
-TableIntent: TypeAlias = Literal["processing", "storage"]
+from renkon.repo.registry import Registry
+from renkon.repo.storage import Storage
 
 
 class Repository:
@@ -36,37 +29,38 @@ class Repository:
         self.storage = storage
 
     def get(self, name: str) -> pa.Table | None:
-        self.registry.lookup(name)
+        if (table_info := self.registry.lookup(name, by="name")) is None:
+            return None
+        return self.storage.read(table_info.path)
 
-    def get_input_table(self, name: str) -> pa.Table:
-        """
-        Get data from the repository.
-        """
-        # First, check if the data is in the metadata repository.
-        if self.registry.lookup_input_path(name):
-            return self.storage.get(name)
-        msg = f"Input table '{name}' not found in metadata repository."
-        raise LookupError(msg)
-
-    def get_input_dataframe(self, name: str) -> pl.DataFrame:
-        df = pl.from_arrow(self.get_input_table(name))
-        if not isinstance(df, pl.DataFrame):
-            msg = f"Expected a polars.DataFrame, got {type(df)}"
-            raise TypeError(msg)
-        return df
-
-    def get_input_table_path(self, name: str) -> Path:
-        """
-        Get data from the repository.
-        """
-        if path := self.registry.lookup_input_path(name):
-            return Path(path)
-        msg = f"Input table '{name}' not found in metadata repository."
-        raise LookupError(msg)
-
-    def put_input_table(self, name: str, data: pa.Table) -> None:
+    def put(self, name: str, table: pa.Table, *, for_ipc: bool = False, for_storage: bool = True) -> None:
         """
         Put data into the repository.
         """
-        path = self.storage.put(name, data)
-        self.registry.register_input(name, path)
+        path = PurePath(name)
+        if path.suffix:
+            msg = f"Name '{name}' cannot have a suffix (extension)."
+            raise ValueError(msg)
+
+        paths = []
+        if not for_ipc and not for_storage:
+            msg = "Cannot store data for neither IPC nor storage."
+            raise ValueError(msg)
+
+        if for_ipc:
+            paths.append(path.with_suffix(".arrow"))
+        if for_storage:
+            paths.append(path.with_suffix(".parquet"))
+
+        for path in paths:
+            self.storage.write(path, table)
+            if (table_info := self.storage.info(path)) is None:
+                msg = f"Table '{name}' not found in registry immediately after store. Something is broken."
+                raise LookupError(msg)
+            self.registry.register(name, path, table_info)
+
+    def exists(self, name: str) -> bool:
+        """
+        Check if a table exists in the repository.
+        """
+        return self.registry.lookup(name, by="name") is not None

@@ -9,7 +9,6 @@ import pyarrow.ipc as pa_ipc
 import pyarrow.parquet as pa_pq
 
 StoragePath: TypeAlias = PurePath
-StorageFormat = Literal["parquet", "ipc"]
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -24,6 +23,7 @@ class StoredTableInfo:
     """
 
     schema: pa.Schema
+    filetype: Literal["parquet", "arrow"]
     rows: int = -1
     size: int = -1
 
@@ -124,10 +124,12 @@ class FileSystemStorage(Storage):
     def info(self, path: StoragePath) -> StoredTableInfo | None:
         match path.suffix:
             case ".parquet":
-                metadata: pa_pq.FileMetaData = pa_pq.read_metadata(str(path), filesystem=self.fs)
+                schema = pa_pq.read_schema(str(path), filesystem=self.fs)
+                metadata = pa_pq.read_metadata(str(path), filesystem=self.fs)
                 file_info = self.fs.get_file_info(str(path))
                 return StoredTableInfo(
-                    schema=metadata.schema,
+                    schema=schema,
+                    filetype="parquet",
                     rows=metadata.num_rows,
                     size=file_info.size,
                 )
@@ -138,6 +140,7 @@ class FileSystemStorage(Storage):
 
                     return StoredTableInfo(
                         schema=table.schema,
+                        filetype="arrow",
                         rows=table.num_rows,
                         size=table.nbytes,
                     )

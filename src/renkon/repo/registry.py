@@ -3,9 +3,9 @@ from __future__ import annotations
 import atexit
 import sqlite3
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePath
 from sqlite3 import Connection as SQLiteConnection
-from typing import Literal, Protocol, TypeAlias
+from typing import Literal, Protocol, TypeAlias, cast
 
 import pyarrow as pa
 
@@ -16,18 +16,23 @@ from renkon.util.common import deserialize_schema, serialize_schema, unreachable
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class RegisteredTableInfo:
+    path: PurePath
     name: str
-    path: str
+    filetype: Literal["parquet", "arrow"]
     schema: pa.Schema
     rows: int
     size: int
 
     @classmethod
     def from_values(cls, values: TableTuple) -> RegisteredTableInfo:
-        _, name, path, schema, rows, size = values
+        path, name, filetype, schema, rows, size = values
+        if filetype not in ("parquet", "arrow"):
+            msg = f"Invalid filetype: {filetype}"
+            raise ValueError(msg)
         return cls(
             name=name,
-            path=path,
+            path=PurePath(path),
+            filetype=cast(Literal["parquet", "arrow"], filetype),  # todo: alias and use type guard instead
             schema=deserialize_schema(schema),
             rows=rows,
             size=size,
@@ -35,16 +40,20 @@ class RegisteredTableInfo:
 
 
 RegistryLookupKey: TypeAlias = Literal["name", "path"]
+RegistrySearchKey: TypeAlias = Literal["name", "path"]
 
 
 class Registry(Protocol):
-    def register(self, name: str, path: str, table_info: StoredTableInfo) -> None:
+    def register(self, name: str, path: PurePath, table_info: StoredTableInfo) -> None:
         ...
 
     def unregister(self, name: str) -> None:
         ...
 
     def lookup(self, key: str, *, by: RegistryLookupKey) -> RegisteredTableInfo | None:
+        ...
+
+    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[RegisteredTableInfo]:
         ...
 
 
@@ -70,14 +79,15 @@ class SQLiteRegistry(Registry):
         if commit:
             self.conn.commit()
 
-    def register(self, name: str, path: str, table_info: StoredTableInfo) -> None:
+    def register(self, name: str, path: PurePath, table_info: StoredTableInfo) -> None:
         """
         Register a table.
         """
         queries.register_table(
             self.conn,
+            path=str(path),
             name=name,
-            path=path,
+            filetype=table_info.filetype,
             schema=serialize_schema(table_info.schema),
             rows=table_info.rows,
             size=table_info.size,
@@ -94,7 +104,9 @@ class SQLiteRegistry(Registry):
         values = None
         match by:
             case "name":
-                values = queries.get_table_by_name(self.conn, name=key)
+                # Prefer parquet to arrow if both exist
+                values = queries.get_table(self.conn, name=key, filetype="parquet")
+                values = values or queries.get_table(self.conn, name=key, filetype="arrow")
             case "path":
                 values = queries.get_table_by_path(self.conn, path=key)
             case _:
