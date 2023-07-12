@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import NoReturn
+from typing import NoReturn, cast
+
+import pyarrow as pa
 
 
 def unreachable() -> NoReturn:
@@ -91,3 +93,17 @@ def pretty_sub(s: str) -> str:
         new = "".join(SUB.get(c, c) for c in match.group(1))
         s = s.replace(old, new)
     return s
+
+
+def serialize_schema(schema: pa.Schema) -> bytes:
+    """
+    Serialize a schema to bytes.
+    """
+    return cast(bytes, schema.serialize().to_pybytes())
+
+
+def deserialize_schema(blob: bytes) -> pa.Schema:
+    """
+    Deserialize a schema from bytes.
+    """
+    return pa.ipc.read_schema(pa.py_buffer(blob))

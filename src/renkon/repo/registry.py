@@ -1,16 +1,48 @@
+from __future__ import annotations
+
 import atexit
 import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
 from typing import Protocol
 
-from pyarrow import fs as pa_fs
+import pyarrow as pa
 
-from renkon.repo.queries import queries
+from renkon.repo.queries import TableTuple, queries
+from renkon.repo.storage import StoredTableInfo
+from renkon.util.common import deserialize_schema, serialize_schema
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class RegisteredTableInfo:
+    name: str
+    path: str
+    schema: pa.Schema
+    rows: int
+    size: int
+
+    @classmethod
+    def from_values(cls, values: TableTuple) -> RegisteredTableInfo:
+        _, name, path, schema, rows, size = values
+        return cls(
+            name=name,
+            path=path,
+            schema=deserialize_schema(schema),
+            rows=rows,
+            size=size,
+        )
 
 
 class Registry(Protocol):
-    pass
+    def register(self, name: str, path: str, table_info: StoredTableInfo) -> None:
+        ...
+
+    def unregister(self, name: str) -> None:
+        ...
+
+    def get_table_by_name(self, name: str) -> RegisteredTableInfo | None:
+        ...
 
 
 class SQLiteRegistry(Registry):
@@ -35,21 +67,30 @@ class SQLiteRegistry(Registry):
         if commit:
             self.conn.commit()
 
-    def register_input(self, name: str, path: str) -> None:
+    def register(self, name: str, path: str, table_info: StoredTableInfo) -> None:
         """
-        Register an input table.
+        Register a table.
         """
-        queries.put_input_table(self.conn, name=name, path=path)
+        queries.register_table(
+            self.conn,
+            name=name,
+            path=path,
+            schema=serialize_schema(table_info.schema),
+            rows=table_info.rows,
+            size=table_info.size,
+        )
         self.conn.commit()
 
-    def list_input_tables(self) -> list[tuple[str, str]]:
+    def unregister(self, name: str) -> None:
         """
-        List all input tables.
+        Unregister a table.
         """
-        return queries.list_input_tables(self.conn)
+        queries.unregister_table(self.conn, name=name)
 
-    def lookup_input_path(self, name: str) -> str | None:
+    def get_table_by_name(self, name: str) -> RegisteredTableInfo | None:
         """
-        Get the path to the data file.
+        Get a table by name.
         """
-        return queries.get_input_table_path(self.conn, name=name)
+        if (values := queries.get_table_by_name(self.conn, name=name)) is None:
+            return None
+        return RegisteredTableInfo.from_values(values)

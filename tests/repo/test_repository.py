@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pytest import MonkeyPatch
+import pytest
 
 from renkon.config import Config
 from renkon.repo.repository import Repository
