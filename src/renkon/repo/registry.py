@@ -11,7 +11,7 @@ import pyarrow as pa
 
 from renkon.repo.queries import TableTuple, queries
 from renkon.repo.storage import StoredTableInfo
-from renkon.util.common import deserialize_schema, serialize_schema, unreachable
+from renkon.util.common import deserialize_schema, serialize_schema
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -43,7 +43,7 @@ RegistryLookupKey: TypeAlias = Literal["name", "path"]
 RegistrySearchKey: TypeAlias = Literal["name", "path"]
 
 
-class Registry(Protocol):
+class Registry(Protocol):  # pragma: no cover
     def register(self, name: str, path: PurePath, table_info: StoredTableInfo) -> None:
         ...
 
@@ -109,8 +109,6 @@ class SQLiteRegistry(Registry):
                 values = values or queries.get_table(self.conn, name=key, filetype="arrow")
             case "path":
                 values = queries.get_table_by_path(self.conn, path=key)
-            case _:
-                unreachable()
 
         if values is None:
             return None

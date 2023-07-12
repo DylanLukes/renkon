@@ -7,7 +7,7 @@ import aiosql.queries
 TableTuple: TypeAlias = tuple[str, str, str, bytes, int, int]
 
 
-class RegistryQueries(Protocol):
+class RegistryQueries(Protocol):  # pragma: no cover
     """
     Protocol for the queries used by the registry. This allows us to define a typed interface
     for the queries supported by the registry, and also to support mocking use of the queries in
