@@ -22,7 +22,7 @@ DEFAULTS: dict[str, dict[str, Any]] = {
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class RepoConfig:
+class RepositoryConfig:
     """
     Renkon repository configuration class.
     """
@@ -46,7 +46,7 @@ class Config:
     Renkon configuration class.
     """
 
-    repository: RepoConfig = field(default_factory=RepoConfig)
+    repository: RepositoryConfig = field(default_factory=RepositoryConfig)
     server: ServerConfig = field(default_factory=ServerConfig)
 
 

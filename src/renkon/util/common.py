@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import NoReturn
+from typing import NoReturn, cast
+
+import pyarrow as pa
 
 
 def unreachable() -> NoReturn:
@@ -20,34 +22,6 @@ SUP = {
     "7": "⁷",
     "8": "⁸",
     "9": "⁹",
-    "a": "ᵃ",
-    "b": "ᵇ",
-    "c": "ᶜ",
-    "d": "ᵈ",
-    "e": "ᵉ",
-    "f": "ᶠ",
-    "g": "ᵍ",
-    "h": "ʰ",
-    "i": "ⁱ",
-    "j": "ʲ",
-    "k": "ᵏ",
-    "l": "ˡ",
-    "m": "ᵐ",
-    "n": "ⁿ",
-    "o": "ᵒ",
-    "p": "ᵖ",
-    "q": "ᵠ",
-    "r": "ʳ",
-    "s": "ˢ",
-    "t": "ᵗ",
-    "u": "ᵘ",
-    "v": "ᵛ",
-    "w": "ʷ",
-    "x": "ˣ",
-    "y": "ʸ",
-    "z": "ᶻ",
-    "(": "⁽",
-    ")": "⁾",
 }
 
 SUB = {
@@ -63,15 +37,15 @@ SUB = {
     "9": "₉",
 }
 
-SUP_RE = re.compile(r"(?:\^|\^{)([0-9a-z()]+)}?")
+SUP_RE = re.compile(r"(?:\^|\^{)([0-9]+)}?")
 SUB_RE = re.compile(r"(?:_|_{)([0-9]+)}?")
 
 
-def pretty_sup(s: str) -> str:
+def pretty_sup(s: str) -> str:  # pragma: no cover
     """
     Format pretty superscripts in a string. For example:
       -  x^2 -> x²
-      - x^{abc} -> xᵃᵇᶜ
+      - x^{123} -> x¹²³
     """
     for match in SUP_RE.finditer(s):
         old = match.group(0)
@@ -80,7 +54,7 @@ def pretty_sup(s: str) -> str:
     return s
 
 
-def pretty_sub(s: str) -> str:
+def pretty_sub(s: str) -> str:  # pragma: no cover
     """
     Format pretty subscripts in a string. For example:
       -  x_2 -> x₂
@@ -91,3 +65,17 @@ def pretty_sub(s: str) -> str:
         new = "".join(SUB.get(c, c) for c in match.group(1))
         s = s.replace(old, new)
     return s
+
+
+def serialize_schema(schema: pa.Schema) -> bytes:
+    """
+    Serialize a schema to bytes.
+    """
+    return cast(bytes, schema.serialize().to_pybytes())
+
+
+def deserialize_schema(blob: bytes) -> pa.Schema:
+    """
+    Deserialize a schema from bytes.
+    """
+    return pa.ipc.read_schema(pa.py_buffer(blob))
