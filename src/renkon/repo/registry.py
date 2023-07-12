@@ -116,3 +116,14 @@ class SQLiteRegistry(Registry):
             return None
 
         return RegisteredTableInfo.from_values(values)
+
+    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[RegisteredTableInfo]:
+        values_list: list[TableTuple] = []
+        match by:
+            case "name":
+                # Prefer parquet to arrow if both exist
+                values_list = queries.search_tables_by_name(self.conn, name=query)
+            case "path":
+                values_list = queries.search_tables_by_path(self.conn, path=query)
+
+        return [RegisteredTableInfo.from_values(values) for values in values_list]

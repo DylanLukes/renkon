@@ -39,10 +39,10 @@ class RegistryQueries(Protocol):
     def list_tables(self, conn: SQLiteConnection) -> TableTuple:
         ...
 
-    def list_tables_matching_path(self, conn: SQLiteConnection, *, path: str) -> TableTuple:
+    def search_tables_by_path(self, conn: SQLiteConnection, *, path: str) -> list[TableTuple]:
         ...
 
-    def list_tables_matching_name(self, conn: SQLiteConnection, *, name: str) -> TableTuple:
+    def search_tables_by_name(self, conn: SQLiteConnection, *, name: str) -> list[TableTuple]:
         ...
 
 

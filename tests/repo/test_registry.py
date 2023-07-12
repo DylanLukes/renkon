@@ -6,9 +6,10 @@ from renkon.repo import Registry
 from renkon.repo.storage import StoredTableInfo
 
 
-def test_register_table(registry: Registry):
+def test_register_table(registry: Registry) -> None:
     store_table_info = StoredTableInfo(
         schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+        filetype="arrow",
         rows=10,
         size=100,  # this is a made up number
     )

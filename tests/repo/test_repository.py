@@ -1,7 +1,7 @@
 import pyarrow as pa
 import pytest
 
-from renkon.repo import Registry, Storage
+from renkon.repo import Registry
 from renkon.repo.repository import Repository
 
 DATA = pa.Table.from_pydict(

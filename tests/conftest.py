@@ -39,7 +39,7 @@ SAMPLES = {
 
 
 @pytest.fixture(autouse=True)
-def change_test_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def change_test_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
 
 
