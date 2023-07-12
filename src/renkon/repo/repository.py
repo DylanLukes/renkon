@@ -35,6 +35,9 @@ class Repository:
         self.registry = registry
         self.storage = storage
 
+    def get(self, name: str) -> pa.Table | None:
+        self.registry.lookup(name)
+
     def get_input_table(self, name: str) -> pa.Table:
         """
         Get data from the repository.

@@ -5,13 +5,13 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
-from typing import Protocol
+from typing import Literal, Protocol, TypeAlias
 
 import pyarrow as pa
 
 from renkon.repo.queries import TableTuple, queries
 from renkon.repo.storage import StoredTableInfo
-from renkon.util.common import deserialize_schema, serialize_schema
+from renkon.util.common import deserialize_schema, serialize_schema, unreachable
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -34,6 +34,9 @@ class RegisteredTableInfo:
         )
 
 
+RegistryLookupKey: TypeAlias = Literal["name", "path"]
+
+
 class Registry(Protocol):
     def register(self, name: str, path: str, table_info: StoredTableInfo) -> None:
         ...
@@ -41,7 +44,7 @@ class Registry(Protocol):
     def unregister(self, name: str) -> None:
         ...
 
-    def get_table_by_name(self, name: str) -> RegisteredTableInfo | None:
+    def lookup(self, key: str, *, by: RegistryLookupKey) -> RegisteredTableInfo | None:
         ...
 
 
@@ -87,10 +90,17 @@ class SQLiteRegistry(Registry):
         """
         queries.unregister_table(self.conn, name=name)
 
-    def get_table_by_name(self, name: str) -> RegisteredTableInfo | None:
-        """
-        Get a table by name.
-        """
-        if (values := queries.get_table_by_name(self.conn, name=name)) is None:
+    def lookup(self, key: str, *, by: RegistryLookupKey) -> RegisteredTableInfo | None:
+        values = None
+        match by:
+            case "name":
+                values = queries.get_table_by_name(self.conn, name=key)
+            case "path":
+                values = queries.get_table_by_path(self.conn, path=key)
+            case _:
+                unreachable()
+
+        if values is None:
             return None
+
         return RegisteredTableInfo.from_values(values)

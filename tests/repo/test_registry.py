@@ -13,7 +13,7 @@ def test_register_table(registry: Registry):
 
     registry.register("df[13]", "cells/13/df.arrow", store_table_info)
 
-    reg_table_info = registry.get_table_by_name("df[13]")
+    reg_table_info = registry.lookup("df[13]", by="name")
     assert reg_table_info is not None
     assert reg_table_info.name == "df[13]"
     assert reg_table_info.path == "cells/13/df.arrow"
@@ -22,4 +22,5 @@ def test_register_table(registry: Registry):
     assert reg_table_info.size == store_table_info.size
 
     registry.unregister("df[13]")
-    assert registry.get_table_by_name("df[13]") is None
+    assert registry.lookup("df[13]", by="name") is None
+    assert registry.lookup("cells/13/df.arrow", by="path") is None
