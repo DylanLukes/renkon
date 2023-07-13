@@ -2,58 +2,32 @@ from __future__ import annotations
 
 import atexit
 import sqlite3
-from dataclasses import dataclass
 from pathlib import Path, PurePath
 from sqlite3 import Connection as SQLiteConnection
-from typing import Literal, Protocol, TypeAlias, cast
+from typing import Literal, Protocol, TypeAlias
 
-import pyarrow as pa
-
-from renkon.repo.queries import TableTuple, queries
-from renkon.repo.storage import StoredTableInfo
-from renkon.util.common import deserialize_schema, serialize_schema
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
-class RegisteredTableInfo:
-    path: PurePath
-    name: str
-    filetype: Literal["parquet", "arrow"]
-    schema: pa.Schema
-    rows: int
-    size: int
-
-    @classmethod
-    def from_values(cls, values: TableTuple) -> RegisteredTableInfo:
-        path, name, filetype, schema, rows, size = values
-        if filetype not in ("parquet", "arrow"):
-            msg = f"Invalid filetype: {filetype}"
-            raise ValueError(msg)
-        return cls(
-            name=name,
-            path=PurePath(path),
-            filetype=cast(Literal["parquet", "arrow"], filetype),  # todo: alias and use type guard instead
-            schema=deserialize_schema(schema),
-            rows=rows,
-            size=size,
-        )
-
+from renkon.repo.info import TableDBTuple, TableInfo, TableStat
+from renkon.repo.queries import queries
+from renkon.util.common import serialize_schema
 
 RegistryLookupKey: TypeAlias = Literal["name", "path"]
 RegistrySearchKey: TypeAlias = Literal["name", "path"]
 
 
 class Registry(Protocol):  # pragma: no cover
-    def register(self, name: str, path: PurePath, table_info: StoredTableInfo) -> None:
+    def register(self, name: str, path: PurePath, table_info: TableStat) -> None:
         ...
 
     def unregister(self, name: str) -> None:
         ...
 
-    def lookup(self, key: str, *, by: RegistryLookupKey) -> RegisteredTableInfo | None:
+    def list_all(self) -> list[TableInfo]:
         ...
 
-    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[RegisteredTableInfo]:
+    def lookup(self, key: str, *, by: RegistryLookupKey) -> TableInfo | None:
+        ...
+
+    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[TableInfo]:
         ...
 
 
@@ -68,6 +42,7 @@ class SQLiteRegistry(Registry):
 
     def __init__(self, path: Path) -> None:
         self.conn = sqlite3.connect(path)
+        self.conn.row_factory = lambda cur, row: TableDBTuple(*row)
         atexit.register(self.conn.close)
         self._create_tables()
 
@@ -79,7 +54,7 @@ class SQLiteRegistry(Registry):
         if commit:
             self.conn.commit()
 
-    def register(self, name: str, path: PurePath, table_info: StoredTableInfo) -> None:
+    def register(self, name: str, path: PurePath, table_info: TableStat) -> None:
         """
         Register a table.
         """
@@ -100,7 +75,14 @@ class SQLiteRegistry(Registry):
         """
         queries.unregister_table(self.conn, name=name)
 
-    def lookup(self, key: str, *, by: RegistryLookupKey) -> RegisteredTableInfo | None:
+    def list_all(self) -> list[TableInfo]:
+        """
+        List all tables.
+        """
+        values_list = queries.list_tables(self.conn)
+        return [TableInfo.from_values(values) for values in values_list]
+
+    def lookup(self, key: str, *, by: RegistryLookupKey) -> TableInfo | None:
         values = None
         match by:
             case "name":
@@ -113,10 +95,10 @@ class SQLiteRegistry(Registry):
         if values is None:
             return None
 
-        return RegisteredTableInfo.from_values(values)
+        return TableInfo.from_values(values)
 
-    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[RegisteredTableInfo]:
-        values_list: list[TableTuple] = []
+    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[TableInfo]:
+        values_list: list[TableDBTuple] = []
         match by:
             case "name":
                 # Prefer parquet to arrow if both exist
@@ -124,4 +106,4 @@ class SQLiteRegistry(Registry):
             case "path":
                 values_list = queries.search_tables_by_path(self.conn, path=query)
 
-        return [RegisteredTableInfo.from_values(values) for values in values_list]
+        return [TableInfo.from_values(values) for values in values_list]
