@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Literal, NamedTuple, TypeAlias, TypeGuard, cast
+from typing import Literal, NamedTuple, TypeAlias, TypeGuard
 
 import pyarrow as pa
 
@@ -23,7 +23,7 @@ class TableDBTuple(NamedTuple):
 
     path: str
     name: str
-    filetype: str
+    filetype: FileType
     schema: bytes
     rows: int
     size: int
@@ -52,17 +52,16 @@ class TableInfo:
         """
         Convert a tuple of values from the database into a TableInfo object.
         """
-        path, name, filetype, schema, rows, size = values
-        if not is_valid_filetype(filetype):
-            msg = f"Invalid filetype: {filetype}"
+        if not is_valid_filetype(values.filetype):
+            msg = f"Invalid filetype: {values.filetype}"
             raise ValueError(msg)
         return cls(
-            name=name,
-            path=PurePath(path),
-            filetype=cast(FileType, filetype),  # type: ignore[redundant-cast]
-            schema=deserialize_schema(schema),
-            rows=rows,
-            size=size,
+            name=values.name,
+            path=PurePath(values.path),
+            filetype=values.filetype,
+            schema=deserialize_schema(values.schema),
+            rows=values.rows,
+            size=values.size,
         )
 
     @classmethod

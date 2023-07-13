@@ -1,20 +1,80 @@
+from collections.abc import Generator
 from typing import Any
 
-import pyarrow.flight as pa_fl
+from loguru import logger
+from pyarrow.flight import (
+    Action,
+    FlightDataStream,
+    FlightDescriptor,
+    FlightEndpoint,
+    FlightInfo,
+    FlightMetadataWriter,
+    FlightServerBase,
+    MetadataRecordBatchReader,
+    RecordBatchStream,
+    ServerCallContext,
+    Ticket,
+)
 
 from renkon.config import ServerConfig
 from renkon.repo import Repository
+from renkon.repo.info import TableInfo
 
 
-class RenkonFlightServer(pa_fl.FlightServerBase):  # type: ignore[misc]
+class RenkonFlightServer(FlightServerBase):  # type: ignore[misc]
+    _location: str
     _repo: Repository
-    config: ServerConfig
+    _config: ServerConfig
 
     def __init__(self, repo: Repository, config: ServerConfig, **kwargs: Any):
-        super().__init__(f"grpc://{config.hostname}:{config.port}", **kwargs)
+        location = f"grpc://{config.hostname}:{config.port}"
+        super().__init__(location, **kwargs)
+        self._location = location
         self._repo = repo
         self._config = config
 
-    def list_flights(self, context: pa_fl.ServerCallContext, criteria: bytes):
-        # tables = self._repo.
-        pass
+    def _make_flight_info(self, table_info: TableInfo) -> FlightInfo:
+        name = table_info.name
+        descriptor = FlightDescriptor.for_path(name.encode("utf-8"))
+        endpoints = [FlightEndpoint(name, [self._location])]
+        return FlightInfo(table_info.schema, descriptor, endpoints, table_info.rows, table_info.size)
+
+    def list_flights(self, context: ServerCallContext, criteria: bytes) -> Generator[FlightInfo, None, None]:
+        for table_info in self._repo.list_info():
+            yield self._make_flight_info(table_info)
+
+    def get_flight_info(self, context: ServerCallContext, descriptor: FlightDescriptor):
+        name = descriptor.path[0].decode("utf-8")
+        table_info = self._repo.get_info(name)
+        return self._make_flight_info(table_info)
+
+    def do_put(
+        self,
+        context: ServerCallContext,
+        descriptor: FlightDescriptor,
+        reader: MetadataRecordBatchReader,
+        writer: FlightMetadataWriter,
+    ) -> None:
+        name = descriptor.path[0].decode("utf-8")
+        table = reader.read_all()
+        self._repo.put(name, table)
+
+    def do_get(
+        self,
+        context: ServerCallContext,
+        ticket: Ticket,
+    ) -> FlightDataStream:
+        name = ticket.ticket.decode("utf-8")
+        table = self._repo.get(name)
+        return RecordBatchStream(table)
+
+    def list_actions(self, context: ServerCallContext) -> list[tuple[str, str]]:
+        return [("dummy", "Dummy action, does nothing.")]
+
+    def do_action(self, context: ServerCallContext, action: Action) -> None:
+        if action.type == "dummy":
+            logger.info("Dummy action received, doing nothing.")
+            pass
+        else:
+            msg = f"Action type {action.type} is not supported."
+            raise NotImplementedError(msg)
