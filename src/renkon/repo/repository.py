@@ -2,6 +2,7 @@ from pathlib import PurePath
 
 import pyarrow as pa
 
+from renkon.repo.info import TableInfo
 from renkon.repo.registry import Registry
 from renkon.repo.storage import Storage
 
@@ -18,20 +19,20 @@ class Repository:
     for a given input or output result.
     """
 
-    registry: Registry
-    storage: Storage
+    _registry: Registry
+    _storage: Storage
 
     def __init__(self, registry: Registry, storage: Storage) -> None:
         """
         Open a repository at the given path.
         """
-        self.registry = registry
-        self.storage = storage
+        self._registry = registry
+        self._storage = storage
 
     def get(self, name: str) -> pa.Table | None:
-        if (table_info := self.registry.lookup(name, by="name")) is None:
+        if (table_info := self._registry.lookup(name, by="name")) is None:
             return None
-        return self.storage.read(table_info.path)
+        return self._storage.read(table_info.path)
 
     def put(self, name: str, table: pa.Table, *, for_ipc: bool = False, for_storage: bool = True) -> None:
         """
@@ -53,14 +54,26 @@ class Repository:
             paths.append(path.with_suffix(".parquet"))
 
         for path in paths:
-            self.storage.write(path, table)
-            if (table_info := self.storage.info(path)) is None:
+            self._storage.write(path, table)
+            if (table_info := self._storage.info(path)) is None:
                 msg = f"Table '{name}' not found in registry immediately after store. Something is broken."
                 raise LookupError(msg)
-            self.registry.register(name, path, table_info)
+            self._registry.register(name, path, table_info)
 
     def exists(self, name: str) -> bool:
         """
         Check if a table exists in the repository.
         """
-        return self.registry.lookup(name, by="name") is not None
+        return self._registry.lookup(name, by="name") is not None
+
+    def get_info(self, name: str) -> TableInfo | None:
+        """
+        Get information about a table in the repository.
+        """
+        return self._registry.lookup(name, by="name")
+
+    def list_info(self) -> list[TableInfo]:
+        """
+        List all tables in the repository.
+        """
+        return self._registry.list_all()

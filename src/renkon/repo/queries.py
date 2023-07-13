@@ -1,10 +1,10 @@
 from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
-from typing import Literal, Protocol, TypeAlias, cast
+from typing import Protocol, cast
 
 import aiosql.queries
 
-TableTuple: TypeAlias = tuple[str, str, str, bytes, int, int]
+from renkon.repo.info import FileType, TableDBTuple
 
 
 class RegistryQueries(Protocol):  # pragma: no cover
@@ -28,21 +28,19 @@ class RegistryQueries(Protocol):  # pragma: no cover
     def unregister_table(self, conn: SQLiteConnection, *, name: str) -> None:
         ...
 
-    def get_table(
-        self, conn: SQLiteConnection, *, name: str, filetype: Literal["parquet"] | Literal["arrow"]
-    ) -> TableTuple:
+    def get_table(self, conn: SQLiteConnection, *, name: str, filetype: FileType) -> TableDBTuple:
         ...
 
-    def get_table_by_path(self, conn: SQLiteConnection, *, path: str) -> TableTuple:
+    def get_table_by_path(self, conn: SQLiteConnection, *, path: str) -> TableDBTuple:
         ...
 
-    def list_tables(self, conn: SQLiteConnection) -> TableTuple:
+    def list_tables(self, conn: SQLiteConnection) -> list[TableDBTuple]:
         ...
 
-    def search_tables_by_path(self, conn: SQLiteConnection, *, path: str) -> list[TableTuple]:
+    def search_tables_by_path(self, conn: SQLiteConnection, *, path: str) -> list[TableDBTuple]:
         ...
 
-    def search_tables_by_name(self, conn: SQLiteConnection, *, name: str) -> list[TableTuple]:
+    def search_tables_by_name(self, conn: SQLiteConnection, *, name: str) -> list[TableDBTuple]:
         ...
 
 

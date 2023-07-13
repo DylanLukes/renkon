@@ -1,31 +1,15 @@
 from abc import abstractmethod
-from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Literal, Protocol, TypeAlias, cast
+from typing import Protocol, TypeAlias, cast
 
 import pyarrow as pa
 import pyarrow.fs as pa_fs
 import pyarrow.ipc as pa_ipc
 import pyarrow.parquet as pa_pq
 
+from renkon.repo.info import TableStat
+
 StoragePath: TypeAlias = PurePath
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
-class StoredTableInfo:
-    """
-    Information record for a table in storage. This may be cheaper
-    to fetch than the entire dataset, and can be used for e.g. listing
-    tables in a repo.
-
-    :field rows: Number of rows in the table, or -1 if unknown.
-    :field size: Size of the serialized table in bytes, or -1 if unknown.
-    """
-
-    schema: pa.Schema
-    filetype: Literal["parquet", "arrow"]
-    rows: int = -1
-    size: int = -1
 
 
 class Storage(Protocol):  # pragma: no cover
@@ -63,7 +47,7 @@ class Storage(Protocol):  # pragma: no cover
         """
         ...
 
-    def info(self, path: StoragePath) -> StoredTableInfo | None:
+    def info(self, path: StoragePath) -> TableStat | None:
         """
         Return a StoredTableInfo with metadata about the given table, such as
         size in bytes, number of records, etc. Useful for flights.
@@ -121,15 +105,16 @@ class FileSystemStorage(Storage):
     def delete(self, path: StoragePath) -> None:
         self.fs.delete_file(str(path))
 
-    def info(self, path: StoragePath) -> StoredTableInfo | None:
+    def info(self, path: StoragePath) -> TableStat | None:
         match path.suffix:
             case ".parquet":
                 schema = pa_pq.read_schema(str(path), filesystem=self.fs)
                 metadata = pa_pq.read_metadata(str(path), filesystem=self.fs)
                 file_info = self.fs.get_file_info(str(path))
-                return StoredTableInfo(
-                    schema=schema,
+                return TableStat(
+                    path=path,
                     filetype="parquet",
+                    schema=schema,
                     rows=metadata.num_rows,
                     size=file_info.size,
                 )
@@ -138,9 +123,10 @@ class FileSystemStorage(Storage):
                     reader = pa_ipc.RecordBatchStreamReader(file)
                     table = reader.read_all()  # todo: ensure this plays well with use_mmap
 
-                    return StoredTableInfo(
-                        schema=table.schema,
+                    return TableStat(
+                        path=path,
                         filetype="arrow",
+                        schema=table.schema,
                         rows=table.num_rows,
                         size=table.nbytes,
                     )

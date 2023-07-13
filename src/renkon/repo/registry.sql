@@ -31,7 +31,7 @@ select * from tables where name = :name and filetype = :filetype;
 -- Get a table by its path.
 select * from tables where path = :path;
 
--- name: list-tables^
+-- name: list-tables
 -- List all of the tables in the database.
 select * from tables;
 

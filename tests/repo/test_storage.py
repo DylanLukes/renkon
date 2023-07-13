@@ -56,6 +56,8 @@ def test_info_parquet(storage: Storage) -> None:
 
     info = storage.info(path)
     assert info is not None
+    assert info.path == path
+    assert info.filetype == "parquet"
     assert info.schema.names == ["a", "b", "c"]
     assert info.rows == TABLE.num_rows
     assert info.size == (Path.cwd() / "data" / path).stat().st_size
