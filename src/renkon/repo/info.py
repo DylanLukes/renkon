@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import sqlite3
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Literal, NamedTuple, TypeAlias, TypeGuard
+from typing import Any, Literal, NamedTuple, Protocol, TypeAlias, TypeGuard, TypeVar
 
 import pyarrow as pa
 
@@ -16,6 +18,20 @@ def is_valid_filetype(value: str) -> TypeGuard[FileType]:
     return value in ("parquet", "arrow")
 
 
+_RowT = TypeVar("_RowT")
+_TupleT = TypeVar("_TupleT", bound=tuple[Any, ...])
+RowFactory: TypeAlias = Callable[[sqlite3.Cursor, _TupleT], _RowT]
+
+
+_T = TypeVar("_T")
+
+
+class SupportsRowFactory(Protocol):
+    @classmethod
+    def row_factory(cls: type[_T], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> _T:
+        ...
+
+
 class TableDBTuple(NamedTuple):
     """
     Tuple type for a table record in the metadata registry (database).
@@ -27,6 +43,10 @@ class TableDBTuple(NamedTuple):
     schema: bytes
     rows: int
     size: int
+
+    @classmethod
+    def row_factory(cls: type[TableDBTuple], _cur: sqlite3.Cursor, row: tuple[Any, ...]) -> TableDBTuple:
+        return cls(*row)
 
 
 """
@@ -48,7 +68,7 @@ class TableInfo:
     size: int
 
     @classmethod
-    def from_values(cls, values: TableDBTuple) -> TableInfo:
+    def from_tuple(cls, values: TableDBTuple) -> TableInfo:
         """
         Convert a tuple of values from the database into a TableInfo object.
         """
