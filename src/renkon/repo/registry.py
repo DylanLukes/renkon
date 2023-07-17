@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import atexit
 import sqlite3
-from collections.abc import Generator
-from contextlib import contextmanager
 from pathlib import Path, PurePath
 from sqlite3 import Connection as SQLiteConnection
 from typing import Literal, Protocol, TypeAlias
 
-from renkon.repo.info import SupportsRowFactory, TableDBTuple, TableInfo, TableStat
+from renkon.repo.info import TableDBTuple, TableInfo, TableStat
 from renkon.repo.queries import queries
 from renkon.util.common import serialize_schema
 
@@ -38,95 +37,73 @@ class SQLiteRegistry(Registry):
     You should generally not need to interact with this class directly.
     """
 
-    db_path: Path | Literal[":memory:"]
+    path: Path
+    conn: SQLiteConnection
 
-    def __init__(self, db_path: Path) -> None:
-        self.db_path = db_path
+    def __init__(self, path: Path) -> None:
+        self.conn = sqlite3.connect(path)
+        self.conn.row_factory = lambda cur, row: TableDBTuple(*row)
+        atexit.register(self.conn.close)
         self._create_tables()
 
-    @contextmanager
-    def _connect(self, *, row_type: type[SupportsRowFactory] | None = None) -> Generator[SQLiteConnection, None, None]:
-        """
-        Get a connection to the metadata repository. This must be used in each method
-        to avoid persisting a connection and risk it being used by multiple threads.
-
-        :param row_type: a type which provides a row_factory method to set on the connection.
-        """
-        try:
-            # note: using a connection object as a context manager implies
-            # that commit will be called if no exception is raised, and rollback
-            # otherwise.
-            with sqlite3.connect(self.db_path) as conn:
-                if row_type is not None:
-                    conn.row_factory = row_type.row_factory
-                yield conn
-        finally:
-            conn.close()
-
-    def _create_tables(self) -> None:
+    def _create_tables(self, *, commit: bool = True) -> None:
         """
         Create tables in the metadata repository.
         """
-        with self._connect() as conn:
-            queries.create_tables(conn)
+        queries.create_tables(self.conn)
+        if commit:
+            self.conn.commit()
 
     def register(self, name: str, path: PurePath, table_info: TableStat) -> None:
         """
         Register a table.
         """
-        with self._connect() as conn:
-            queries.register_table(
-                conn,
-                path=str(path),
-                name=name,
-                filetype=table_info.filetype,
-                schema=serialize_schema(table_info.schema),
-                rows=table_info.rows,
-                size=table_info.size,
-            )
+        queries.register_table(
+            self.conn,
+            path=str(path),
+            name=name,
+            filetype=table_info.filetype,
+            schema=serialize_schema(table_info.schema),
+            rows=table_info.rows,
+            size=table_info.size,
+        )
+        self.conn.commit()
 
     def unregister(self, name: str) -> None:
         """
         Unregister a table.
         """
-        with self._connect() as conn:
-            queries.unregister_table(conn, name=name)
+        queries.unregister_table(self.conn, name=name)
 
     def list_all(self) -> list[TableInfo]:
         """
         List all tables.
         """
-        with self._connect(row_type=TableDBTuple) as conn:
-            row_tuples = queries.list_tables(conn)
-            return [TableInfo.from_tuple(row_tuple) for row_tuple in row_tuples]
+        values_list = queries.list_tables(self.conn)
+        return [TableInfo.from_values(values) for values in values_list]
 
     def lookup(self, key: str, *, by: RegistryLookupKey) -> TableInfo | None:
-        row_tuple = None
+        values = None
+        match by:
+            case "name":
+                # Prefer parquet to arrow if both exist
+                values = queries.get_table(self.conn, name=key, filetype="parquet")
+                values = values or queries.get_table(self.conn, name=key, filetype="arrow")
+            case "path":
+                values = queries.get_table_by_path(self.conn, path=key)
 
-        with self._connect(row_type=TableDBTuple) as conn:
-            match by:
-                case "name":
-                    # Prefer parquet to arrow if both exist.
-                    row_tuple = queries.get_table(conn, name=key, filetype="parquet")
-                    row_tuple = row_tuple or queries.get_table(conn, name=key, filetype="arrow")
-                case "path":
-                    # The string path stored in the database is native (e.g. on Win: "foo/bar" -> "foo\\bar").
-                    native_path = str(Path(key))
-                    row_tuple = queries.get_table_by_path(conn, path=native_path)
-
-        if row_tuple is None:
+        if values is None:
             return None
 
-        return TableInfo.from_tuple(row_tuple)
+        return TableInfo.from_values(values)
 
     def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[TableInfo]:
-        row_tuples: list[TableDBTuple] = []
-        with self._connect(row_type=TableDBTuple) as conn:
-            match by:
-                case "name":
-                    # Prefer parquet to arrow if both exist
-                    row_tuples = queries.search_tables_by_name(conn, name=query)
-                case "path":
-                    row_tuples = queries.search_tables_by_path(conn, path=query)
+        values_list: list[TableDBTuple] = []
+        match by:
+            case "name":
+                # Prefer parquet to arrow if both exist
+                values_list = queries.search_tables_by_name(self.conn, name=query)
+            case "path":
+                values_list = queries.search_tables_by_path(self.conn, path=query)
 
-        return [TableInfo.from_tuple(values) for values in row_tuples]
+        return [TableInfo.from_values(values) for values in values_list]

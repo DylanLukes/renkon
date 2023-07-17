@@ -83,8 +83,7 @@ class FileSystemStorage(Storage):
             case ".arrow":
                 with self.fs.open_input_file(str(path)) as file:
                     reader = pa_ipc.RecordBatchStreamReader(file)
-                    table = reader.read_all()
-                return table
+                    return reader.read_all()
             case _:
                 msg = f"Unknown file extension: {path.suffix}"
                 raise ValueError(msg)
