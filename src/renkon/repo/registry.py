@@ -106,11 +106,13 @@ class SQLiteRegistry(Registry):
         with self._connect(row_type=TableDBTuple) as conn:
             match by:
                 case "name":
-                    # Prefer parquet to arrow if both exist
+                    # Prefer parquet to arrow if both exist.
                     row_tuple = queries.get_table(conn, name=key, filetype="parquet")
                     row_tuple = row_tuple or queries.get_table(conn, name=key, filetype="arrow")
                 case "path":
-                    row_tuple = queries.get_table_by_path(conn, path=key)
+                    # The string path stored in the database is native (e.g. on Win: "foo/bar" -> "foo\\bar").
+                    native_path = str(Path(key))
+                    row_tuple = queries.get_table_by_path(conn, path=native_path)
 
         if row_tuple is None:
             return None
