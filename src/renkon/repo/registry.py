@@ -125,8 +125,8 @@ class SQLiteRegistry(Registry):
             match by:
                 case "name":
                     # Prefer parquet to arrow if both exist
-                    row_tuples = queries.search_tables_by_name(conn, name=query)
+                    row_tuples = list(queries.search_tables_by_name(conn, name=query))
                 case "path":
-                    row_tuples = queries.search_tables_by_path(conn, path=query)
+                    row_tuples = list(queries.search_tables_by_path(conn, path=query))
 
         return [TableInfo.from_tuple(values) for values in row_tuples]

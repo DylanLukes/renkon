@@ -26,7 +26,7 @@ RowFactory: TypeAlias = Callable[[sqlite3.Cursor, _TupleT], _RowT]
 _T = TypeVar("_T")
 
 
-class SupportsRowFactory(Protocol):
+class SupportsRowFactory(Protocol):  # pragma: no cover
     @classmethod
     def row_factory(cls: type[_T], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> _T:
         ...

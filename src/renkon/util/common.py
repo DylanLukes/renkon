@@ -6,7 +6,7 @@ from typing import NoReturn, cast
 import pyarrow as pa
 
 
-def unreachable() -> NoReturn:
+def unreachable() -> NoReturn:  # pragma: no cover
     msg = "unreachable"
     raise AssertionError(msg)
 
