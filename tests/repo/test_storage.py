@@ -1,5 +1,4 @@
 from pathlib import Path, PurePath
-from time import sleep
 
 import pyarrow as pa
 import pytest

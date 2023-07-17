@@ -51,7 +51,7 @@ def test_list_tables(registry: Registry) -> None:
 
     reg_table_infos = registry.list_all()
     assert len(reg_table_infos) == len(named_table_infos)
-    for (name, table_info), reg_info in zip(named_table_infos, reg_table_infos):
+    for (name, table_info), reg_info in zip(named_table_infos, reg_table_infos, strict=True):
         assert reg_info.name == name
         assert reg_info.path == PurePath(f"tables/{name}.{table_info.filetype}")
         assert reg_info.schema == table_info.schema
