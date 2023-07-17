@@ -1,14 +1,19 @@
+import atexit
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import click
 import pyarrow as pa
 import pyarrow.fs as pa_fs
 from loguru import logger
+from pyarrow import csv as pa_csv
+from pyarrow import ipc as pa_ipc
+from pyarrow import parquet as pa_pq
 from rich.logging import RichHandler
 
 from renkon.__about__ import __version__
+from renkon.client import RenkonFlightClient
 from renkon.config import DEFAULTS, load_config
 from renkon.repo import FileSystemStorage, Repository
 from renkon.repo.registry import SQLiteRegistry
@@ -58,7 +63,11 @@ def cli(ctx: click.Context) -> None:
 @click.argument("hostname", type=str, default=DEFAULTS["server"]["hostname"])
 @click.argument("port", type=int, default=DEFAULTS["server"]["port"])
 @click.option(
-    "-d", "--data-dir", type=click.Path(), default=DEFAULTS["repository"]["path"], help="Path for data repository"
+    "-d",
+    "--data-dir",
+    type=click.Path(path_type=Path),
+    default=DEFAULTS["repository"]["path"],
+    help="Path for data repository",
 )
 @click.pass_context
 def server(_ctx: click.Context, hostname: str, port: int, data_dir: Path) -> None:
@@ -95,24 +104,89 @@ def server(_ctx: click.Context, hostname: str, port: int, data_dir: Path) -> Non
     server.serve()
 
 
-@cli.command(context_settings={"show_default": True})
-@click.argument("hostname", type=str)
-@click.argument("port", type=int)
+@cli.group(context_settings={"show_default": True})
+@click.option("--hostname", "-H", type=str, default=DEFAULTS["server"]["hostname"])
+@click.option("--port", "-P", type=int, default=DEFAULTS["server"]["port"])
 @click.pass_context
-def client(_ctx: click.Context, hostname: str, port: int) -> None:
+def client(ctx: click.Context, hostname: str, port: int) -> None:
     # Logging.
     setup_default_logging()
 
     # Start client.
-    # client = FlightClient(location=f"grpc://{hostname}:{port}")
-    # client = RenkonFlightClient(location=f"grpc://{hostname}:{port}")
-    client = pa.flight.connect("grpc://127.0.0.1:1410")
+    client = RenkonFlightClient(location=f"grpc://{hostname}:{port}")
 
     logger.info(f"Connecting to {hostname}:{port}...")
     client.wait_for_available()
     logger.info("Connected!")
-    logger.info(f"Flights: {list(client.list_flights())}")
-    client.close()
+
+    ctx.obj = client
+
+    atexit.register(client.close)
+
+    # logger.info("Uploading test data (cereals-corrupt.csv)...")
+    # table = csv.read_csv("etc/samples/cereals-corrupt.csv",
+    #                      read_options=csv.ReadOptions(skip_rows_after_names=1),
+    #                      parse_options=csv.ParseOptions(delimiter=";"),
+    #                      convert_options=csv.ConvertOptions(auto_dict_encode=True))
+    # client.upload("test", table)
+    #
+    # logger.info("Downloading test data...")
+    # table = client.download("test")
+    # logger.info(pretty_repr(table, expand_all=True))
+    #
+    # client.close()
+
+
+@client.command(context_settings={"show_default": True})
+@click.argument("name", type=str)
+@click.argument("path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
+@click.pass_context
+def put(ctx: click.Context, name: str, path: Path) -> None:
+    client = cast(RenkonFlightClient, ctx.obj)
+
+    table: pa.Table
+    match path.suffix.lower():
+        case ".csv":
+            table = pa_csv.read_csv(path)
+        case ".parquet":
+            table = pa_pq.read_table(path)
+        case ".arrow":
+            table = pa_ipc.open_file(path).read_all()
+        case _:
+            msg = f"Unsupported file type: {path.suffix}"
+            raise ValueError(msg)
+
+    client.upload(name, table)
+    logger.info(f"Uploaded {name}!")
+
+
+@client.command(context_settings={"show_default": True})
+@click.argument("name", type=str)
+@click.argument("path", type=click.Path(path_type=Path, exists=False, dir_okay=False))
+@click.pass_context
+def get(ctx: click.Context, name: str, path: Path) -> None:
+    client = cast(RenkonFlightClient, ctx.obj)
+
+    if path.is_dir():
+        logger.warning(f"Path {path} is a directory, defaulting to {path}/{name}.parquet")
+        path.mkdir(parents=True, exist_ok=True)
+        path = path / f"{name}.parquet"
+
+    try:
+        table = client.download(name)
+        match path.suffix.lower():
+            case ".csv":
+                pa_csv.write_csv(table, path)
+            case ".parquet":
+                pa_pq.write_table(table, path)
+            case ".arrow":
+                pa_ipc.new_file(path, table.schema).write_all(table)
+            case _:
+                msg = f"Unsupported file type: {path.suffix}"
+                raise ValueError(msg)
+        logger.info(f"Downloaded {name} to {path}")
+    except pa.ArrowKeyError:
+        logger.error(f"Dataset {name} does not exist!")
 
 
 if __name__ == "__main__":
