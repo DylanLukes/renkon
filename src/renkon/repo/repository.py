@@ -55,7 +55,7 @@ class Repository:
 
         for path in paths:
             self._storage.write(path, table)
-            if (table_info := self._storage.info(path)) is None:
+            if (table_info := self._storage.info(path)) is None:  # pragma: no cover
                 msg = f"Table '{name}' not found in registry immediately after store. Something is broken."
                 raise LookupError(msg)
             self._registry.register(name, path, table_info)

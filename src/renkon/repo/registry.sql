@@ -35,10 +35,10 @@ select * from tables where path = :path;
 -- List all of the tables in the database.
 select * from tables;
 
--- name: search-tables-by-name^
+-- name: search-tables-by-name
 -- List all of the tables in the database whose name matches the given pattern.
-select * from tables where name like :pattern;
+select * from tables where name like :name;
 
--- name: search-tables-by-path^
+-- name: search-tables-by-path
 -- List all of the tables in the database whose path matches the given pattern.
-select * from tables where path like :pattern;
+select * from tables where path like :path;

@@ -32,11 +32,11 @@ def test_register_table(registry: Registry) -> None:
 
 
 def test_list_tables(registry: Registry) -> None:
-    named_table_infos = [
+    named_table_stats = [
         (
             name,
             TableStat(
-                path=PurePath(f"tables/{i}.{('arrow', 'parquet')[i % 2]}"),
+                path=PurePath(f"tables/{name}.{('arrow', 'parquet')[i % 2]}"),
                 filetype=("arrow", "parquet")[i % 2],
                 schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
                 rows=10,
@@ -46,12 +46,68 @@ def test_list_tables(registry: Registry) -> None:
         for i, name in enumerate(["foo", "bar", "baz", "qux"])
     ]
 
-    for name, table_info in named_table_infos:
-        registry.register(name, PurePath(f"tables/{name}.{table_info.filetype}"), table_info)
+    for name, table_stat in named_table_stats:
+        registry.register(name, table_stat.path, table_stat)
 
     reg_table_infos = registry.list_all()
-    assert len(reg_table_infos) == len(named_table_infos)
-    for (name, table_info), reg_info in zip(named_table_infos, reg_table_infos, strict=True):
+    assert len(reg_table_infos) == len(named_table_stats)
+    for (name, table_info), reg_info in zip(named_table_stats, reg_table_infos, strict=True):
+        assert reg_info.name == name
+        assert reg_info.path == PurePath(f"tables/{name}.{table_info.filetype}")
+        assert reg_info.schema == table_info.schema
+        assert reg_info.rows == table_info.rows
+        assert reg_info.size == table_info.size
+
+
+def test_search_tables_by_name(registry: Registry) -> None:
+    named_table_stats = [
+        (
+            name,
+            TableStat(
+                path=PurePath(f"tables/{name}.parquet"),
+                filetype="parquet",
+                schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+                rows=10,
+                size=100,  # this is a made up number
+            ),
+        )
+        for name in ["foo", "foo-too", "also-foo"]
+    ]
+
+    for name, table_stat in named_table_stats:
+        registry.register(name, table_stat.path, table_stat)
+
+    reg_table_infos = registry.search("%foo%", by="name")
+    assert len(reg_table_infos) == len(named_table_stats)
+    for (name, table_info), reg_info in zip(named_table_stats, reg_table_infos, strict=True):
+        assert reg_info.name == name
+        assert reg_info.path == PurePath(f"tables/{name}.{table_info.filetype}")
+        assert reg_info.schema == table_info.schema
+        assert reg_info.rows == table_info.rows
+        assert reg_info.size == table_info.size
+
+
+def test_search_tables_by_path(registry: Registry) -> None:
+    named_table_stats = [
+        (
+            name,
+            TableStat(
+                path=PurePath(f"tables/{name}.parquet"),
+                filetype="parquet",
+                schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+                rows=10,
+                size=100,  # this is a made up number
+            ),
+        )
+        for name in ["foo", "foo-too", "also-foo"]
+    ]
+
+    for name, table_stat in named_table_stats:
+        registry.register(name, table_stat.path, table_stat)
+
+    reg_table_infos = registry.search("tables/%", by="path")
+    assert len(reg_table_infos) == len(named_table_stats)
+    for (name, table_info), reg_info in zip(named_table_stats, reg_table_infos, strict=True):
         assert reg_info.name == name
         assert reg_info.path == PurePath(f"tables/{name}.{table_info.filetype}")
         assert reg_info.schema == table_info.schema
