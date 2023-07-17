@@ -1,4 +1,5 @@
 from pathlib import Path, PurePath
+from time import sleep
 
 import pyarrow as pa
 import pytest
@@ -30,7 +31,7 @@ def test_write_read_delete_parquet(storage: Storage) -> None:
 
 
 def test_write_read_delete_arrow(storage: Storage) -> None:
-    path = PurePath("foo/bar.arrow")
+    path = PurePath("foo/bar.parquet")
 
     storage.write(path, TABLE)
     assert storage.exists(path)
