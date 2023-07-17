@@ -39,21 +39,24 @@ class RenkonFlightServer(FlightServerBase):  # type: ignore[misc]
         endpoints = [FlightEndpoint(name, [self._location])]
         return FlightInfo(table_info.schema, descriptor, endpoints, table_info.rows, table_info.size)
 
-    def list_flights(self, context: ServerCallContext, criteria: bytes) -> Generator[FlightInfo, None, None]:
+    def list_flights(self, _context: ServerCallContext, _criteria: bytes) -> Generator[FlightInfo, None, None]:
         for table_info in self._repo.list_info():
             yield self._make_flight_info(table_info)
 
-    def get_flight_info(self, context: ServerCallContext, descriptor: FlightDescriptor):
+    def get_flight_info(self, _context: ServerCallContext, descriptor: FlightDescriptor) -> FlightInfo:
         name = descriptor.path[0].decode("utf-8")
         table_info = self._repo.get_info(name)
+        if table_info is None:
+            msg = f"Table {name} not found."
+            raise KeyError(msg)
         return self._make_flight_info(table_info)
 
     def do_put(
         self,
-        context: ServerCallContext,
+        _context: ServerCallContext,
         descriptor: FlightDescriptor,
         reader: MetadataRecordBatchReader,
-        writer: FlightMetadataWriter,
+        _writer: FlightMetadataWriter,
     ) -> None:
         name = descriptor.path[0].decode("utf-8")
         table = reader.read_all()
@@ -61,17 +64,17 @@ class RenkonFlightServer(FlightServerBase):  # type: ignore[misc]
 
     def do_get(
         self,
-        context: ServerCallContext,
+        _context: ServerCallContext,
         ticket: Ticket,
     ) -> FlightDataStream:
         name = ticket.ticket.decode("utf-8")
         table = self._repo.get(name)
         return RecordBatchStream(table)
 
-    def list_actions(self, context: ServerCallContext) -> list[tuple[str, str]]:
+    def list_actions(self, _context: ServerCallContext) -> list[tuple[str, str]]:
         return [("dummy", "Dummy action, does nothing.")]
 
-    def do_action(self, context: ServerCallContext, action: Action) -> None:
+    def do_action(self, _context: ServerCallContext, action: Action) -> None:
         if action.type == "dummy":
             logger.info("Dummy action received, doing nothing.")
             pass

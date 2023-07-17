@@ -3,12 +3,12 @@ from pathlib import Path
 from typing import Any
 
 import click
+import pyarrow as pa
 import pyarrow.fs as pa_fs
 from loguru import logger
 from rich.logging import RichHandler
 
 from renkon.__about__ import __version__
-from renkon.client import RenkonFlightClient
 from renkon.config import DEFAULTS, load_config
 from renkon.repo import FileSystemStorage, Repository
 from renkon.repo.registry import SQLiteRegistry
@@ -105,7 +105,8 @@ def client(_ctx: click.Context, hostname: str, port: int) -> None:
 
     # Start client.
     # client = FlightClient(location=f"grpc://{hostname}:{port}")
-    client = RenkonFlightClient(location=f"grpc://{hostname}:{port}")
+    # client = RenkonFlightClient(location=f"grpc://{hostname}:{port}")
+    client = pa.flight.connect("grpc://127.0.0.1:1410")
 
     logger.info(f"Connecting to {hostname}:{port}...")
     client.wait_for_available()
