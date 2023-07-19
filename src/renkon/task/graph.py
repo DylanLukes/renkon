@@ -87,12 +87,12 @@ class TaskGraph(Generic[_T]):
         tasks_remaining = set(range(len(self.task_dag)))
         all_done = Event()
 
-        logger.info("Scanning dependency tree...")
+        logger.debug("Scanning dependency tree...")
         tasks_next = {}
         for task_id in range(len(self.task_dag)):
             deps = self.task_dag.get_dependencies(task_id)
             tasks_next[task_id] = deps
-            logger.info(f"{task_id} <- {deps}.")
+            logger.debug(f"{task_id} <- {deps}.")
 
         # todo: inject pool (allow for different pool implementations)
         with Pool() as pool:
@@ -115,19 +115,19 @@ class TaskGraph(Generic[_T]):
                     s = tasks_next[next_task_id]
                     s.remove(task_id)
                     if not s:
-                        logger.info(f"All dependencies finished for {next_task_id}.")
+                        logger.debug(f"All dependencies finished for {next_task_id}.")
                         submit(next_task_id)
 
             def on_error(task_id: int, error: Exception) -> None:
                 nonlocal tasks_remaining
 
-                logger.info(f"Task {task_id} failed: {error}")
+                logger.debug(f"Task {task_id} failed: {error}")
                 self.task_id_to_result[task_id] = Err(error)
 
                 # Compute the set of tasks that depend on this one.
                 pruned_tasks = self.task_dag.get_descendants(task_id)
                 pruned_task_names = [self.get_task(task_id).name for task_id in pruned_tasks]
-                logger.info(f"Pruning tasks: {pruned_task_names}")
+                logger.debug(f"Pruning tasks: {pruned_task_names}")
 
                 # Remove the failed task and all of its descendants.
                 tasks_remaining.remove(task_id)
@@ -151,42 +151,3 @@ class TaskGraph(Generic[_T]):
             for task_id in self.task_dag.get_roots():
                 submit(task_id)
             all_done.wait()
-
-
-#
-# def dummy_task(name: str) -> int:
-#     proc = current_process()
-#     logger.info(f"START {name}...")
-#     time.sleep(0.1)
-#     logger.info(f"DONE {name}...")
-#     return proc.pid if proc.pid is not None else 0
-#
-#
-# def fail_task(name: str) -> int:
-#     current_process()
-#     logger.info(f"START {name}...")
-#     msg = "Uh oh, SNAFU!"
-#     raise RuntimeError(msg)
-#
-#
-# if __name__ == "__main__":
-#     g = TaskGraph[int]()
-#
-#     name_to_tid = g.add_tasks(
-#         [
-#             ("Task-0", dummy_task, []),
-#             ("Task-1", dummy_task, ["Task-0"]),
-#             ("Task-2", dummy_task, []),
-#             ("Task-3", dummy_task, ["Task-1", "Task-2"]),
-#             ("Task-4", fail_task, ["Task-3"]),
-#             ("Task-5", dummy_task, ["Task-4"]),
-#             ("Task-6", dummy_task, ["Task-1", "Task-5"]),
-#         ]
-#     )
-#
-#     logger.info("Added tasks:\n" + pformat(name_to_tid))
-#     g.run()
-#
-#     for name in sorted(name_to_tid.keys()):
-#         task_id = name_to_tid[name]
-#         logger.info(f"Task {name} has result {g.get_result(task_id)}.")

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from loguru import logger
 from pyarrow import fs as pa_fs
 
 from renkon.config import Config, load_config
@@ -11,30 +12,10 @@ from renkon.repo.storage import FileSystemStorage
 
 TESTS_DIR = Path(__file__).parent
 
-# SEMICOLON_WITH_TYPE_ROW = {
-#     "parse_options": csv.ParseOptions(delimiter=";"),
-#     "read_options": csv.ReadOptions(skip_rows_after_names=1),
-# }
-#
-# DEFAULT = {
-#     "parse_options": csv.ParseOptions(),
-#     "read_options": csv.ReadOptions(),
-# }
-#
-# """
-# List of sample datasets. Each key corresponds to a CSV file in the
-# `data` directory. Each contains the parse and read options needed
-# to read the file.
-# """
-# SAMPLES = {
-#     "cars": SEMICOLON_WITH_TYPE_ROW,
-#     "cereals": SEMICOLON_WITH_TYPE_ROW,
-#     "cereals-corrupt": SEMICOLON_WITH_TYPE_ROW,
-#     "factbook": SEMICOLON_WITH_TYPE_ROW,
-#     "films": SEMICOLON_WITH_TYPE_ROW,
-#     "gini": DEFAULT,
-#     "smallwikipedia": SEMICOLON_WITH_TYPE_ROW,
-# }
+
+@pytest.fixture(autouse=True, scope="session")
+def reset_loguru() -> None:
+    logger.remove()
 
 
 @pytest.fixture(autouse=True)
