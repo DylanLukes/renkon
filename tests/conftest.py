@@ -1,5 +1,9 @@
 from pathlib import Path
+from typing import cast
 
+import polars as pl
+import pyarrow as pa
+import pyarrow.csv
 import pytest
 from loguru import logger
 from pyarrow import fs as pa_fs
@@ -47,3 +51,19 @@ def storage(config: Config) -> Storage:
 def repo(registry: Registry, storage: Storage) -> Repository:
     repo = Repository(registry=registry, storage=storage)
     return repo
+
+
+@pytest.fixture
+def cereals_df() -> pl.DataFrame:
+    """
+    Cereal nutrition dataset from https://www.kaggle.com/crawford/80-cereals
+    """
+    # Load cereal data from the data directory.
+    path = TESTS_DIR / "data" / "cereals.csv"
+    table = pa.csv.read_csv(
+        path,
+        parse_options=pa.csv.ParseOptions(delimiter=";"),
+        read_options=pa.csv.ReadOptions(skip_rows_after_names=1),
+        convert_options=pa.csv.ConvertOptions(auto_dict_encode=True),
+    )
+    return cast(pl.DataFrame, pl.from_arrow(table))

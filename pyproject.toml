@@ -48,6 +48,7 @@ renkon = "renkon.cli:cli"
 python_version = "3.11"
 strict = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
+enable_incomplete_feature = "TypeVarTuple, Unpack"
 
 [[tool.mypy.overrides]]
 module = [

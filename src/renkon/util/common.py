@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import re
-from typing import NoReturn, cast
+from typing import Any, NoReturn, TypeVar, cast
 
 import pyarrow as pa
 
@@ -11,60 +10,20 @@ def unreachable() -> NoReturn:  # pragma: no cover
     raise AssertionError(msg)
 
 
-SUP = {
-    "0": "⁰",
-    "1": "¹",
-    "2": "²",
-    "3": "³",
-    "4": "⁴",
-    "5": "⁵",
-    "6": "⁶",
-    "7": "⁷",
-    "8": "⁸",
-    "9": "⁹",
-}
-
-SUB = {
-    "0": "₀",
-    "1": "₁",
-    "2": "₂",
-    "3": "₃",
-    "4": "₄",
-    "5": "₅",
-    "6": "₆",
-    "7": "₇",
-    "8": "₈",
-    "9": "₉",
-}
-
-SUP_RE = re.compile(r"(?:\^|\^{)([0-9]+)}?")
-SUB_RE = re.compile(r"(?:_|_{)([0-9]+)}?")
+T = TypeVar("T")
 
 
-def pretty_sup(s: str) -> str:  # pragma: no cover
+def checked_cast(typ: type[T], val: Any) -> T:  # pragma: no cover
     """
-    Format pretty superscripts in a string. For example:
-      -  x^2 -> x²
-      - x^{123} -> x¹²³
+    Cast an object to a type, using MyPy's type checker to ensure the cast is valid,
+    BUT also using a runtime check to ensure the cast is valid. Adds a tiny bit of
+    overhead, but during development helps catch bugs where they are introduced
+    rather than later when some operation using them blows up.
     """
-    for match in SUP_RE.finditer(s):
-        old = match.group(0)
-        new = "".join(SUP.get(c, c) for c in match.group(1))
-        s = s.replace(old, new)
-    return s
-
-
-def pretty_sub(s: str) -> str:  # pragma: no cover
-    """
-    Format pretty subscripts in a string. For example:
-      -  x_2 -> x₂
-      - x_{123} -> x₁₂₃
-    """
-    for match in SUB_RE.finditer(s):
-        old = match.group(0)
-        new = "".join(SUB.get(c, c) for c in match.group(1))
-        s = s.replace(old, new)
-    return s
+    if not isinstance(val, typ):
+        msg = f"expected {typ}, got {type(val)}"
+        raise TypeError(msg)
+    return cast(T, val)  # type: ignore[redundant-cast]
 
 
 def serialize_schema(schema: pa.Schema) -> bytes:

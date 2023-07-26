@@ -5,7 +5,7 @@ from typing import Protocol
 
 from polars import DataFrame, Series
 
-from renkon.core.trait import Trait, TraitSketch, _TraitT
+from renkon.infer.trait import Trait, TraitSketch, _TraitT
 
 
 class InferenceStrategy(Protocol):
