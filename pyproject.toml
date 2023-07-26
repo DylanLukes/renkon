@@ -27,7 +27,9 @@ dependencies = [
     "pyarrow",
     "polars",
     "rich",
-    "toolz"
+    "toolz",
+    "numpy",
+    "scipy",
 ]
 
 [project.urls]
@@ -57,7 +59,8 @@ module = [
     "pyarrow.*",
     "pytest.*",
     "rich.*",
-    "toolz.*"
+    "toolz.*",
+    "scipy.*"
 ]
 ignore_missing_imports = true
 
