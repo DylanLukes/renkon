@@ -39,7 +39,7 @@ class Results(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def score(self, data: pl.DataFrame | None) -> float:
+    def score(self, data: pl.DataFrame | None = None) -> float:
         """
         Score the fit of the model on the given data, or on the training data if
         ``data`` is ``None``.
