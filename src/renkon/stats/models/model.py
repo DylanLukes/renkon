@@ -50,11 +50,25 @@ class Results(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def predict(self, data: pl.DataFrame) -> pl.Series:
+    def predict(self: Results[_ParamsT], data: pl.DataFrame, *, params: _ParamsT | None = None) -> pl.Series:
         """
         Predict the dependent variable for the given data.
 
         Convenience method that calls :meth:`~renkon.models.model.Model.predict`.
+
+        :param data: the data to predict the dependent variable for.
+        :param params: the parameters to use for the prediction, or ``None`` to use the model's parameters.
+        """
+        ...
+
+    @abstractmethod
+    def test_inliers(self, data: pl.DataFrame) -> pl.Series:
+        """
+        Check which rows of the given data are inliers. How this is done is model-specific. For example,
+        a linear regression model might check that the points are within the 95% confidence interval of the
+        regression.
+
+        :return: a boolean series indicating the rows identified as inliers.
         """
         ...
 

@@ -59,3 +59,22 @@ def test_linear_noisy_fit() -> None:
 
     # Expect predicted values to be within 3 standard errors of estimate of the true values.
     np.testing.assert_allclose(y_pred, y_true, atol=3 * se_estimate)
+
+
+def test_linear_outlier_detection() -> None:
+    x = np.arange(0.0, 100.0)
+    y = x
+    df = pl.DataFrame({"x": x, "y": y})
+
+    model = OLSModel("y", ["x"], fit_intercept=True)
+    results = model.fit(df)
+
+    # Produce some data that could not be explained by this model:
+
+    # y = 2x + 100
+    df_outlier = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0], "y": [0.0, 1.0, 2.0, 30.0]})
+
+    expected_inliers = pl.Series("is_inlier", [True, True, True, False])
+    observed_inliers = results.test_inliers(df_outlier)
+
+    pl.testing.assert_series_equal(expected_inliers, observed_inliers)

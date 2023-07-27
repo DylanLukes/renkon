@@ -17,10 +17,10 @@ class OLSParams(Params):
     Represents the parameters of an OLS model.
     """
 
-    m: list[float]
-    c: float
+    m: npt.NDArray[np.float64]
+    c: np.float64
 
-    def __iter__(self) -> Generator[float, None, None]:
+    def __iter__(self) -> Generator[np.float64, None, None]:
         yield from self.m
         yield self.c
 
@@ -68,9 +68,9 @@ class OLSResults(Results[OLSParams]):
             raise ValueError(msg)
 
         # Calculate the number of observations, parameters, and degrees of freedom.
-        self._n = self._x_train.height
+        self._n_train = self._x_train.height
         self._k = len(self.model.x_cols) + int(self.model.fit_intercept)
-        self._dof = self._n - self._k - 1
+        self._dof = self._n_train - self._k - 1
 
         # Calculate the residual sum of squares (RSS), total sum of squares (TSS), and R-squared (R^2)
         # over the _training data_. This is done here so that the values are cached.
@@ -110,20 +110,44 @@ class OLSResults(Results[OLSParams]):
         _, adj_rsq, _, _ = self._rsquared(data[self.model.y_col], data[self.model.x_cols])
         return adj_rsq
 
-    def predict(self, data: pl.DataFrame) -> pl.Series:
+    def predict(self: OLSResults, data: pl.DataFrame, *, params: OLSParams | None = None) -> pl.Series:
         """
         Predict the dependent variable using the given data.
 
         :param data: the data to predict the dependent variable on. Must contain columns named the same as the
         independent variables used to produce these results.
+        :param params: the parameters to use for the prediction. If ``None``, then the parameters used to produce these
+        results are used.
         """
         x_cols = self.model.x_cols
-        m, c = self.params.m, self.params.c
+
+        if params is None:
+            params = self.params
+        m, c = params.m, params.c
         return (
             data[self.model.x_cols]
             .select((pl.sum_horizontal(pl.col(x_cols) * pl.lit(m)) + pl.lit(c)).alias(self.model.y_col))
             .to_series()
         )
+
+    def test_inliers(self, data: pl.DataFrame) -> pl.Series:
+        """
+        :param data: the data to test for outliers.
+        :returns: a boolean series indicating whether each observation lies within the 95% confidence interval.
+        """
+        x_data = data[self.model.x_cols]
+        y_data = data[self.model.y_col]
+
+        ci_lower, ci_upper = self._confidence_interval()
+
+        y_pred_lower = self.predict(x_data, params=ci_lower)
+        y_pred_upper = self.predict(x_data, params=ci_upper)
+
+        # Set a small tolerance value to handle floating-point precision issues with extremely well
+        # correlated data. This is a bit of a hack, but it works.
+        tol = 1e-10
+
+        return ((y_data >= y_pred_lower - tol) & (y_data <= y_pred_upper + tol)).alias("is_inlier")
 
     def _rsquared(self, y_data: pl.Series, x_data: pl.DataFrame) -> tuple[float, float, float, float]:
         """
@@ -133,13 +157,13 @@ class OLSResults(Results[OLSParams]):
         y_true = y_data.to_numpy()
 
         # Calculate the residual sum of squares (RSS) and total sum of squares (TSS).
-        rss = np.sum((y_true - y_pred) ** 2)
-        tss = np.sum((y_true - np.mean(y_true)) ** 2)
+        rss = float(np.sum((y_true - y_pred) ** 2))
+        tss = float(np.sum((y_true - np.mean(y_true)) ** 2))
 
         # Calculate the R-squared and adjusted R-squared.
         n = x_data.height
         k = self._k
-        rsq = 1 - rss / tss
+        rsq = 1.0 - rss / tss
         adj_rsq = 1 - (1 - rsq) * (n - 1) / (n - k - 1)
 
         return rsq, adj_rsq, rss, tss
@@ -162,7 +186,7 @@ class OLSResults(Results[OLSParams]):
         _t = scipy.stats.t.ppf(1 - alpha / 2, dof)
 
         # Extract the standard errors of the estimated parameters from Cov(X).
-        *se_m, se_c = self.bse
+        se_c, se_m = self.bse[0], self.bse[1:]
 
         # Calculate the lower and upper bounds of the confidence interval.
         lower = OLSParams(
@@ -225,4 +249,4 @@ class OLSModel(Model[OLSParams]):
         # Solve y = mx + c
         (c, *m), rss, _, _ = np.linalg.lstsq(x_data, y_data, rcond=None)
 
-        return OLSResults(_x_train=x_data, _y_train=y_data, _model=self, _params=OLSParams(m=m, c=c))
+        return OLSResults(_x_train=x_data, _y_train=y_data, _model=self, _params=OLSParams(m=np.asarray(m), c=c))
