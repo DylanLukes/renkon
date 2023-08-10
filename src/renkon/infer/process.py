@@ -5,41 +5,12 @@ from typing import Any, Protocol, TypeVar
 
 from polars import DataFrame, Series
 
+from renkon.infer.sampling import Sampler
 from renkon.stats.models.model import Model
 
 _ModelT = TypeVar("_ModelT", bound=Model[Any])
 _ModelT_co = TypeVar("_ModelT_co", bound=Model[Any], covariant=True)
 _ModelT_contra = TypeVar("_ModelT_contra", bound=Model[Any], contravariant=True)
-
-
-class SamplingPhase(Protocol):
-    """
-    Represents a minimal-subset sampling phase of a sample consensus process.
-    """
-
-    @abstractmethod
-    def sample(self, height: int) -> Series:
-        """
-        Returns an integer series with values in the range [0, height),
-        indicating the rows which are included in the sample.
-
-        :param height: the height of the data to sample from.
-        """
-        ...
-
-    @abstractmethod
-    def check_sample(self, data: DataFrame, sample: Series) -> bool:
-        """
-        Check whether the given sample is desirable. This can be overriden
-        for specific problems to bail out early if the sample is not desirable.
-
-        By default, this always returns true.
-
-        :param sample: the sample to check, as produced by `sample`.
-        :param data: the data to sample from.
-        :return: whether the given sample should be kept (true) or discarded.
-        """
-        return True
 
 
 class GenerationPhase(Protocol[_ModelT]):
@@ -112,7 +83,7 @@ class RefinementPhase(Protocol[_ModelT]):
 class SampleConsensusProcess(Protocol[_ModelT]):
     @property
     @abstractmethod
-    def sampling_phase(self) -> SamplingPhase:
+    def sampling_phase(self) -> Sampler:
         ...
 
     @property

@@ -8,7 +8,7 @@ import numpy.typing as npt
 import polars as pl
 import scipy
 
-from renkon.stats.models.model import Model, Params, Results
+from renkon.stats.models.model import Model, Params, Results, SupportsPredict
 
 
 @dataclass(kw_only=True)
@@ -26,7 +26,7 @@ class OLSParams(Params):
 
 
 @dataclass(kw_only=True)
-class OLSResults(Results[OLSParams]):
+class OLSResults(Results[OLSParams], SupportsPredict[OLSParams]):
     """
     :param _x_train: the X (independent) data used to generate the model.
     :param _y_train: the Y (dependent) data used to generate the model.

@@ -50,18 +50,6 @@ class Results(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def predict(self: Results[_ParamsT], data: pl.DataFrame, *, params: _ParamsT | None = None) -> pl.Series:
-        """
-        Predict the dependent variable for the given data.
-
-        Convenience method that calls :meth:`~renkon.models.model.Model.predict`.
-
-        :param data: the data to predict the dependent variable for.
-        :param params: the parameters to use for the prediction, or ``None`` to use the model's parameters.
-        """
-        ...
-
-    @abstractmethod
     def test_inliers(self, data: pl.DataFrame) -> pl.Series:
         """
         Check which rows of the given data are inliers. How this is done is model-specific. For example,
@@ -76,6 +64,12 @@ class Results(Protocol[_ParamsT_co]):
 class Model(Protocol[_ParamsT_co]):
     """
     Represents a statistical model, prior to fitting.
+
+    This is a somewhat loose/broad notion of "model" which can include things like
+    a normal distribution, or a linear regression, or a clustering algorithm.
+
+    A linear regression, which can be used to predict a dependent variable from
+    independent variables, would also implement SupportsPredict.
     """
 
     @property
@@ -88,16 +82,32 @@ class Model(Protocol[_ParamsT_co]):
 
     @property
     @abstractmethod
-    def y_col(self) -> str:
+    def y_col(self) -> str | None:
         """
-        :return: the name of the dependent variable column.
+        :return: the name of the dependent variable column, if any.
         """
         ...
 
     @abstractmethod
     def fit(self: Model[_ParamsT], data: pl.DataFrame) -> Results[_ParamsT]:
         """
+        Fit (or more generally "train", "learn") the model on the given data.
+
         :param data: the data to fit the model to.
         :return: the :class:`~renkon.models.model.Results` of fitting the model to the given data.
+        """
+        ...
+
+
+class SupportsPredict(Protocol[_ParamsT_co]):
+    @abstractmethod
+    def predict(self: Results[_ParamsT], data: pl.DataFrame, *, params: _ParamsT | None = None) -> pl.Series:
+        """
+        Predict the dependent variable for the given data.
+
+        Convenience method that calls :meth:`~renkon.models.model.Model.predict`.
+
+        :param data: the data to predict the dependent variable for.
+        :param params: the parameters to use for the prediction, or ``None`` to use the model's parameters.
         """
         ...
