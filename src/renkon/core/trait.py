@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
 from polars import DataFrame, Series
 
 if TYPE_CHECKING:
-    from renkon.infer.strategy import InferenceStrategy
+    from renkon.core.strategy import InferenceStrategy
 
 _TraitT = TypeVar("_TraitT", bound="Trait")
 _PropT = TypeVar("_PropT", bound="PropTrait")

@@ -2,7 +2,7 @@ import numpy as np
 import polars as pl
 from pytest import approx
 
-from renkon.stats.models.normal import NormalModel
+from renkon.stats.normal import NormalModel
 
 
 def test_normal_first_hundred() -> None:

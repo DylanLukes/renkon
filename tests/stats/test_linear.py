@@ -5,7 +5,7 @@ import pytest
 from pytest import approx
 from scipy.stats import t
 
-from renkon.stats.models.linear import OLSModel
+from renkon.stats.linear import OLSModel
 
 
 def test_linear_perfect_fit() -> None:
@@ -20,7 +20,9 @@ def test_linear_perfect_fit() -> None:
     assert results.params.c == approx(0)
     assert results.score(df) == approx(1.0)
 
-    pl.testing.assert_series_equal(results.predict(df[["x"]]), df["y"])
+    y_pred = df.select(model.predict(results.params)).get_column("y")
+
+    pl.testing.assert_series_equal(y_pred, df["y"])
 
 
 @pytest.mark.flaky(reruns=5, rerun_delay=1)
@@ -47,17 +49,13 @@ def test_linear_noisy_fit() -> None:
 
     assert results.params.c == approx(0.0, abs=se_c * t_crit)
     assert results.params.m[0] == approx(1.0, abs=se_m * t_crit)
-    assert results.score() == approx(1.0, rel=0.1)
-
-    y_pred = results.predict(df[["x"]]).to_numpy()
-
-    # Calculate the residuals (y_true - y_pred)
-    residuals = y_true - y_pred
+    assert results.score(df) == approx(1.0, rel=0.1)
 
     # Calculate the standard error of estimate (SE)
-    se_estimate = np.sqrt((residuals**2).sum() / dof)
+    se_estimate = np.sqrt((results.resid**2).sum() / dof)
 
     # Expect predicted values to be within 3 standard errors of estimate of the true values.
+    y_pred = df.select(model.predict(results.params)).get_column("y").to_numpy()
     np.testing.assert_allclose(y_pred, y_true, atol=3 * se_estimate)
 
 

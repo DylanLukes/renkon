@@ -39,24 +39,12 @@ class Results(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def score(self, data: pl.DataFrame | None = None) -> float:
+    def score(self, data: pl.DataFrame) -> float:
         """
-        Score the fit of the model on the given data, or on the training data if
-        ``data`` is ``None``.
+        Score the fit of the model on the given data.
 
         :param data: the data to score the model on, or ``None`` to score on the training data.
         :return: a score in the range [0, 1].
-        """
-        ...
-
-    @abstractmethod
-    def test_inliers(self, data: pl.DataFrame) -> pl.Series:
-        """
-        Check which rows of the given data are inliers. How this is done is model-specific. For example,
-        a linear regression model might check that the points are within the 95% confidence interval of the
-        regression.
-
-        :return: a boolean series indicating the rows identified as inliers.
         """
         ...
 
@@ -98,10 +86,8 @@ class Model(Protocol[_ParamsT_co]):
         """
         ...
 
-
-class SupportsPredict(Protocol[_ParamsT_co]):
     @abstractmethod
-    def predict(self: Results[_ParamsT], data: pl.DataFrame, *, params: _ParamsT | None = None) -> pl.Series:
+    def predict(self: Model[_ParamsT], params: _ParamsT) -> pl.Expr:
         """
         Predict the dependent variable for the given data.
 

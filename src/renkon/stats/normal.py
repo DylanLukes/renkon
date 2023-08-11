@@ -13,8 +13,9 @@ from dataclasses import dataclass
 from typing import cast
 
 import polars as pl
+import scipy
 
-from renkon.stats.models.model import Model, Params, Results
+from renkon.stats.model import Model, Params, Results
 
 
 @dataclass(kw_only=True)
@@ -73,6 +74,7 @@ class NormalModel(Model[NormalParams]):
         x = data[self._x_col]
         mean = pl.mean(x)
         std = cast(float, pl.std(x))
+
         return NormalResults(_model=self, _params=NormalParams(mean=mean, std=std))
 
 
@@ -85,5 +87,5 @@ class RobustNormalModel(NormalModel):
     def fit(self, data: pl.DataFrame) -> NormalResults:
         x = data[self._x_col]
         median = pl.mean(x)
-        mad_adj = pl.median((x - median).abs()) * 1.4826
+        mad_adj = scipy.stats.median_abs_deviation(x, scale="normal")
         return NormalResults(_model=self, _params=NormalParams(mean=median, std=mad_adj))
