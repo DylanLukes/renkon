@@ -3,9 +3,10 @@ from typing import TypeVar
 
 import polars as pl
 
-from renkon.stats.model import Model, Results
+from renkon.stats.base.model import Model, Results
+from renkon.stats.base.params import Params
 
-_ParamsT = TypeVar("_ParamsT", bound="Params")
+_ParamsT = TypeVar("_ParamsT", bound=Params)
 
 
 @dataclass(kw_only=True)
@@ -21,4 +22,4 @@ class RANSACModel(Model[_ParamsT]):
         return self.base_model.y_col
 
     def fit(self: Model[_ParamsT], data: pl.DataFrame) -> Results[_ParamsT]:
-        pass
+        raise NotImplementedError()

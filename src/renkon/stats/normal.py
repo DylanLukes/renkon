@@ -15,7 +15,8 @@ from typing import cast
 import polars as pl
 import scipy
 
-from renkon.stats.model import Model, Params, Results
+from renkon.stats.base.model import Model, Results
+from renkon.stats.base.params import Params
 
 
 @dataclass(kw_only=True)
@@ -49,7 +50,7 @@ class NormalResults(Results[NormalParams]):
     def params(self) -> NormalParams:
         return self._params
 
-    def score(self, data: pl.DataFrame | None = None) -> float:
+    def score(self) -> pl.Expr:
         raise NotImplementedError
 
     def test_inliers(self, data: pl.DataFrame) -> pl.Series:
@@ -67,8 +68,8 @@ class NormalModel(Model[NormalParams]):
         return [self._x_col]
 
     @property
-    def y_col(self) -> None:
-        return None
+    def y_col(self) -> str:
+        raise NotImplementedError
 
     def fit(self, data: pl.DataFrame) -> NormalResults:
         x = data[self._x_col]

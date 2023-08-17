@@ -6,12 +6,12 @@ from dataclasses import dataclass, field
 import numpy as np
 import numpy.typing as npt
 import polars as pl
-import scipy
 
-from renkon.stats.model import Model, Params, Results
+from renkon.stats.base.model import Model, Results
+from renkon.stats.base.params import Params
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class OLSParams(Params):
     """
     Represents the parameters of an OLS model.
@@ -20,9 +20,9 @@ class OLSParams(Params):
     m: npt.NDArray[np.float64]
     c: np.float64
 
-    def __iter__(self) -> Generator[np.float64, None, None]:
-        yield from self.m
-        yield self.c
+    def __iter__(self) -> Generator[float, None, None]:
+        yield from (float(m_i) for m_i in self.m)
+        yield float(self.c)
 
 
 @dataclass(kw_only=True)
@@ -43,13 +43,15 @@ class OLSResults(Results[OLSParams]):
     _bse: npt.NDArray[np.float64] = field(init=False)
 
     def __post_init__(self) -> None:
+        # todo: cached in the wrong place or?...
+        y_col, x_cols = self.model.y_col, self.model.x_cols
+
         # Calculate the number of observations, parameters, and degrees of freedom.
         self._n = self._data.height
-        self._k = len(self.model.x_cols) + int(self.model.fit_intercept)
+        self._k = len(x_cols) + int(self.model.fit_intercept)
         self._dof = self._n - self._k - 1
 
         # Calculate the training data residuals.
-        y_col, x_cols = self.model.y_col, self.model.x_cols
         y_pred = self.model.predict(self.params)
         self._resid = self._data.select(pl.col(y_col) - y_pred).to_series().to_numpy()
 
@@ -61,8 +63,11 @@ class OLSResults(Results[OLSParams]):
         self._bse = np.sqrt(np.diag(self._cov_x))
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"OLSResults(m={list(self.params.m)}, c={self.params.c}, ...)"
+
+    # Implement protocols
+    # -------------------
 
     @property
     def model(self) -> OLSModel:
@@ -72,51 +77,29 @@ class OLSResults(Results[OLSParams]):
     def params(self) -> OLSParams:
         return self._params
 
+    def score(self) -> pl.Expr:
+        return self.rsquared(adjust=True)
+
+    # Linear specific properties
+    # --------------------------
+
     @property
     def resid(self) -> npt.NDArray[np.float64]:
-        """
-        The residuals of the training data.
-        """
+        """The residuals of the training data."""
         return self._resid
 
     @property
     def cov_x(self) -> npt.NDArray[np.float64]:
-        """
-        The covariance matrix of the parameters.
-        """
+        """The covariance matrix of the parameters."""
         return self._cov_x
 
     @property
     def bse(self) -> npt.NDArray[np.float64]:
-        """
-        The standard errors of the parameters.
-        """
+        """The standard errors of the parameters."""
         return self._bse
 
-    def score(self, data: pl.DataFrame | None = None) -> float:
-        """
-        Score the model on the given data. If ``data`` is ``None``, then the score from the training data is returned.
-
-        :param data: the data to score the model on. Must contain columns named the same as the independent _and_
-        dependent variables used to produce these results.
-        """
-        return data.select(self.rsquared()).item()
-
-    def rsquared(self, adjust: bool = True) -> pl.Expr:
-        y_col, x_cols = self.model.y_col, self.model.x_cols
-
-        y_pred = self.model.predict(self.params).alias("y_pred")
-        y_mean = pl.col(y_col).mean().alias("y_mean")
-
-        rss = ((pl.col(y_col) - y_pred) ** 2).sum().alias("rss")
-        tss = ((pl.col(y_col) - y_mean) ** 2).sum().alias("tss")
-        rsq = (1 - rss / tss).alias("rsq")
-
-        if not adjust:
-            return rsq
-
-        adj_rsq = (1 - (1 - rsq) * (self._n - 1) / self._dof).alias("adj_rsq")
-        return adj_rsq
+    def rsquared(self, *, adjust: bool = True) -> pl.Expr:
+        return self.model.rsquared(self.params, adjust=adjust)
 
 
 class OLSModel(Model[OLSParams]):
@@ -140,12 +123,12 @@ class OLSModel(Model[OLSParams]):
         self._fit_intercept = fit_intercept
 
     @property
-    def x_cols(self) -> list[str]:
-        return self._x_cols
-
-    @property
     def y_col(self) -> str:
         return self._y_col
+
+    @property
+    def x_cols(self) -> list[str]:
+        return self._x_cols
 
     @property
     def fit_intercept(self) -> bool:
@@ -171,6 +154,32 @@ class OLSModel(Model[OLSParams]):
         y_col, x_cols = self.y_col, self.x_cols
         m, c = params.m, params.c
         return pl.sum_horizontal(pl.col(x_cols) * pl.lit(m) + pl.lit(c)).alias(y_col)
+
+    def errors(self, params: OLSParams, *, pred_col: str | None = None) -> pl.Expr:
+        pred_expr = pl.col(pred_col) if pred_col else self.predict(params)
+        return pl.col(self.y_col) - pred_expr
+
+    def score(self, params: OLSParams, *, err_col: str | None = None) -> pl.Expr:
+        return self.rsquared(params, err_col=err_col, adjust=True)
+
+    def rsquared(self, params: OLSParams, *, err_col: str | None = None, adjust: bool = True) -> pl.Expr:
+        y_col, x_cols = self.y_col, self.x_cols
+
+        y_pred = pl.col(err_col) if err_col else self.predict(params)
+        y_mean = pl.col(y_col).mean().alias("y_mean")
+
+        rss = ((pl.col(y_col) - y_pred) ** 2).sum().alias("rss")
+        tss = ((pl.col(y_col) - y_mean) ** 2).sum().alias("tss")
+        rsq = (1 - rss / tss).alias("rsq")
+
+        if not adjust:
+            return rsq
+
+        n = pl.count().alias("n")
+        k = len(x_cols) + int(self._fit_intercept)
+        dof = (n - k - 1).alias("dof")
+        adj_rsq = (1 - (1 - rsq) * (n - 1) / dof).alias("adj_rsq")
+        return adj_rsq
 
 
 def linear_fit(*, data: pl.DataFrame, y: str, x: list[str] | str) -> tuple[OLSModel, OLSResults]:

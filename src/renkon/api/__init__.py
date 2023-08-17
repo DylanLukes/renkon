@@ -14,3 +14,4 @@ In this case, `rk.sample` works as an alias for `rk.core.sample`.
 __all__ = ["sample", "stats"]
 
 from renkon.api import sample, stats
+from renkon.util.polars import RenkonPolarsUtils  # noqa: F401

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Generic, Protocol, TypeVar, overload
+from typing import Protocol, TypeVar
 
 import numpy as np
 import polars as pl
@@ -135,37 +135,37 @@ class FractionSampler(_MaskFromIndicesMixin, Sampler):
         return pl.int_range(0, pl.count()).sample(fraction=self.f)
 
 
-@dataclass
-class TrainTestSplit:
-    """A train-test split. Train and test must be disjoint."""
-
-    train: Sampler
-    test: Sampler
-
-
-@overload
-def split(test: Sampler, train: None):
-    pass
-
-
-@overload
-def split(test: None, train: Sampler):
-    pass
-
-
-def split(test: Sampler | None, train: Sampler | None):
-    match (test, train):
-        case (None, None):
-            msg = "At least one of test and train must be specified."
-            raise ValueError(msg)
-        case (test, None):
-            pass
-        case (None, train):
-            pass
-        case (_, _):
-            msg = "At most one of test and train can be specified."
-            raise ValueError(msg)
-
+# @dataclass
+# class TrainTestSplit:
+#     """A train-test split. Train and test must be disjoint."""
+#
+#     train: Sampler
+#     test: Sampler
+#
+#
+# @overload
+# def split(test: Sampler, train: None):
+#     pass
+#
+#
+# @overload
+# def split(test: None, train: Sampler):
+#     pass
+#
+#
+# def split(test: Sampler | None, train: Sampler | None):
+#     match (test, train):
+#         case (None, None):
+#             msg = "At least one of test and train must be specified."
+#             raise ValueError(msg)
+#         case (test, None):
+#             pass
+#         case (None, train):
+#             pass
+#         case (_, _):
+#             msg = "At most one of test and train can be specified."
+#             raise ValueError(msg)
+#
 
 full = FullSampler
 null = NullSampler
