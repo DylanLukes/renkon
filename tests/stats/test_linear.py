@@ -22,7 +22,7 @@ def test_linear_perfect_fit() -> None:
     fit = model.fit(df)
 
     # Test if the fit is correct.
-    m, c = fit.params
+    m, c = fit.params.m, fit.params.c
     assert m == approx(13)
     assert c == approx(37)
 
@@ -60,7 +60,7 @@ def test_linear_noisy_fit() -> None:
     se_c, se_m = fit.bse
 
     # Test if the fit is correct: params within t_crit * se of the true values.
-    m, c = fit.params
+    m, c = fit.params.m, fit.params.c
     assert m == approx(13, abs=se_m * t_crit)
     assert c == approx(37, abs=se_c * t_crit)
 

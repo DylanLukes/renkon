@@ -21,8 +21,8 @@ class OLSParams(Params):
     c: np.float64
 
     def __iter__(self) -> Generator[float, None, None]:
-        yield from (float(m_i) for m_i in self.m)
         yield float(self.c)
+        yield from (float(m_i) for m_i in self.m)
 
 
 @dataclass(kw_only=True)
@@ -152,8 +152,11 @@ class OLSModel(Model[OLSParams]):
 
     def predict(self, params: OLSParams) -> pl.Expr:
         y_col, x_cols = self.y_col, self.x_cols
+
         m, c = params.m, params.c
-        return pl.sum_horizontal(pl.col(x_cols) * pl.lit(m) + pl.lit(c)).alias(y_col)
+        return (
+            pl.sum_horizontal([pl.col(x_col) * m_i for x_col, m_i in zip(x_cols, m, strict=True)]) + params.c
+        ).alias(y_col)
 
     def errors(self, params: OLSParams, *, pred_col: str | None = None) -> pl.Expr:
         pred_expr = pl.col(pred_col) if pred_col else self.predict(params)
