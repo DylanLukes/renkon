@@ -1,4 +1,4 @@
-from renkon.task.result import Err, Ok, Unk
+from renkon.core.task.result import Err, Ok, Unk
 
 
 def test_result_ok() -> None:

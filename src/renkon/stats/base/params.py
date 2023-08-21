@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Any, Protocol
+from typing import Protocol
 
 
 class Params(Protocol):

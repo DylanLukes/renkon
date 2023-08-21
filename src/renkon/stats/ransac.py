@@ -18,7 +18,7 @@ class RANSACModel(Model[_ParamsT]):
         return self.base_model.x_cols
 
     @property
-    def y_col(self) -> str | None:
+    def y_col(self) -> str:
         return self.base_model.y_col
 
     def fit(self: Model[_ParamsT], data: pl.DataFrame) -> Results[_ParamsT]:

@@ -6,8 +6,8 @@ from typing import Generic, TypeAlias, TypeVar
 
 from loguru import logger
 
-from renkon.task.result import Err, Ok, Result, Unk
-from renkon.task.task import Task
+from renkon.core.task.result import Err, Ok, Result, Unk
+from renkon.core.task.task import Task
 from renkon.util.dag import DAG
 
 _T = TypeVar("_T")

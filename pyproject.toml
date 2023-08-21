@@ -30,6 +30,7 @@ dependencies = [
     "toolz",
     "numpy",
     "scipy",
+
 ]
 
 [project.urls]

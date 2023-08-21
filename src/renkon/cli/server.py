@@ -8,8 +8,8 @@ from pyarrow import fs as pa_fs
 from rich.logging import RichHandler
 
 from renkon.config import DEFAULTS, load_config
+from renkon.flight.server import RenkonFlightServer
 from renkon.repo import FileSystemStorage, Repository, SQLiteRegistry
-from renkon.server import RenkonFlightServer
 
 
 def setup_server_logging() -> None:

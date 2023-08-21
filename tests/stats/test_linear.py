@@ -6,7 +6,7 @@ from pytest import approx
 from scipy.stats import t
 
 from renkon.stats.linear import OLSModel
-from renkon.util.polars import RenkonPolarsUtils
+from renkon.util.polars import RenkonPolarsUtils  # noqa: F401
 
 
 def test_linear_perfect_fit() -> None:
@@ -89,6 +89,6 @@ def test_linear_outlier_detection() -> None:
     bad_y = np.random.randint(100, 1000, len(bad_x))
     bad_df = pl.DataFrame({"x": bad_x, "y": bad_y})
 
-    _train_mad = df.select(pl.col("y").rk.mad()).item()
-    _is_inlier = bad_df.select(fit.errors().abs() < _train_mad).to_series()
-    assert not _is_inlier.any()
+    _train_mad = df.select(pl.col("y").rk.mad()).item()  # type: ignore[attr-defined]
+    assert not bad_df.select((fit.errors().abs() < _train_mad).any()).item()
+    assert df.select((fit.errors().abs() < _train_mad).all()).item()

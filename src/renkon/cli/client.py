@@ -13,8 +13,8 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
-from renkon.client import RenkonFlightClient
 from renkon.config import DEFAULTS
+from renkon.flight.client import RenkonFlightClient
 
 
 def setup_client_logging() -> None:

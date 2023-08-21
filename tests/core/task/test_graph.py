@@ -4,8 +4,8 @@ from typing import TypeVar
 import pytest
 from toolz import curry, identity
 
-from renkon.task.graph import TaskGraph
-from renkon.task.result import Err, Ok, Unk
+from renkon.core.task.graph import TaskGraph
+from renkon.core.task.result import Err, Ok, Unk
 
 T = TypeVar("T")
 

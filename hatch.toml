@@ -65,7 +65,7 @@ dependencies = [
     "dacite",
     "polars",
     "numpy",
-    "scipy",
+    "scipy"
 ]
 
 [envs.lint.scripts]
