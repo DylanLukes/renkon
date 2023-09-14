@@ -44,7 +44,7 @@ class RegistryQueries(Protocol):  # pragma: no cover
         ...
 
 
-class Queries(aiosql.queries.Queries, RegistryQueries):  # type: ignore[misc] # pragma: no cover
+class Queries(aiosql.queries.Queries, RegistryQueries):
     """
     Queries for the repository.
 

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import cast
 
 import polars as pl
-import scipy
+import scipy  # type: ignore[import]
 
 from renkon.stats.base.model import Model, Results
 from renkon.stats.base.params import Params

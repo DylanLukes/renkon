@@ -11,13 +11,13 @@ class DAG(Generic[T_]):
     Generic append-only doubly-linked directed acyclic graph implementation.
 
     This is not a general purpose graph, it is specifically designed to
-    be used in the Reactor for job scheduling. Therefore:
+    be used for the TaskGraph. Therefore:
 
       - Adding edges is only allowed together with a new node.
         - Edges cannot be added between existing nodes.
       - Adding edges is only allowed if it does not create a cycle.
       - Removing nodes is not allowed.
-      - Arrows are directed from dependencies to dependents.
+      - Arrows directed from dependencies to dependents.
 
     """
 

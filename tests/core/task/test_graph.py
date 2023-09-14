@@ -1,102 +1,107 @@
-from collections.abc import Callable
-from typing import TypeVar
+from typing import NoReturn, TypeVar
 
 import pytest
-from toolz import curry, identity
 
 from renkon.core.task.graph import TaskGraph
 from renkon.core.task.result import Err, Ok, Unk
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
-def identitwo(x: T, _: object) -> T:
-    """Like identity, but with an extra argument that is ignored."""
-    return x
+def mk_foo() -> str:
+    return "foo"
 
 
-def const(x: T) -> Callable[[object], T]:
-    return curry(identitwo, x)  # type: ignore
+def mk_bar() -> str:
+    return "bar"
 
 
-def fail(_: T) -> T:
+def mk_baz() -> str:
+    return "baz"
+
+
+def mk_qux() -> str:
+    return "qux"
+
+
+def fail(_: _T) -> NoReturn:
     msg = "fail"
     raise RuntimeError(msg)
 
 
 def test_add_task() -> None:
-    g: TaskGraph[int] = TaskGraph()
-    id_a = g.add_task("a", curry(identity, 42), [])
+    g: TaskGraph[str] = TaskGraph()
+    id_a = g.add_task("a", mk_foo, [])
 
     assert g.get_task(id_a).name == "a"
-    assert g.get_task(id_a).func() == 42
+    assert g.get_task(id_a).func() == "foo"
 
 
 def test_add_tasks() -> None:
-    g: TaskGraph[int] = TaskGraph()
+    g: TaskGraph[str] = TaskGraph()
 
     g.add_tasks(
         [
-            ("a", curry(identity, 42), []),
-            ("b", curry(identity, 43), []),
+            ("a", mk_foo, []),
+            ("b", mk_bar, []),
         ]
     )
 
 
 def test_no_duplicate_task_names() -> None:
-    g: TaskGraph[int] = TaskGraph()
-    g.add_task("a", curry(identity, 42), [])
+    g: TaskGraph[str] = TaskGraph()
+    g.add_task("a", mk_foo, [])
 
     with pytest.raises(ValueError):
-        g.add_task("a", curry(identity, 42), [])
+        g.add_task("a", mk_bar, [])
 
 
 def test_run_line() -> None:
-    g: TaskGraph[int] = TaskGraph()
+    g: TaskGraph[str] = TaskGraph()
 
     g.add_tasks(
         [
-            ("a", const(42), []),
-            ("b", const(43), ["a"]),
-            ("c", const(44), ["b"]),
+            ("a", mk_foo, []),
+            ("b", mk_bar, ["a"]),
+            ("c", mk_baz, ["b"]),
         ]
     )
 
     g.run()
 
-    assert g.get_result(g.task_name_to_id["a"]) == Ok(42)
-    assert g.get_result(g.task_name_to_id["b"]) == Ok(43)
-    assert g.get_result(g.task_name_to_id["c"]) == Ok(44)
+    assert g.get_result(g.task_name_to_id["a"]) == Ok("foo")
+    assert g.get_result(g.task_name_to_id["b"]) == Ok("bar")
+    assert g.get_result(g.task_name_to_id["c"]) == Ok("baz")
 
 
 def test_run_diamond() -> None:
-    g: TaskGraph[int] = TaskGraph()
+    g: TaskGraph[str] = TaskGraph()
 
     g.add_tasks(
         [
-            ("a", const(42), []),
-            ("b", const(43), ["a"]),
-            ("c", const(44), ["a"]),
-            ("d", const(45), ["b", "c"]),
+            ("a", mk_foo, []),
+            ("b", mk_bar, ["a"]),
+            ("c", mk_baz, ["a"]),
+            ("d", mk_qux, ["b", "c"]),
         ]
     )
 
     g.run()
 
-    assert g.get_result(g.task_name_to_id["a"]) == Ok(42)
-    assert g.get_result(g.task_name_to_id["b"]) == Ok(43)
-    assert g.get_result(g.task_name_to_id["c"]) == Ok(44)
-    assert g.get_result(g.task_name_to_id["d"]) == Ok(45)
+    assert g.get_result(g.task_name_to_id["a"]) == Ok("foo")
+    assert g.get_result(g.task_name_to_id["b"]) == Ok("bar")
+    assert g.get_result(g.task_name_to_id["c"]) == Ok("baz")
+    assert g.get_result(g.task_name_to_id["d"]) == Ok("qux")
 
 
 def test_run_prune_line() -> None:
-    g: TaskGraph[int] = TaskGraph()
+    g: TaskGraph[str] = TaskGraph()
 
     g.add_tasks(
         [
-            ("a", const(42), []),
+            ("a", mk_foo, []),
             ("b", fail, ["a"]),
-            ("c", const(44), ["b"]),
+            ("c", mk_bar, ["b"]),
         ]
     )
 
@@ -108,17 +113,17 @@ def test_run_prune_line() -> None:
 
 
 def test_run_prune_complex() -> None:
-    g: TaskGraph[int] = TaskGraph()
+    g: TaskGraph[str] = TaskGraph()
 
     g.add_tasks(
         [
-            ("a", const(42), []),
-            ("b", const(43), ["a"]),
-            ("c", const(44), []),
-            ("d", const(45), ["b", "c"]),
+            ("a", mk_foo, []),
+            ("b", mk_bar, ["a"]),
+            ("c", mk_foo, []),
+            ("d", mk_foo, ["b", "c"]),
             ("e", fail, ["d"]),
-            ("f", const(47), ["e"]),
-            ("g", const(48), ["a", "f"]),
+            ("f", mk_foo, ["e"]),
+            ("g", mk_foo, ["a", "f"]),
         ]
     )
 

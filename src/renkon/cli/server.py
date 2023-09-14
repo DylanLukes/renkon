@@ -6,10 +6,15 @@ import click
 from loguru import logger
 from pyarrow import fs as pa_fs
 from rich.logging import RichHandler
+from rich.text import Text
 
 from renkon.config import DEFAULTS, load_config
 from renkon.flight.server import RenkonFlightServer
 from renkon.repo import FileSystemStorage, Repository, SQLiteRegistry
+
+
+def rich_iso_log_time_format(dt: Any) -> Text:
+    return Text(dt.isoformat(sep=" ", timespec="milliseconds"))
 
 
 def setup_server_logging() -> None:
@@ -17,9 +22,7 @@ def setup_server_logging() -> None:
     logger.configure(
         handlers=[
             {
-                "sink": RichHandler(
-                    markup=True, log_time_format=lambda dt: dt.isoformat(sep=" ", timespec="milliseconds")
-                ),
+                "sink": RichHandler(markup=True, log_time_format=rich_iso_log_time_format),
                 "level": os.environ.get("LOG_LEVEL", "INFO"),
                 "format": "{message}",
             }

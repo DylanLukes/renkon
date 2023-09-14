@@ -154,9 +154,7 @@ class OLSModel(Model[OLSParams]):
         y_col, x_cols = self.y_col, self.x_cols
 
         m, c = params.m, params.c
-        return (
-            pl.sum_horizontal([pl.col(x_col) * m_i for x_col, m_i in zip(x_cols, m, strict=True)]) + params.c
-        ).alias(y_col)
+        return (pl.sum_horizontal([pl.col(x_col) * m_i for x_col, m_i in zip(x_cols, m, strict=True)]) + c).alias(y_col)
 
     def errors(self, params: OLSParams, *, pred_col: str | None = None) -> pl.Expr:
         pred_expr = pl.col(pred_col) if pred_col else self.predict(params)

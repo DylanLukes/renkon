@@ -20,17 +20,23 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    "aiosql",
-    "click",
-    "dacite",
-    "loguru",
-    "pyarrow",
-    "polars",
-    "rich",
-    "toolz",
-    "numpy",
-    "scipy",
+    # Data Processing
+    "aiosql", # SQL
+    "pyarrow", # Columnar data
+    "numpy", # Numerical computing
+    "scipy", # Scientific computing
+    "polars", # Data frames
 
+    # Utilities
+    "returns", # Functional programming typing (Maybe, Either, HKTs, etc)
+
+    # Infrastructure
+    "loguru", # Logging
+    "dacite", # Dataclass deserialization
+
+    # Interface
+    "click", # CLI
+    "rich", # Pretty console output
 ]
 
 [project.urls]
@@ -55,13 +61,7 @@ enable_incomplete_feature = "TypeVarTuple, Unpack"
 
 [[tool.mypy.overrides]]
 module = [
-    "aiosql.*",
-    "loguru.*",
-    "pyarrow.*",
-    "pytest.*",
-    "rich.*",
-    "toolz.*",
-    "scipy.*"
+    "pyarrow.*"
 ]
 ignore_missing_imports = true
 
