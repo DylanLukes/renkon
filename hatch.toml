@@ -66,7 +66,7 @@ dependencies = [
 typing = """
     mypy --install-types \
          --non-interactive \
-         --python-executable="$(hatch -q -e default run python -c 'import sys; print(sys.executable)')" \
+         --python-executable=$(hatch -q -e default run python -c 'import sys; print(sys.executable)') \
          {args:.}
 """
 
