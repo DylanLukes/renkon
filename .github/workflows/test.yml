@@ -40,6 +40,7 @@ jobs:
         run: pip install --upgrade hatch
 
       - name: Lint
+        shell: bash  # required
         run: hatch run lint:all
 
       - name: Run tests
