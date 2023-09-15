@@ -40,8 +40,10 @@ jobs:
         run: pip install --upgrade hatch
 
       - name: Lint
-        shell: bash  # required
-        run: hatch run lint:all
+        shell: bash  # required for Windows compatibility
+        run: |
+          mkdir .mypy_cache
+          hatch run lint:all
 
       - name: Run tests
         run: hatch run cov
