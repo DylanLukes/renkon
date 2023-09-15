@@ -63,12 +63,11 @@ dependencies = [
 ]
 
 [envs.lint.scripts]
-typing = """
-    mypy --install-types \
-         --non-interactive \
-         --python-executable="$(hatch -q -e default run python -c 'import sys; print(sys.executable)')" \
-         {args:.}
-"""
+typing = [
+    "hatch -q -e default run python -c 'import sys; print(sys.executable)' > python-exec.tmp",
+    "mypy --install-types --non-interactive --python-executable='$(cat python-exec)' {args:.}",
+    "rm python-exec.tmp",
+]
 
 style = [
     "ruff {args:.}",
