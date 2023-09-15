@@ -5,7 +5,7 @@ from typing import Protocol, TypeVar
 
 import polars as pl
 
-from renkon.stats.base.params import Params
+from renkon.core.stats.base.params import Params
 
 _ParamsT = TypeVar("_ParamsT", bound="Params")
 _ParamsT_co = TypeVar("_ParamsT_co", bound="Params", covariant=True)

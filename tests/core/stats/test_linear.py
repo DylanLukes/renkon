@@ -5,7 +5,7 @@ import pytest
 from pytest import approx
 from scipy.stats import t  # type: ignore[import]
 
-from renkon.stats.linear import OLSModel
+from renkon.core.stats.linear import OLSModel
 from renkon.util.polars import RenkonPolarsUtils  # noqa: F401
 
 

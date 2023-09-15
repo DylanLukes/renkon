@@ -1,8 +1,8 @@
 import pyarrow as pa
 import pytest
 
-from renkon.repo import Registry
-from renkon.repo.repository import Repository
+from renkon.core.repo import Registry
+from renkon.core.repo.repository import Repository
 
 DATA = pa.Table.from_pydict(
     mapping={

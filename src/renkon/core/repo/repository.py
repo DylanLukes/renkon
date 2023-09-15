@@ -2,9 +2,8 @@ from pathlib import PurePath
 
 import pyarrow as pa
 
-from renkon.repo.info import TableInfo
-from renkon.repo.registry import Registry
-from renkon.repo.storage import Storage
+from renkon.core.repo.registry import Registry
+from renkon.core.repo.storage import Storage
 
 
 class Repository:
@@ -55,10 +54,10 @@ class Repository:
 
         for path in paths:
             self._storage.write(path, table)
-            if (table_info := self._storage.info(path)) is None:  # pragma: no cover
+            if (stat := self._storage.stat(path)) is None:  # pragma: no cover
                 msg = f"Table '{name}' not found in registry immediately after store. Something is broken."
                 raise LookupError(msg)
-            self._registry.register(name, path, table_info)
+            self._registry.register(stat.to_entry(name))
 
     def exists(self, name: str) -> bool:
         """
@@ -66,13 +65,13 @@ class Repository:
         """
         return self._registry.lookup(name, by="name") is not None
 
-    def get_info(self, name: str) -> TableInfo | None:
+    def get_info(self, name: str) -> Registry.Entry | None:
         """
         Get information about a table in the repository.
         """
         return self._registry.lookup(name, by="name")
 
-    def list_info(self) -> list[TableInfo]:
+    def list_info(self) -> list[Registry.Entry]:
         """
         List all tables in the repository.
         """

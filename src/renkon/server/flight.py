@@ -17,8 +17,8 @@ from pyarrow.flight import (
 )
 
 from renkon.config import ServerConfig
-from renkon.repo import Repository
-from renkon.repo.info import TableInfo
+from renkon.core.repo import Repository
+from renkon.core.repo.registry.base import Entry
 
 
 class RenkonFlightServer(FlightServerBase):  # type: ignore[misc]
@@ -33,7 +33,7 @@ class RenkonFlightServer(FlightServerBase):  # type: ignore[misc]
         self._repo = repo
         self._config = config
 
-    def _make_flight_info(self, table_info: TableInfo) -> FlightInfo:
+    def _make_flight_info(self, table_info: Entry) -> FlightInfo:
         name = table_info.name
         descriptor = FlightDescriptor.for_path(name.encode("utf-8"))
         endpoints = [FlightEndpoint(name, [self._location])]

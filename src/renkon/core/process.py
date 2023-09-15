@@ -5,8 +5,8 @@ from typing import Any, Protocol, TypeVar
 
 from polars import DataFrame, Series
 
-from renkon.stats.base.model import Model
-from renkon.stats.sampling import Sampler
+from renkon.core.stats.base.model import Model
+from renkon.core.stats.sampling import Sampler
 
 _ModelT = TypeVar("_ModelT", bound=Model[Any])
 _ModelT_co = TypeVar("_ModelT_co", bound=Model[Any], covariant=True)

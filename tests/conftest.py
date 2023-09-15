@@ -9,10 +9,10 @@ from loguru import logger
 from pyarrow import fs as pa_fs
 
 from renkon.config import Config, load_config
-from renkon.repo import Storage
-from renkon.repo.registry import Registry, SQLiteRegistry
-from renkon.repo.repository import Repository
-from renkon.repo.storage import FileSystemStorage
+from renkon.core.repo import SQLiteRegistry, Storage
+from renkon.core.repo.registry import Registry
+from renkon.core.repo.repository import Repository
+from renkon.core.repo.storage import FileSystemStorage
 
 TESTS_DIR = Path(__file__).parent
 
@@ -34,7 +34,7 @@ def config(tmp_path: Path) -> Config:
 
 @pytest.fixture
 def registry(config: Config) -> Registry:
-    path = config.repository.path / "metadata.db"
+    path = config.repository.path / "registry.db"
     return SQLiteRegistry(path)
 
 

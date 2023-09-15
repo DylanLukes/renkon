@@ -8,19 +8,19 @@ from renkon.core.task.result import Err, Ok, Unk
 _T = TypeVar("_T")
 
 
-def mk_foo() -> str:
+def mk_foo(_task_name: str) -> str:
     return "foo"
 
 
-def mk_bar() -> str:
+def mk_bar(_task_name: str) -> str:
     return "bar"
 
 
-def mk_baz() -> str:
+def mk_baz(_task_name: str) -> str:
     return "baz"
 
 
-def mk_qux() -> str:
+def mk_qux(_task_name: str) -> str:
     return "qux"
 
 
@@ -34,7 +34,7 @@ def test_add_task() -> None:
     id_a = g.add_task("a", mk_foo, [])
 
     assert g.get_task(id_a).name == "a"
-    assert g.get_task(id_a).func() == "foo"
+    assert g.get_task(id_a).func == mk_foo
 
 
 def test_add_tasks() -> None:

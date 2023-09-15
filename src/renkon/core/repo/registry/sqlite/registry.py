@@ -1,34 +1,28 @@
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from pathlib import Path, PurePath
+from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
-from typing import Literal, Protocol, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias, TypeVar
 
-from renkon.repo.info import SupportsRowFactory, TableDBTuple, TableInfo, TableStat
-from renkon.repo.queries import queries
-from renkon.util.common import serialize_schema
+from renkon.core.repo.registry import LookupKey, SearchKey
+from renkon.core.repo.registry.base import Registry
+from renkon.core.repo.registry.sqlite import TableRow
+from renkon.core.repo.registry.sqlite.queries import queries
+from renkon.core.repo.util import serialize_schema
 
-RegistryLookupKey: TypeAlias = Literal["name", "path"]
-RegistrySearchKey: TypeAlias = Literal["name", "path"]
+_T = TypeVar("_T")
+_RowT = TypeVar("_RowT")
+_TupleT = TypeVar("_TupleT", bound=tuple[Any, ...])
+
+RowFactory: TypeAlias = Callable[[sqlite3.Cursor, _TupleT], _RowT]
 
 
-class Registry(Protocol):  # pragma: no cover
-    def register(self, name: str, path: PurePath, table_info: TableStat) -> None:
-        ...
-
-    def unregister(self, name: str) -> None:
-        ...
-
-    def list_all(self) -> list[TableInfo]:
-        ...
-
-    def lookup(self, key: str, *, by: RegistryLookupKey) -> TableInfo | None:
-        ...
-
-    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[TableInfo]:
+class SupportsRowFactory(Protocol):
+    @classmethod
+    def row_factory(cls: type[_T], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> _T:
         ...
 
 
@@ -70,19 +64,19 @@ class SQLiteRegistry(Registry):
         with self._connect() as conn:
             queries.create_tables(conn)
 
-    def register(self, name: str, path: PurePath, table_info: TableStat) -> None:
+    def register(self, entry: Registry.Entry) -> None:
         """
         Register a table.
         """
         with self._connect() as conn:
             queries.register_table(
                 conn,
-                path=str(path),
-                name=name,
-                filetype=table_info.filetype,
-                schema=serialize_schema(table_info.schema),
-                rows=table_info.rows,
-                size=table_info.size,
+                path=str(entry.path),
+                name=entry.name,
+                filetype=entry.filetype,
+                schema=serialize_schema(entry.schema),
+                rows=entry.rows,
+                size=entry.size,
             )
 
     def unregister(self, name: str) -> None:
@@ -92,18 +86,18 @@ class SQLiteRegistry(Registry):
         with self._connect() as conn:
             queries.unregister_table(conn, name=name)
 
-    def list_all(self) -> list[TableInfo]:
+    def list_all(self) -> list[Registry.Entry]:
         """
         List all tables.
         """
-        with self._connect(row_type=TableDBTuple) as conn:
+        with self._connect(row_type=TableRow) as conn:
             row_tuples = queries.list_tables(conn)
-            return [TableInfo.from_tuple(row_tuple) for row_tuple in row_tuples]
+            return [row_tuple.to_entry() for row_tuple in row_tuples]
 
-    def lookup(self, key: str, *, by: RegistryLookupKey) -> TableInfo | None:
+    def lookup(self, key: str, *, by: LookupKey) -> Registry.Entry | None:
         row_tuple = None
 
-        with self._connect(row_type=TableDBTuple) as conn:
+        with self._connect(row_type=TableRow) as conn:
             match by:
                 case "name":
                     # Prefer parquet to arrow if both exist.
@@ -117,11 +111,11 @@ class SQLiteRegistry(Registry):
         if row_tuple is None:
             return None
 
-        return TableInfo.from_tuple(row_tuple)
+        return row_tuple.to_entry()
 
-    def search(self, query: str = "*", *, by: RegistrySearchKey) -> list[TableInfo]:
-        row_tuples: list[TableDBTuple] = []
-        with self._connect(row_type=TableDBTuple) as conn:
+    def search(self, query: str = "*", *, by: SearchKey) -> list[Registry.Entry]:
+        row_tuples: list[TableRow] = []
+        with self._connect(row_type=TableRow) as conn:
             match by:
                 case "name":
                     # Prefer parquet to arrow if both exist
@@ -129,4 +123,4 @@ class SQLiteRegistry(Registry):
                 case "path":
                     row_tuples = list(queries.search_tables_by_path(conn, path=query))
 
-        return [TableInfo.from_tuple(values) for values in row_tuples]
+        return [row_tuple.to_entry() for row_tuple in row_tuples]

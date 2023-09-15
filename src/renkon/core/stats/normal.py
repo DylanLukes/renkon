@@ -15,8 +15,8 @@ from typing import cast
 import polars as pl
 import scipy  # type: ignore[import]
 
-from renkon.stats.base.model import Model, Results
-from renkon.stats.base.params import Params
+from renkon.core.stats.base.model import Model, Results
+from renkon.core.stats.base.params import Params
 
 
 @dataclass(kw_only=True)

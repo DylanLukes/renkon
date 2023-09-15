@@ -9,8 +9,8 @@ from rich.logging import RichHandler
 from rich.text import Text
 
 from renkon.config import DEFAULTS, load_config
-from renkon.flight.server import RenkonFlightServer
-from renkon.repo import FileSystemStorage, Repository, SQLiteRegistry
+from renkon.core.repo import FileSystemStorage, Repository, SQLiteRegistry
+from renkon.server.flight import RenkonFlightServer
 
 
 def rich_iso_log_time_format(dt: Any) -> Text:
@@ -65,7 +65,7 @@ def server(_ctx: click.Context, hostname: str, port: int, data_dir: Path) -> Non
     fs = pa_fs.SubTreeFileSystem(str(repo_path / "data"), pa_fs.LocalFileSystem(use_mmap=True))
 
     repository = Repository(
-        registry=SQLiteRegistry(repo_path / "metadata.db"),
+        registry=SQLiteRegistry(repo_path / "registry.db"),
         storage=FileSystemStorage(fs),
     )
 

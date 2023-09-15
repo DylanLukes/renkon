@@ -3,8 +3,8 @@ from typing import TypeVar
 
 import polars as pl
 
-from renkon.stats.base.model import Model, Results
-from renkon.stats.base.params import Params
+from renkon.core.stats.base.model import Model, Results
+from renkon.core.stats.base.params import Params
 
 _ParamsT = TypeVar("_ParamsT", bound=Params)
 
