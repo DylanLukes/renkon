@@ -64,23 +64,23 @@ dependencies = [
 
 [envs.lint.scripts]
 typing = [
-    "hatch -q -e default run python -c 'import sys; print(sys.executable)' > python-exec.tmp",
-    "mypy --install-types --non-interactive --python-executable='$(cat python-exec)' {args:.}",
-    "rm python-exec.tmp",
+    'hatch -q -e default run python -c "import sys; print(sys.executable)" > python-exec.tmp',
+    'mypy --install-types --non-interactive --python-executable="$(cat python-exec)" {args:.}',
+    'rm python-exec.tmp',
 ]
 
 style = [
-    "ruff {args:.}",
-    "black --check --diff {args:.}",
+    'ruff {args:.}',
+    'black --check --diff {args:.}',
 ]
 
 fmt = [
-    "black {args:.}",
-    "ruff --fix {args:.}",
-    "style",
+    'black {args:.}',
+    'ruff --fix {args:.}',
+    'style',
 ]
 
 all = [
-    "style",
-    "typing",
+    'style',
+    'typing',
 ]
