@@ -10,15 +10,15 @@ PACKAGES = {
 }
 
 
-def main():
+def main() -> None:
     project_root = Path(__file__).resolve().parent.parent
     coverage_report = project_root / "coverage.xml"
     root = etree.fromstring(coverage_report.read_text())  # nosec B320  # noqa: S320
 
-    raw_package_data = defaultdict(lambda: {"hits": 0, "misses": 0})
-    for package in root.find("packages"):
-        for module in package.find("classes"):
-            filename = module.attrib["filename"]
+    raw_package_data: defaultdict[str, dict[str, int]] = defaultdict(lambda: {"hits": 0, "misses": 0})
+    for package in root.find("packages") or []:
+        for module in package.find("classes") or []:
+            filename = str(module.attrib["filename"])
             for relative_path, package_name in PACKAGES.items():
                 if filename.startswith(relative_path):
                     data = raw_package_data[package_name]
@@ -27,7 +27,7 @@ def main():
                 message = f"unknown package: {module}"
                 raise ValueError(message)
 
-            for line in module.find("lines"):
+            for line in module.find("lines") or []:
                 if line.attrib["hits"] == "1":
                     data["hits"] += 1
                 else:

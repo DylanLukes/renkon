@@ -5,7 +5,7 @@ from pathlib import Path
 PRECISION = Decimal(".01")
 
 
-def main():
+def main() -> None:
     project_root = Path(__file__).resolve().parent.parent
     coverage_summary = project_root / "coverage-summary.json"
 
