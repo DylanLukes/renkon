@@ -28,8 +28,7 @@ class SupportsRowFactory(Protocol):
 
 class SQLiteRegistry(Registry):
     """
-    Handles all things related to metadata, composed by Repo.
-    You should generally not need to interact with this class directly.
+    SQLite-based implementation of the table registry.
     """
 
     db_path: Path | Literal[":memory:"]

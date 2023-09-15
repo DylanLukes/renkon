@@ -35,8 +35,9 @@ class Storage(Protocol):  # pragma: no cover
         Information about a table in storage, produced by the storage backend
         from the underlying data.
 
-        This contains everything in the registry _except_ the name of the table
-        in the registry entry. See the to_entry method.
+        Contains most of the same information as a Registry.Entry, except the
+        name of the table in the registry, which may not match the name in the
+        storage (on disk, on some remote storage, etc).
 
         :field path: Logical path to the table in storage.
         :field filetype: Filetype of the table, either "parquet" or "arrow".
