@@ -65,7 +65,7 @@ dependencies = [
 [envs.lint.scripts]
 typing = """mypy --install-types \
                  --non-interactive \
-                 --python-executable="$(hatch env find default)/bin/python" \
+                 --python-executable="$(hatch -q -e default run which python)" \
                  {args:.}"""
 style = [
     "ruff {args:.}",
