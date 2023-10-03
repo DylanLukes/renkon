@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
-from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
+from typing import TYPE_CHECKING, Generic, Protocol, TypeVar, runtime_checkable
 
-from polars import DataFrame, Series
+from polars import DataFrame, DataType, PolarsDataType, Series
+from polars.datatypes import DataTypeGroup
 
 if TYPE_CHECKING:
     from renkon.core.strategy import InferenceStrategy
@@ -15,32 +15,17 @@ _PropT = TypeVar("_PropT", bound="PropTrait")
 _StatT = TypeVar("_StatT", bound="StatTrait")
 
 
-class InferenceStrategyKind(Enum):
-    """Enumeration for inference strategies."""
-
-    SIMPLE = 0
-    """Simple inference strategy. Evaluated by simple predicate."""
-
-    RANSAC = 1
-    """RANSAC inference strategy. Valid only for statistical traits."""
-
-    IQR = 2
-    """1.5xIQR inference strategy. Valid only for a weaker prior of normality, more robust for smaller datasets."""
-
-    THREE_SIGMA = 3
-    """Three-sigma inference strategy. Valid only with a strong prior of normality and sufficient data."""
-
-
 @dataclass(eq=True, frozen=True, kw_only=True, slots=True)
 class TraitSketch(Generic[_TraitT]):
     trait_type: type[_TraitT]
-    column_ids: tuple[str, ...]
+    columns: tuple[str, ...]
 
 
+@runtime_checkable
 class Trait(Protocol):
     @classmethod
     @abstractmethod
-    def sketch(cls: type[_TraitT], column_ids: list[str]) -> TraitSketch[_TraitT]:
+    def sketch(cls: type[_TraitT], columns: list[str]) -> TraitSketch[_TraitT]:
         """
         :return: a hashable token that uniquely identifies a sketch given some column IDs.
         """
@@ -75,11 +60,11 @@ class Trait(Protocol):
         """
         ...
 
-    @property
+    @classmethod
     @abstractmethod
-    def data(self) -> DataFrame:
+    def dtypes(cls, arity: int) -> tuple[frozenset[PolarsDataType], ...]:
         """
-        :return: the data this trait was inferred from.
+        :return: the types supported for each position up to the given arity.
         """
         ...
 
@@ -91,19 +76,13 @@ class Trait(Protocol):
         ...
 
 
-class TypeTrait(Trait, ABC):
-    """
-    A trait representing a type, e.g. "x is a string" or "x is a number".
-
-    :note: These are in general not inferred but rather provided by the user or taken from the schema.
-    """
-
-    # note: should there be a test_coercible?
-
-    pass
+class BaseTrait(Trait, ABC):
+    @classmethod
+    def sketch(cls: type[_TraitT], columns: list[str]) -> TraitSketch[_TraitT]:
+        return TraitSketch(trait_type=cls, columns=tuple(columns))
 
 
-class PropTrait(Trait, ABC):
+class PropTrait(BaseTrait, ABC):
     """
     A trait representing a logical proposition, e.g. "x != 0" or "x < y".
     """
@@ -126,22 +105,21 @@ class PropTrait(Trait, ABC):
         raise NotImplementedError
 
 
-class StatTrait(Trait, ABC):
+class StatTrait(BaseTrait, ABC):
     """
     A trait representing a statistical property, e.g. "x is normally distributed" or "x is linearly correlated with y".
     """
 
     @classmethod
-    def fit(cls: type[_StatT], data: DataFrame) -> _StatT | None:
+    @abstractmethod
+    def fit(cls: type[_StatT], data: DataFrame, columns: list[str]) -> _StatT | None:
         """
         Attempts to fit the statistical property to the given data, returning a trait instance if successful, or
         None if sufficient confidence/goodness-of-fit cannot be achieved.
         """
-        raise NotImplementedError
+        ...
 
-    def test(self, data: DataFrame) -> Series:
-        return self.test_inlying(data)
-
+    @abstractmethod
     def test_inlying(self, data: DataFrame) -> Series:
         """
         Tests whether each row of the given data is inlying with respect to the statistical property.
@@ -156,4 +134,7 @@ class StatTrait(Trait, ABC):
 
         :return: boolean series of whether the data is inlying with respect to the statistical property (for each row).
         """
-        raise NotImplementedError
+        ...
+
+    def test(self, data: DataFrame) -> Series:
+        return self.test_inlying(data)

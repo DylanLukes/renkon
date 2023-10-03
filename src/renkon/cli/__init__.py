@@ -2,8 +2,11 @@ import click
 from loguru import logger
 
 from renkon.__about__ import __version__
-from renkon.cli.client import client as client_group
-from renkon.cli.server import server as server_group
+from renkon.cli.simple import simple
+
+# Disabled for now.
+# from renkon.cli.client import client as client_group
+# from renkon.cli.server import server as server_group
 
 
 @click.group(
@@ -13,27 +16,18 @@ from renkon.cli.server import server as server_group
 @click.version_option(version=__version__, prog_name="renkon")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
-    """
-    Starts a renkon server as a subprocess, and then connects a client to it.
-
-    This is intended to be used only by an end-user for inspecting a repository,
-    and is started with the default configuration. For real-world use, please
-    use the server and client subcommands.
-
-    If you must override the configuration, `renkon.toml` is loaded from the current working directory.
-
-    By default, renkon runs on 127.0.0.1:1410, and uses the repository .renkon in the current working directory.
-    """
-    # If there is a subcommand, do nothing.
+    # If there is a subcommand, do nothing (yield to it).
     if ctx.invoked_subcommand:
         return
 
-    # No subcommand behavior.
+    # No subcommand behavior yet.
     logger.critical("not yet implemented!")
 
 
-cli.add_command(client_group)
-cli.add_command(server_group)
+# Disabled for now.
+cli.add_command(simple)
+# cli.add_command(client_group)
+# cli.add_command(server_group)
 
 if __name__ == "__main__":
     cli()

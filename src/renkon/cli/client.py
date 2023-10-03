@@ -23,7 +23,7 @@ def setup_client_logging() -> None:
         handlers=[
             {
                 "sink": RichHandler(markup=True, show_time=False, show_level=True, show_path=False),
-                "level": os.environ.get("LOG_LEVEL", "WARNING"),
+                "level": os.environ.get("LOG_LEVEL", "INFO"),
                 "format": "{message}",
             }
         ]

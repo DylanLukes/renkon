@@ -5,7 +5,7 @@ from typing import Protocol
 
 from polars import DataFrame, Series
 
-from renkon.core.trait import Trait, TraitSketch, _TraitT
+from renkon.core.trait.base import Trait, TraitSketch, _TraitT
 
 
 class InferenceStrategy(Protocol):
@@ -68,15 +68,3 @@ class SimpleInferenceStrategy(InferenceStrategy):
 
     def confidence(self, trait: Trait, data: DataFrame) -> float:
         raise NotImplementedError  # todo: implement
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
-class ThreeSigmaInferenceStrategy(InferenceStrategy):
-    def infer(self, sketch: TraitSketch[_TraitT], data: DataFrame) -> _TraitT:
-        raise NotImplementedError  # todo: implement
-
-    def test(self, trait: Trait, data: DataFrame) -> Series:
-        raise NotImplementedError
-
-    def confidence(self, trait: Trait, data: DataFrame) -> float:
-        raise NotImplementedError
