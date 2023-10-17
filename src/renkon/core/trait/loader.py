@@ -1,11 +1,11 @@
 import importlib
 from typing import TypeGuard
 
-from renkon.core.trait.base import Trait
+from renkon.core.trait.base import Trait, TraitType
 from renkon.errors import NotATraitError, TraitNotFoundError
 
 
-def is_trait_type(cls: type | None) -> TypeGuard[type[Trait]]:
+def is_trait_type(cls: type | None) -> TypeGuard[TraitType]:
     """
     :return: whether the given class is a trait.
     """
@@ -17,19 +17,19 @@ class TraitLoader:
     Utility class for loading traits.
     """
 
-    def load(self, trait_name: str) -> type[Trait]:
+    @staticmethod
+    def load(trait_name: str) -> TraitType:
         package_name, class_name = trait_name.rsplit(".", 1)
-        klass: type[Trait] | None = None
 
         try:
             module = importlib.import_module(package_name)
-            klass = getattr(module, class_name)
+            klass: TraitType = getattr(module, class_name)
+
+            if not is_trait_type(klass):
+                raise NotATraitError(trait_name)
+
+            return klass
         except ImportError as err:
             raise TraitNotFoundError(trait_name) from err
         except AttributeError as err:
             raise TraitNotFoundError(trait_name) from err
-
-        if not is_trait_type(klass):
-            raise NotATraitError(trait_name)
-
-        return klass

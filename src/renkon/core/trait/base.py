@@ -1,23 +1,27 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, TypeAlias, runtime_checkable
 
-from polars import DataFrame, DataType, PolarsDataType, Series
-from polars.datatypes import DataTypeGroup
+from polars import DataFrame, PolarsDataType, Series
 
 if TYPE_CHECKING:
     from renkon.core.strategy import InferenceStrategy
 
-_TraitT = TypeVar("_TraitT", bound="Trait")
-_PropT = TypeVar("_PropT", bound="PropTrait")
-_StatT = TypeVar("_StatT", bound="StatTrait")
+
+# We're going to be typing this a lot, so an alias is useful.
+TraitType: TypeAlias = type["Trait"]
 
 
 @dataclass(eq=True, frozen=True, kw_only=True, slots=True)
-class TraitSketch(Generic[_TraitT]):
-    trait_type: type[_TraitT]
+class TraitSketch:
+    """
+    Represents a sketch of a trait for a given set of columns.
+    """
+
+    trait_type: TraitType
     columns: tuple[str, ...]
 
 
@@ -25,7 +29,7 @@ class TraitSketch(Generic[_TraitT]):
 class Trait(Protocol):
     @classmethod
     @abstractmethod
-    def sketch(cls: type[_TraitT], columns: list[str]) -> TraitSketch[_TraitT]:
+    def sketch(cls, columns: Sequence[str]) -> TraitSketch:
         """
         :return: a hashable token that uniquely identifies a sketch given some column IDs.
         """
@@ -33,7 +37,7 @@ class Trait(Protocol):
 
     @classmethod
     @abstractmethod
-    def inference_strategy(cls, priors: tuple[TraitSketch[Trait], ...]) -> InferenceStrategy:
+    def inference_strategy(cls, priors: tuple[TraitSketch, ...]) -> InferenceStrategy:
         """
         :return: the inference strategy used by this invariant.
 
@@ -78,7 +82,7 @@ class Trait(Protocol):
 
 class BaseTrait(Trait, ABC):
     @classmethod
-    def sketch(cls: type[_TraitT], columns: list[str]) -> TraitSketch[_TraitT]:
+    def sketch(cls, columns: Sequence[str]) -> TraitSketch:
         return TraitSketch(trait_type=cls, columns=tuple(columns))
 
 
@@ -88,21 +92,22 @@ class PropTrait(BaseTrait, ABC):
     """
 
     @classmethod
-    def satisfy(cls: type[_PropT], data: DataFrame) -> _PropT | None:
+    def satisfy(cls, data: DataFrame) -> Trait | None:
         """
         Attempts to find an assignment of variables (model) that satisfies the proposition on the given data,
         returning a trait instance if successful, or None if no such assignment can be found.
         """
-        raise NotImplementedError
+        ...
 
     def test(self, data: DataFrame) -> Series:
         return self.test_satisfied(data)
 
+    @abstractmethod
     def test_satisfied(self, data: DataFrame) -> Series:
         """
         :return: boolean Series of whether the proposition holds on the given data (for each row).
         """
-        raise NotImplementedError
+        ...
 
 
 class StatTrait(BaseTrait, ABC):
@@ -112,29 +117,19 @@ class StatTrait(BaseTrait, ABC):
 
     @classmethod
     @abstractmethod
-    def fit(cls: type[_StatT], data: DataFrame, columns: list[str]) -> _StatT | None:
+    def fit(cls, data: DataFrame, columns: list[str]) -> Trait | None:
         """
         Attempts to fit the statistical property to the given data, returning a trait instance if successful, or
         None if sufficient confidence/goodness-of-fit cannot be achieved.
         """
         ...
 
+    def test(self, data: DataFrame) -> Series:
+        return self.test_inlying(data)
+
     @abstractmethod
     def test_inlying(self, data: DataFrame) -> Series:
         """
-        Tests whether each row of the given data is inlying with respect to the statistical property.
-
-        ----
-
-        *Examples:*
-
-        For a normal distribution, this could be whether the data is within 3 standard deviations of the mean.
-
-        For a linear correlation, this could be whether the data is within a 95% confidence interval.
-
-        :return: boolean series of whether the data is inlying with respect to the statistical property (for each row).
+        :return: boolean Series of whether the given data is inlying (according to some model).
         """
         ...
-
-    def test(self, data: DataFrame) -> Series:
-        return self.test_inlying(data)

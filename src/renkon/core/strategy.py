@@ -5,11 +5,11 @@ from typing import Protocol
 
 from polars import DataFrame, Series
 
-from renkon.core.trait.base import Trait, TraitSketch, _TraitT
+from renkon.core.trait.base import Trait, TraitSketch
 
 
 class InferenceStrategy(Protocol):
-    def infer(self, sketch: TraitSketch[_TraitT], data: DataFrame) -> _TraitT:
+    def infer(self, sketch: TraitSketch, data: DataFrame) -> Trait:
         """
         :return: an invariant inferred from the given data.
         """
@@ -39,7 +39,7 @@ class RANSACInferenceStrategy(InferenceStrategy):
     min_inlier_ratio: float = 0.90
     min_confidence: float = 0.90
 
-    def infer(self, sketch: TraitSketch[_TraitT], data: DataFrame) -> _TraitT:
+    def infer(self, sketch: TraitSketch, data: DataFrame) -> Trait:
         raise NotImplementedError  # todo: implement
 
     def test(self, trait: Trait, data: DataFrame) -> Series:
@@ -60,7 +60,7 @@ class SimpleInferenceStrategy(InferenceStrategy):
 
     sample_ratio: float = 1.0
 
-    def infer(self, sketch: TraitSketch[_TraitT], data: DataFrame) -> _TraitT:
+    def infer(self, sketch: TraitSketch, data: DataFrame) -> Trait:
         raise NotImplementedError  # todo: implement
 
     def test(self, trait: Trait, data: DataFrame) -> Series:

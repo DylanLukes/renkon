@@ -15,8 +15,7 @@ import polars as pl
 from loguru import logger
 from rich.logging import RichHandler
 
-from renkon.core.engine import SimpleEngine
-from renkon.core.trait.base import Trait
+from renkon.core.trait.base import TraitType
 from renkon.core.trait.loader import TraitLoader
 from renkon.errors import TraitLoaderError
 
@@ -45,8 +44,8 @@ def simple(ctx: click.Context, trait_name: str, data_path: Path, columns: list[s
 
     # 1. Instantiate en engine.
     loader = TraitLoader()
-    _engine = SimpleEngine()
-    trait_class: type[Trait] | None = None
+    # _engine = SimpleEngine() todo
+    trait_type: TraitType | None = None
 
     # 2. Handle default package case.
     if "." not in trait_name:
@@ -54,14 +53,14 @@ def simple(ctx: click.Context, trait_name: str, data_path: Path, columns: list[s
 
     # 3. Locate the trait and ensure it exists.
     try:
-        trait_class = loader.load(trait_name)
+        trait_type = loader.load(trait_name)
     except TraitLoaderError as err:
         msg = f"Trait '{trait_name}' not found."
         raise click.BadParameter(msg) from err
     logger.info(f"Loaded trait '{trait_name}'")
 
     # 4 Sketch the trait.
-    sketch = trait_class.sketch(columns)
+    sketch = trait_type.sketch(columns)
     logger.info(f"Sketched trait: {sketch}")
 
     # 5. Try to load the data.
@@ -69,7 +68,7 @@ def simple(ctx: click.Context, trait_name: str, data_path: Path, columns: list[s
     logger.info(f"Loaded data:\n{data}")
 
     # 6 Ensure that the columns exist and are of acceptable types.
-    for col, valid_dtypes in zip(columns, trait_class.dtypes(len(columns)), strict=True):
+    for col, valid_dtypes in zip(columns, trait_type.dtypes(len(columns)), strict=True):
         if col not in data.columns:
             msg = f"Column '{col}' not found in data."
             raise RuntimeError(msg)
