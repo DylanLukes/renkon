@@ -1,13 +1,10 @@
 """
 Filesystem based implementation of Storage.
 """
+from pathlib import Path
 
-from typing import cast
-
-import pyarrow as pa
-from pyarrow import fs as pa_fs
-from pyarrow import ipc as pa_ipc
-from pyarrow import parquet as pa_pq
+import polars as pl
+from polars import DataFrame
 
 from renkon.core.repo.storage.base import Storage, StoragePath
 
@@ -22,70 +19,67 @@ class FileSystemStorage(Storage):
     and the OS optimizes for this).
     """
 
-    fs: pa_fs.FileSystem
+    root: Path
 
-    def __init__(self, fs: pa_fs.FileSystem) -> None:
-        self.fs = fs
+    def __init__(self, root: Path) -> None:
+        self.root = root
 
-    def read(self, path: StoragePath) -> pa.Table | None:
+    def read(self, path: StoragePath) -> DataFrame | None:
         match path.suffix:
             case ".parquet":
-                return pa_pq.read_table(str(path), filesystem=self.fs)
+                return pl.read_parquet(self.root / path)
             case ".arrow":
-                with self.fs.open_input_file(str(path)) as file:
-                    reader = pa_ipc.RecordBatchStreamReader(file)
-                    table = reader.read_all()
-                return table
+                return pl.read_ipc(self.root / path)
             case _:
                 msg = f"Unknown file extension: {path.suffix}"
                 raise ValueError(msg)
 
-    def write(self, path: StoragePath, table: pa.Table) -> None:
-        self.fs.create_dir(str(path.parent), recursive=True)
+    def write(self, path: StoragePath, table: DataFrame) -> None:
+        (self.root / path).mkdir(parents=True, exist_ok=True)
+
         match path.suffix:
             case ".parquet":
-                pa_pq.write_table(table, str(path), filesystem=self.fs)
+                table.write_parquet(self.root / path)
             case ".arrow":
-                with self.fs.open_output_stream(str(path)) as stream:
-                    writer = pa_ipc.RecordBatchStreamWriter(stream, table.schema)
-                    writer.write(table)
-                    writer.close()
+                table.write_ipc(self.root / path)
             case _:
                 msg = f"Unknown file extension: {path.suffix}"
                 raise ValueError(msg)
 
     def delete(self, path: StoragePath) -> None:
-        self.fs.delete_file(str(path))
+        (self.root / path).unlink()
 
     def stat(self, path: StoragePath) -> Storage.Stat | None:
+        full_path = self.root / path
+
         match path.suffix:
             case ".parquet":
-                schema = pa_pq.read_schema(str(path), filesystem=self.fs)
-                metadata = pa_pq.read_metadata(str(path), filesystem=self.fs)
-                file_info = self.fs.get_file_info(str(path))
+                schema = pl.read_parquet_schema(full_path)
+                row_count = pl.scan_parquet(full_path).select(pl.count()).collect().item()
+                file_size = full_path.stat().st_size
+
                 return Storage.Stat(
                     path=path,
                     filetype="parquet",
                     schema=schema,
-                    rows=metadata.num_rows,
-                    size=file_info.size,
+                    rows=row_count,
+                    size=file_size,
                 )
             case ".arrow":
-                with self.fs.open_input_file(str(path)) as file:
-                    reader = pa_ipc.RecordBatchStreamReader(file)
-                    table = reader.read_all()  # todo: ensure this plays well with use_mmap
+                schema = pl.read_ipc_schema(full_path)
+                row_count = pl.scan_ipc(full_path).select(pl.count()).collect().item()
+                file_size = full_path.stat().st_size
 
-                    return Storage.Stat(
-                        path=path,
-                        filetype="arrow",
-                        schema=table.schema,
-                        rows=table.num_rows,
-                        size=table.nbytes,
-                    )
+                return Storage.Stat(
+                    path=path,
+                    filetype="arrow",
+                    schema=schema,
+                    rows=row_count,
+                    size=file_size,
+                )
             case _:
                 msg = f"Unknown file extension: {path.suffix}"
                 raise ValueError(msg)
 
     def exists(self, path: StoragePath) -> bool:
-        file_info: pa_fs.FileInfo = self.fs.get_file_info(str(path))
-        return cast(bool, file_info.is_file)
+        return (path := self.root / path).exists() and path.is_file()

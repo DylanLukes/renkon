@@ -32,7 +32,7 @@ full = "_cov -n auto --reruns 5 --reruns-delay 3 -r aR {args:tests}"
 # -----------------------
 
 [[envs.test.matrix]]
-python = ["3.11"]
+python = ["3.12"]
 
 # Coverage Environemnt
 # --------------------
@@ -57,16 +57,21 @@ write-summary-report = "python scripts/write_coverage_summary_report.py"
 [envs.lint]
 detached = true
 dependencies = [
-    "black>=23.1.0",
-    "mypy>=1.0.0",
-    "ruff>=0.0.243",
+    "black>=23.10.0",
+    "mypy>=1.6.1",
+    "ruff>=0.1.0",
+    "pyright>=1.1.132"
 ]
 
 [envs.lint.scripts]
-typing = """mypy --install-types --non-interactive \
+python-path = 'hatch -q -e default run python -c "import sys; print(sys.executable)"'
+typing-mypy = """
+    mypy --install-types --non-interactive \
          --python-executable=$(hatch -q -e default run python -c "import sys; print(sys.executable)") \
          {args:.}
 """
+typing-pyright = "pyright {args:.}"
+typing = ['typing-pyright']
 
 style = [
     'ruff {args:.}',

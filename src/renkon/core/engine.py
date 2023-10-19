@@ -7,7 +7,7 @@ from polars import DataFrame
 from renkon.core.trait.base import Trait, TraitType
 
 
-class Engine(Protocol):
+class InferenceEngine(Protocol):
     """
     Core inference engine (protocol) for Renkon.
     """
@@ -30,14 +30,15 @@ class Engine(Protocol):
         ...
 
 
-class SimpleEngine(Engine):
+class BatchInferenceEngine(InferenceEngine):
     """
-    Simple inference engine for Renkon. Does not support any advanced features such as:
+    Simple batch inference engine for Renkon. Does not support any advanced features such as:
       - Task graphs.
       - Dependent inference.
       - Multi-processing.
 
-    Appropriate for small-scale inference, or for testing.
+    Appropriate for small-scale inference, or for testing. Just runs trait inference for a
+    given set of traits on a given dataset.
     """
 
     _trait_types: dict[str, TraitType]

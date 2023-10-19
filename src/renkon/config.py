@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from ipaddress import IPv4Address
 from pathlib import Path
 from typing import Any
 
-from dacite import Config as DaciteConfig
-from dacite import from_dict
+import dacite
 
 # todo: load this from a default renkon.toml
 DEFAULTS: dict[str, dict[str, Any]] = {
@@ -20,24 +19,26 @@ DEFAULTS: dict[str, dict[str, Any]] = {
     },
 }
 
+# DEFAULT_CONFIG =
+
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class RepositoryConfig:
     """
-    Renkon repository configuration class.
+    Configuration for Renkon's repository.
     """
 
-    path: Path = field(default=DEFAULTS["repository"]["path"])
+    path: Path
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class ServerConfig:
     """
-    Renkon server configuration class.
+    Configuration for Renkon when running as a server.
     """
 
-    hostname: IPv4Address = field(default=DEFAULTS["server"]["hostname"])
-    port: int = field(default=DEFAULTS["server"]["port"])
+    hostname: IPv4Address
+    port: int
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -46,27 +47,27 @@ class Config:
     Renkon configuration class.
     """
 
-    repository: RepositoryConfig = field(default_factory=RepositoryConfig)
-    server: ServerConfig = field(default_factory=ServerConfig)
+    repository: RepositoryConfig
+    server: ServerConfig
 
+    @staticmethod
+    def load(**overrides: Any) -> Config:
+        """
+        Load the configuration from renkon.toml, and apply overrides.
 
-def load_config(**overrides: Any) -> Config:
-    """
-    Load the configuration from renkon.toml, and apply overrides.
+        :param update_global: Whether to update the global configuration.
+        :param overrides: Configuration overrides.
+        :return: The configuration.
+        """
 
-    :param update_global: Whether to update the global configuration.
-    :param overrides: Configuration overrides.
-    :return: The configuration.
-    """
+        # If renkon.toml exists in the working directory, load it using pathlib.
+        conf_data = {}
+        if (p := Path.cwd() / "renkon.toml").exists():
+            with p.open("rb") as f:
+                conf_data = tomllib.load(f)
 
-    # If renkon.toml exists in the working directory, load it using pathlib.
-    conf_data = {}
-    if (p := Path.cwd() / "renkon.toml").exists():
-        with p.open("rb") as f:
-            conf_data = tomllib.load(f)
+        # Apply overrides.
+        conf_data.update(overrides)
 
-    # Apply overrides.
-    conf_data.update(overrides)
-
-    conf = from_dict(data_class=Config, data=conf_data, config=DaciteConfig(cast=[Path, IPv4Address]))
-    return conf
+        conf = dacite.from_dict(data_class=Config, data=conf_data, config=dacite.Config(cast=[Path, IPv4Address]))
+        return conf

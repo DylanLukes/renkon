@@ -8,7 +8,7 @@ import pytest
 from loguru import logger
 from pyarrow import fs as pa_fs
 
-from renkon.config import Config, load_config
+from renkon.config import Config
 from renkon.core.repo import SQLiteRegistry, Storage
 from renkon.core.repo.registry import Registry
 from renkon.core.repo.repository import Repository
@@ -29,7 +29,7 @@ def change_test_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def config(tmp_path: Path) -> Config:
-    return load_config(repository={"path": tmp_path})
+    return Config.load(repository={"path": tmp_path})
 
 
 @pytest.fixture

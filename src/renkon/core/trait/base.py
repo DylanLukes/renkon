@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol, TypeAlias, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from polars import DataFrame, PolarsDataType, Series
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 # We're going to be typing this a lot, so an alias is useful.
-TraitType: TypeAlias = type["Trait"]
+type TraitType = type[Trait]
 
 
 @dataclass(eq=True, frozen=True, kw_only=True, slots=True)
@@ -80,13 +80,13 @@ class Trait(Protocol):
         ...
 
 
-class BaseTrait(Trait, ABC):
+class BaseTraitMixin:
     @classmethod
-    def sketch(cls, columns: Sequence[str]) -> TraitSketch:
+    def sketch(cls: type[Trait], columns: Sequence[str]) -> TraitSketch:
         return TraitSketch(trait_type=cls, columns=tuple(columns))
 
 
-class PropTrait(BaseTrait, ABC):
+class PropTrait(BaseTraitMixin, ABC):
     """
     A trait representing a logical proposition, e.g. "x != 0" or "x < y".
     """
@@ -110,14 +110,14 @@ class PropTrait(BaseTrait, ABC):
         ...
 
 
-class StatTrait(BaseTrait, ABC):
+class StatTrait(BaseTraitMixin, ABC):
     """
     A trait representing a statistical property, e.g. "x is normally distributed" or "x is linearly correlated with y".
     """
 
     @classmethod
     @abstractmethod
-    def fit(cls, data: DataFrame, columns: list[str]) -> Trait | None:
+    def fit[T](cls: type[T], data: DataFrame, columns: list[str]) -> T | None:
         """
         Attempts to fit the statistical property to the given data, returning a trait instance if successful, or
         None if sufficient confidence/goodness-of-fit cannot be achieved.

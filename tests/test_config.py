@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from renkon.config import load_config
+from renkon.config import Config
 
 
-def test_load_toml_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_load_default_toml_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Monkeypatch the current working directory.
     monkeypatch.chdir(tmp_path)
 
@@ -24,7 +24,7 @@ def test_load_toml_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     )
 
     # Load the configuration.
-    config = load_config()
+    config = Config.load()
 
     # Check that the configuration has been loaded correctly.
     assert config.server.hostname == IPv4Address("1.2.3.4")

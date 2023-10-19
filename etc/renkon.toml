@@ -1,0 +1,6 @@
+# Sample Renkon Config
+
+
+
+[repository]
+path = "foo/bar/baz"

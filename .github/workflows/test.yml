@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  STABLE_PYTHON_VERSION: '3.11'
+  STABLE_PYTHON_VERSION: '3.12'
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
 
@@ -22,8 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        python-version: [ '3.11' ]
+        os: [ ubuntu-latest, macos-latest ]
+        python-version: [ '3.12' ]
 
     steps:
       - uses: actions/checkout@v3

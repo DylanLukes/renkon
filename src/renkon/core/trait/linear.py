@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from polars import NUMERIC_DTYPES, DataFrame, PolarsDataType, Series
 
 from renkon.core.stats.linear import OLSModel, OLSResults
@@ -30,7 +32,7 @@ class Linear(StatTrait):
         return (NUMERIC_DTYPES,) * arity
 
     @classmethod
-    def fit(cls, data: DataFrame, columns: list[str]) -> StatTrait | None:
+    def fit(cls, data: DataFrame, columns: list[str]) -> Linear | None:
         raise NotImplementedError
 
     def test_inlying(self, data: DataFrame) -> Series:

@@ -142,7 +142,7 @@ class OLSModel(Model[OLSParams]):
             x_cols = ["const", *x_cols]
 
         # Solve y = mx + c
-        (c, *m), rss, _, _ = np.linalg.lstsq(
+        (c, *m), _rss, _, _ = np.linalg.lstsq(
             data.select(x_cols),
             data.select(y_col).to_series(),
             rcond=None,

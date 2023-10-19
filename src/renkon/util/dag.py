@@ -96,7 +96,7 @@ class DAG(Generic[T_]):
         :param node_index: The index of the node.
         :return: The indices of the nodes that are descendants of the node.
         """
-        descendants = set()
+        descendants: set[int] = set()
         stack = [node_index]
         while stack:
             idx = stack.pop()

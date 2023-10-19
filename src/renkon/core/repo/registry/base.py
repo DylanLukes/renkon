@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Literal, Protocol, TypeAlias
+from typing import Literal, Protocol
 
-import pyarrow as pa
+from renkon.core.repo.schema import Schema
 
-LookupKey: TypeAlias = Literal["name", "path"]
-SearchKey: TypeAlias = Literal["name", "path"]
-FileType: TypeAlias = Literal["parquet", "arrow"]
+type LookupKey = Literal["name", "path"]
+type SearchKey = Literal["name", "path"]
+type FileType = Literal["parquet", "arrow"]
 
 
 class Registry(Protocol):
@@ -21,7 +21,7 @@ class Registry(Protocol):
         path: PurePath
         name: str
         filetype: FileType
-        schema: pa.Schema
+        schema: Schema
         rows: int
         size: int
 

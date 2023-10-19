@@ -4,7 +4,10 @@ but don't logically belong to a particular module (e.g. TraitType in core.trait.
 
 They may eventually move here.
 """
+from typing import TYPE_CHECKING
 
-from typing import TypeAlias
+if TYPE_CHECKING:
+    from polars import PolarsDataType
 
-ColumnName: TypeAlias = str
+type ColumnName = str
+type Schema = dict[str, PolarsDataType]

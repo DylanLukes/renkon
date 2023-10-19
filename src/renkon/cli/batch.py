@@ -38,12 +38,15 @@ def setup_simple_logging() -> None:
 @click.argument("data_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("columns", type=str, nargs=-1)
 @click.pass_context
-def simple(ctx: click.Context, trait_name: str, data_path: Path, columns: list[str]) -> None:  # noqa: ARG001
+def batch(ctx: click.Context, trait_name: str, data_path: Path, columns: list[str]) -> None:  # noqa: ARG001
     # 0. Configure logging.
     setup_simple_logging()
 
+    # 1. Load the configuration.
+
     # 1. Instantiate en engine.
     loader = TraitLoader()
+
     # _engine = SimpleEngine() todo
     trait_type: TraitType | None = None
 

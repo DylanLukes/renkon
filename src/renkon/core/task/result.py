@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, TypeAlias, TypeVar
+from typing import Generic, TypeVar
 
 _T = TypeVar("_T")
 
@@ -22,7 +22,7 @@ class Err:
     Represents an error result, carrying the responsible exception.
     """
 
-    cause: Exception
+    cause: BaseException
 
     def __repr__(self) -> str:
         return f"Err({self.cause!r})"
@@ -37,4 +37,4 @@ class Unk:
         return "Unk"
 
 
-Result: TypeAlias = Ok[_T] | Err | Unk
+type Result[_T] = Ok[_T] | Err | Unk

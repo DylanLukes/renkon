@@ -78,6 +78,15 @@ class NormalModel(Model[NormalParams]):
 
         return NormalResults(_model=self, _params=NormalParams(mean=mean, std=std))
 
+    def predict(self, params: NormalParams) -> pl.Expr:
+        raise NotImplementedError
+
+    def errors(self, params: NormalParams, *, pred_col: str | None = None) -> pl.Expr:
+        raise NotImplementedError
+
+    def score(self, params: NormalParams, *, err_col: str | None = None) -> pl.Expr:
+        raise NotImplementedError
+
 
 class RobustNormalModel(NormalModel):
     """

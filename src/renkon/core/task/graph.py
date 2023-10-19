@@ -2,7 +2,6 @@ from collections import defaultdict
 from collections.abc import Callable
 from functools import partial
 from multiprocessing import Event, Pool
-from typing import Generic, TypeAlias, TypeVar
 
 from loguru import logger
 
@@ -10,12 +9,10 @@ from renkon.core.task.result import Err, Ok, Result, Unk
 from renkon.core.task.task import Task
 from renkon.util.dag import DAG
 
-_T = TypeVar("_T")
-
-TaskSpec: TypeAlias = tuple[str, Callable[..., _T], list[str]]
+type TaskSpec[T] = tuple[str, Callable[..., T], list[str]]
 
 
-class TaskGraph(Generic[_T]):
+class TaskGraph[T]:
     """
     Implements a task graph with dependencies using python multiprocessing,
     generic in the return type of the tasks.
@@ -28,19 +25,19 @@ class TaskGraph(Generic[_T]):
 
     __slots__ = ("task_dag", "task_id_to_name", "task_id_to_result", "task_name_to_id")
 
-    task_dag: DAG[Task[_T]]
+    task_dag: DAG[Task[T]]
 
     task_id_to_name: dict[int, str]
-    task_id_to_result: dict[int, Result[_T]]
+    task_id_to_result: dict[int, Result[T]]
     task_name_to_id: dict[str, int]
 
     def __init__(self) -> None:
-        self.task_dag = DAG[Task[_T]]()
+        self.task_dag = DAG[Task[T]]()
         self.task_id_to_name = {}
         self.task_id_to_result = defaultdict(Unk)
         self.task_name_to_id = {}
 
-    def add_task(self, name: str, func: Callable[..., _T], dependencies: list[int]) -> int:
+    def add_task(self, name: str, func: Callable[..., T], dependencies: list[int]) -> int:
         """
         Add a single task to the graph to be run after the dependencies.
         """
@@ -58,7 +55,7 @@ class TaskGraph(Generic[_T]):
 
         return task_id
 
-    def add_tasks(self, specs: list[TaskSpec[_T]]) -> dict[str, int]:
+    def add_tasks(self, specs: list[TaskSpec[T]]) -> dict[str, int]:
         """
         Add a batch of tasks to the graph. The task names are the keys of the
         dictionary, and the values are tuples of (name, func, dependencies).
@@ -68,7 +65,7 @@ class TaskGraph(Generic[_T]):
         :returns: a mapping from task names to task ids.
         """
         # We return a mapping from task names to task ids.
-        task_name_to_id = {}
+        task_name_to_id: dict[str, int] = {}
 
         for name, func, dependency_names in specs:
             dep_ids = [self.task_name_to_id[name] for name in dependency_names]
@@ -77,7 +74,7 @@ class TaskGraph(Generic[_T]):
 
         return task_name_to_id
 
-    def get_task(self, task_id: int) -> Task[_T]:
+    def get_task(self, task_id: int) -> Task[T]:
         return self.task_dag.get_node(task_id)
 
     def get_result(self, task_id: int) -> object:
@@ -88,17 +85,17 @@ class TaskGraph(Generic[_T]):
         all_done = Event()
 
         logger.debug("Scanning dependency tree...")
-        tasks_next = {}
+        tasks_next: dict[int, set[int]] = {}
         for task_id in range(len(self.task_dag)):
             deps = self.task_dag.get_dependencies(task_id)
             tasks_next[task_id] = deps
             logger.debug(f"{task_id} <- {deps}.")
 
-        # todo: inject pool (allow for different pool implementations)
+        # maybetodo: inject pool (allow for different pool implementations)
         with Pool() as pool:
             # pool = MultiprocessingPoolExecutor(_pool)
 
-            def on_complete(task_id: int, result: _T) -> None:
+            def on_complete(task_id: int, result: T) -> None:
                 nonlocal tasks_remaining
 
                 # Store the result
@@ -118,7 +115,7 @@ class TaskGraph(Generic[_T]):
                         logger.debug(f"All dependencies finished for {next_task_id}.")
                         submit(next_task_id)
 
-            def on_error(task_id: int, error: Exception) -> None:
+            def on_error(task_id: int, error: BaseException) -> None:
                 nonlocal tasks_remaining
 
                 logger.debug(f"Task {task_id} failed: {error}")

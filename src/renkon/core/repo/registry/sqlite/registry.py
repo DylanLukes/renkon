@@ -5,24 +5,20 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
-from typing import Any, Literal, Protocol, TypeAlias, TypeVar
+from typing import Any, Literal, Protocol
 
 from renkon.core.repo.registry import LookupKey, SearchKey
 from renkon.core.repo.registry.base import Registry
 from renkon.core.repo.registry.sqlite import TableRow
 from renkon.core.repo.registry.sqlite.queries import queries
-from renkon.core.repo.util import serialize_schema
+from renkon.core.repo.schema import to_arrow_schema_bytes
 
-_T = TypeVar("_T")
-_RowT = TypeVar("_RowT")
-_TupleT = TypeVar("_TupleT", bound=tuple[Any, ...])
-
-RowFactory: TypeAlias = Callable[[sqlite3.Cursor, _TupleT], _RowT]
+type RowFactory[RowT, TupleT: tuple[Any, ...]] = Callable[[sqlite3.Cursor, TupleT], RowT]
 
 
 class SupportsRowFactory(Protocol):
     @classmethod
-    def row_factory(cls: type[_T], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> _T:
+    def row_factory[T](cls: type[T], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> T:
         ...
 
 
@@ -45,6 +41,7 @@ class SQLiteRegistry(Registry):
 
         :param row_type: a type which provides a row_factory method to set on the connection.
         """
+        conn = None
         try:
             # note: using a connection object as a context manager implies
             # that commit will be called if no exception is raised, and rollback
@@ -54,7 +51,7 @@ class SQLiteRegistry(Registry):
                     conn.row_factory = row_type.row_factory
                 yield conn
         finally:
-            conn.close()
+            conn.close() if conn else None
 
     def _create_tables(self) -> None:
         """
@@ -73,7 +70,7 @@ class SQLiteRegistry(Registry):
                 path=str(entry.path),
                 name=entry.name,
                 filetype=entry.filetype,
-                schema=serialize_schema(entry.schema),
+                schema=to_arrow_schema_bytes(entry.schema),
                 rows=entry.rows,
                 size=entry.size,
             )
@@ -94,7 +91,7 @@ class SQLiteRegistry(Registry):
             return [row_tuple.to_entry() for row_tuple in row_tuples]
 
     def lookup(self, key: str, *, by: LookupKey) -> Registry.Entry | None:
-        row_tuple = None
+        row_tuple: TableRow | None = None
 
         with self._connect(row_type=TableRow) as conn:
             match by:
@@ -107,7 +104,7 @@ class SQLiteRegistry(Registry):
                     native_path = str(Path(key))
                     row_tuple = queries.get_table_by_path(conn, path=native_path)
 
-        if row_tuple is None:
+        if not row_tuple:
             return None
 
         return row_tuple.to_entry()

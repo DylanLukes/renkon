@@ -1,18 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 import polars as pl
 
-from renkon.core.stats.base.params import Params
 
-_ParamsT = TypeVar("_ParamsT", bound="Params")
-_ParamsT_co = TypeVar("_ParamsT_co", bound="Params", covariant=True)
-_ParamsT_contra = TypeVar("_ParamsT_contra", bound="Params", contravariant=True)
-
-
-class Results(Protocol[_ParamsT_co]):
+class Results[ParamsT](Protocol):
     """
     Represents the results of a model. Can be used to predict values
     for new data, or to evaluate the model's score on new data.
@@ -20,7 +14,7 @@ class Results(Protocol[_ParamsT_co]):
 
     @property
     @abstractmethod
-    def model(self) -> Model[_ParamsT_co]:
+    def model(self) -> Model[ParamsT]:
         """
         :return: the model that generated these results.
         """
@@ -28,7 +22,7 @@ class Results(Protocol[_ParamsT_co]):
 
     @property
     @abstractmethod
-    def params(self) -> _ParamsT_co:
+    def params(self) -> ParamsT:
         """
         :return: the parameters used to generate these results.
         """
@@ -44,7 +38,7 @@ class Results(Protocol[_ParamsT_co]):
     # Convenience Delegate Methods
     # ----------------------------
 
-    def predict(self: Results[_ParamsT], params: _ParamsT | None = None) -> pl.Expr:
+    def predict(self, params: ParamsT | None = None) -> pl.Expr:
         """
         Convenience method delegating to :meth:`~renkon.models.model.Model.predict`.
 
@@ -55,7 +49,7 @@ class Results(Protocol[_ParamsT_co]):
         """
         return self.model.predict(params or self.params)
 
-    def errors(self: Results[_ParamsT], params: _ParamsT | None = None) -> pl.Expr:
+    def errors(self, params: ParamsT | None = None) -> pl.Expr:
         """
         Convenience method delegating to :meth:`~renkon.models.model.Model.errors`.
 
@@ -67,7 +61,7 @@ class Results(Protocol[_ParamsT_co]):
         return self.model.errors(params or self.params)
 
 
-class Model(Protocol[_ParamsT_co]):
+class Model[ParamsT](Protocol):
     """
     Represents a (predictive) statistical model, prior to fitting.
 
@@ -97,7 +91,7 @@ class Model(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def fit(self: Model[_ParamsT], data: pl.DataFrame) -> Results[_ParamsT]:
+    def fit(self, data: pl.DataFrame) -> Results[ParamsT]:
         """
         Fit (or more generally "train", "learn") the model on the given data.
 
@@ -107,7 +101,7 @@ class Model(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def predict(self: Model[_ParamsT], params: _ParamsT) -> pl.Expr:
+    def predict(self, params: ParamsT) -> pl.Expr:
         """
         Expression: predicted y values.
 
@@ -117,7 +111,7 @@ class Model(Protocol[_ParamsT_co]):
         ...
 
     @abstractmethod
-    def errors(self: Model[_ParamsT], params: _ParamsT, *, pred_col: str | None = None) -> pl.Expr:
+    def errors(self, params: ParamsT, *, pred_col: str | None = None) -> pl.Expr:
         """
         Expression: errors/residuals (has default implementation).
 
@@ -132,7 +126,7 @@ class Model(Protocol[_ParamsT_co]):
         return pred_expr - pl.col(self.y_col)
 
     @abstractmethod
-    def score(self: Model[_ParamsT], params: _ParamsT, *, err_col: str | None = None) -> pl.Expr:
+    def score(self, params: ParamsT, *, err_col: str | None = None) -> pl.Expr:
         """
         Expression: Calculate the score of the model on the data.
 

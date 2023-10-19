@@ -3,14 +3,15 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Protocol, TypeAlias
+from typing import Protocol
 
-import pyarrow as pa
+from polars import DataFrame
+from polars.type_aliases import PolarsDataType
 
 from renkon.core.repo import Registry
 from renkon.core.repo.registry.base import FileType
 
-StoragePath: TypeAlias = PurePath
+type StoragePath = PurePath
 
 
 class Storage(Protocol):  # pragma: no cover
@@ -48,7 +49,7 @@ class Storage(Protocol):  # pragma: no cover
 
         path: PurePath
         filetype: FileType
-        schema: pa.Schema
+        schema: dict[str, PolarsDataType]
         rows: int = -1
         size: int = -1
 
@@ -66,13 +67,13 @@ class Storage(Protocol):  # pragma: no cover
             )
 
     @abstractmethod
-    def read(self, path: StoragePath) -> pa.Table | None:
+    def read(self, path: StoragePath) -> DataFrame | None:
         """
         Return a Table from the storage backend, or None if it does not exist.
         """
         ...
 
-    def write(self, path: StoragePath, table: pa.Table) -> None:
+    def write(self, path: StoragePath, table: DataFrame) -> None:
         """
         Put a Table into the storage backend. Overwrites any existing data at the given path.
         """

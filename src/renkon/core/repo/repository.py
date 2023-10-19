@@ -1,6 +1,6 @@
 from pathlib import PurePath
 
-import pyarrow as pa
+from polars import DataFrame
 
 from renkon.core.repo.registry import Registry
 from renkon.core.repo.storage import Storage
@@ -28,12 +28,12 @@ class Repository:
         self._registry = registry
         self._storage = storage
 
-    def get(self, name: str) -> pa.Table | None:
+    def get(self, name: str) -> DataFrame | None:
         if (table_info := self._registry.lookup(name, by="name")) is None:
             return None
         return self._storage.read(table_info.path)
 
-    def put(self, name: str, table: pa.Table, *, for_ipc: bool = False, for_storage: bool = True) -> None:
+    def put(self, name: str, table: DataFrame, *, for_ipc: bool = False, for_storage: bool = True) -> None:
         """
         Put data into the repository.
         """
@@ -42,7 +42,7 @@ class Repository:
             msg = f"Name '{name}' cannot have a suffix (extension)."
             raise ValueError(msg)
 
-        paths = []
+        paths: list[PurePath] = []
         if not for_ipc and not for_storage:
             msg = "Cannot store data for neither IPC nor storage."
             raise ValueError(msg)
