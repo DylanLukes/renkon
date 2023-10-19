@@ -1,12 +1,9 @@
 from pathlib import Path
-from typing import cast
 
 import polars as pl
-import pyarrow.csv
 import pytest
 from loguru import logger
 from polars import DataFrame
-from pyarrow import fs as pa_fs
 
 from renkon.config import Config
 from renkon.core.repo import SQLiteRegistry, Storage
@@ -34,12 +31,14 @@ def config(tmp_path: Path) -> Config:
 
 @pytest.fixture
 def registry(config: Config) -> Registry:
+    assert config.repository is not None
     path = config.repository.path / "registry.db"
     return SQLiteRegistry(path)
 
 
 @pytest.fixture
 def storage(config: Config) -> Storage:
+    assert config.repository is not None
     root = config.repository.path / "data"
     root.mkdir(parents=True, exist_ok=True)
     return FileSystemStorage(root)

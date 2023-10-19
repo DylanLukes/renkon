@@ -1,8 +1,6 @@
 from pathlib import PurePath
 
-import pyarrow as pa
 from polars import Int64, Utf8
-from pyarrow import Schema
 
 from renkon.core.repo.registry import Registry
 from renkon.core.repo.schema import Schema

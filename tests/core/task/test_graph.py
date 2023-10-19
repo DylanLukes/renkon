@@ -1,4 +1,4 @@
-from typing import NoReturn, TypeVar
+from typing import Any, NoReturn, TypeVar
 
 import pytest
 
@@ -24,7 +24,7 @@ def mk_qux(_task_name: str) -> str:
     return "qux"
 
 
-def fail(_: _T) -> NoReturn:
+def fail(_: Any) -> NoReturn:
     msg = "fail"
     raise RuntimeError(msg)
 

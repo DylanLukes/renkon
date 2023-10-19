@@ -1,6 +1,8 @@
+# pyright: basic
+
 import numpy as np
 import polars as pl
-import polars.testing
+import polars.testing as pl_testing
 import pytest
 from pytest import approx
 from scipy.stats import t  # type: ignore[import]
@@ -32,7 +34,7 @@ def test_linear_perfect_fit() -> None:
 
     # Test if the model properly predicts the test data.
     y_pred = df_test.select(model.predict(fit.params)).get_column("y")
-    pl.testing.assert_series_equal(y_pred, df_test["y"])
+    pl_testing.assert_series_equal(y_pred, df_test["y"])
 
 
 @pytest.mark.flaky(reruns=5, rerun_delay=1)
@@ -73,7 +75,7 @@ def test_linear_noisy_fit() -> None:
 
     # Expect predicted values to be within 3 * noise_factor of the true values.
     y_pred = df_test.select(fit.predict()).get_column("y")
-    pl.testing.assert_series_equal(df_test["y"], y_pred, atol=3 * noise_std)
+    pl_testing.assert_series_equal(df_test["y"], y_pred, atol=3 * noise_std)
 
 
 def test_linear_outlier_detection() -> None:
@@ -86,7 +88,7 @@ def test_linear_outlier_detection() -> None:
 
     # Produce some data that could not be explained by this model:
     bad_x = np.arange(0.0, 100.0, 10.0)
-    bad_y = np.random.randint(100, 1000, len(bad_x))
+    bad_y: np.ndarray = np.random.randint(100, 1000, len(bad_x))
     bad_df = pl.DataFrame({"x": bad_x, "y": bad_y})
 
     _train_mad = df.select(pl.col("y").rk.mad()).item()  # type: ignore[attr-defined]

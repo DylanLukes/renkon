@@ -1,3 +1,4 @@
+# pyright: basic
 import json
 from decimal import ROUND_DOWN, Decimal
 from pathlib import Path

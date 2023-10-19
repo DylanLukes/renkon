@@ -55,7 +55,7 @@ renkon = "renkon.cli:cli"
 
 [tool.pyright]
 pythonVersion = "3.12"
-include = ["src", "tests"]
+include = ["./src", "./tests"]
 venvPath = ".hatch"
 venv = "renkon"  # use imports from default venv
 

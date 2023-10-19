@@ -70,7 +70,7 @@ typing-mypy = """
          --python-executable=$(hatch -q -e default run python -c "import sys; print(sys.executable)") \
          {args:.}
 """
-typing-pyright = "pyright {args:.}"
+typing-pyright = "pyright {args:src/ tests/}"
 typing = ['typing-pyright']
 
 style = [

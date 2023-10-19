@@ -1,4 +1,3 @@
-import pyarrow as pa
 import pytest
 from polars import DataFrame
 
@@ -18,6 +17,7 @@ def test_round_trip(repo: Repository) -> None:
     repo.put("foo/bar", DATA)
     assert repo.exists("foo/bar")
     data = repo.get("foo/bar")
+    assert data is not None
     assert data.frame_equal(DATA)
 
 
