@@ -87,7 +87,7 @@ class TaskGraph[T]:
         logger.debug("Scanning dependency tree...")
         tasks_next: dict[int, set[int]] = {}
         for task_id in range(len(self.task_dag)):
-            deps = self.task_dag.get_dependencies(task_id)
+            deps = self.task_dag.get_parents(task_id)
             tasks_next[task_id] = deps
             logger.debug(f"{task_id} <- {deps}.")
 
@@ -108,7 +108,7 @@ class TaskGraph[T]:
                     return
 
                 # Otherwise, submit the tasks that were only waiting for this one.
-                for next_task_id in self.task_dag.get_dependents(task_id):
+                for next_task_id in self.task_dag.get_children(task_id):
                     s = tasks_next[next_task_id]
                     s.remove(task_id)
                     if not s:

@@ -6,9 +6,9 @@ def test_dag_line() -> None:
     id_a = d.add_node("a", [])
     id_b = d.add_node("b", [id_a])
     id_c = d.add_node("c", [id_b])
-    assert d.get_dependents(id_a) == {id_b}
-    assert d.get_dependents(id_b) == {id_c}
-    assert d.get_dependents(id_c) == set()
+    assert d.get_children(id_a) == {id_b}
+    assert d.get_children(id_b) == {id_c}
+    assert d.get_children(id_c) == set()
 
 
 def test_dag_disjoint() -> None:
