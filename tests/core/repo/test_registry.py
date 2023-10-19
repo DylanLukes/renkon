@@ -1,8 +1,13 @@
 from pathlib import PurePath
 
 import pyarrow as pa
+from polars import Int64, Utf8
+from pyarrow import Schema
 
 from renkon.core.repo.registry import Registry
+from renkon.core.repo.schema import Schema
+
+DUMMY_SCHEMA: Schema = {"a": Int64, "b": Utf8}
 
 
 def test_register_table(registry: Registry) -> None:
@@ -10,7 +15,7 @@ def test_register_table(registry: Registry) -> None:
         name="df[13]",
         path=PurePath("cells/13/df"),
         filetype="arrow",
-        schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+        schema=DUMMY_SCHEMA,
         rows=10,
         size=100,  # this is a made up number
     )
@@ -29,7 +34,7 @@ def test_list_tables(registry: Registry) -> None:
             name=name,
             path=PurePath(f"tables/{name}"),
             filetype="arrow",
-            schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+            schema=DUMMY_SCHEMA,
             rows=10,
             size=100,  # this is a made up number
         )
@@ -49,7 +54,7 @@ def test_search_tables_by_name(registry: Registry) -> None:
             name=name,
             path=PurePath(f"tables/{name}.arrow"),
             filetype="arrow",
-            schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+            schema=DUMMY_SCHEMA,
             rows=10,
             size=100,  # this is a made up number
         )
@@ -69,7 +74,7 @@ def test_search_tables_by_path(registry: Registry) -> None:
             name=name,
             path=PurePath(f"tables/{name}.parquet"),
             filetype="parquet",
-            schema=pa.schema([pa.field("a", pa.int64()), pa.field("b", pa.string())]),
+            schema=DUMMY_SCHEMA,
             rows=10,
             size=100,  # this is a made up number
         )

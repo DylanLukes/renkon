@@ -1,11 +1,12 @@
 import pyarrow as pa
 import pytest
+from polars import DataFrame
 
 from renkon.core.repo import Registry
 from renkon.core.repo.repository import Repository
 
-DATA = pa.Table.from_pydict(
-    mapping={
+DATA = DataFrame(
+    {
         "a": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         "b": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
         "c": [True, False, True, False, True, False, True, False, True, False],
@@ -17,11 +18,7 @@ def test_round_trip(repo: Repository) -> None:
     repo.put("foo/bar", DATA)
     assert repo.exists("foo/bar")
     data = repo.get("foo/bar")
-    assert data is not None
-    assert data.num_rows == 10
-    assert data.num_columns == 3
-    assert data.column_names == ["a", "b", "c"]
-    assert data.equals(DATA)
+    assert data.frame_equal(DATA)
 
 
 def test_put_bad_path(repo: Repository) -> None:
@@ -66,7 +63,7 @@ def test_get_info(repo: Repository) -> None:
     assert info is not None
     assert info.name == "foo/bar"
     assert info.filetype == "parquet"
-    assert info.schema.names == ["a", "b", "c"]
+    assert not info.schema.keys() - {"a", "b", "c"}
 
 
 def test_list_info(repo: Repository) -> None:

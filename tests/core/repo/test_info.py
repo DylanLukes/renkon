@@ -1,12 +1,11 @@
 from pathlib import PurePath
 
-import pyarrow as pa
 import pytest
 
 from renkon.core.repo.registry.base import FileType
 from renkon.core.repo.registry.sqlite import TableRow
+from renkon.core.repo.schema import to_arrow_schema_bytes
 from renkon.core.repo.storage.base import Storage
-from renkon.core.repo.util import serialize_schema
 
 
 def test_from_tuple_valid_filetype() -> None:
@@ -20,7 +19,7 @@ def test_from_tuple_valid_filetype() -> None:
             path="foo",
             name="bar",
             filetype=file_type,
-            schema=serialize_schema(pa.schema([])),
+            schema=to_arrow_schema_bytes({}),
             rows=0,
             size=0,
         ).to_entry()
@@ -42,12 +41,12 @@ def test_from_tuple_invalid_filetype() -> None:
 
 
 def test_from_stat() -> None:
-    stat = Storage.Stat(path=PurePath("foo"), filetype="parquet", schema=pa.schema([]), rows=0, size=0)
+    stat = Storage.Stat(path=PurePath("foo"), filetype="parquet", schema={}, rows=0, size=0)
     info = stat.to_entry(name="bar")
 
     assert info.name == "bar"
     assert info.path == PurePath("foo")
     assert info.filetype == "parquet"
-    assert info.schema == pa.schema([])
+    assert info.schema == {}
     assert info.rows == 0
     assert info.size == 0

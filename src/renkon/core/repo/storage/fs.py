@@ -35,7 +35,7 @@ class FileSystemStorage(Storage):
                 raise ValueError(msg)
 
     def write(self, path: StoragePath, table: DataFrame) -> None:
-        (self.root / path).mkdir(parents=True, exist_ok=True)
+        (self.root / path.parent).mkdir(parents=True, exist_ok=True)
 
         match path.suffix:
             case ".parquet":

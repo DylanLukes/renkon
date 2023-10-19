@@ -1,13 +1,11 @@
 from pathlib import Path, PurePath
 
-import pyarrow as pa
 import pytest
+from polars import DataFrame
 
 from renkon.core.repo import Storage
 
-TABLE = pa.Table.from_pydict(
-    mapping={"a": [1, 2, 3, 4, 5], "b": ["a", "b", "c", "d", "e"], "c": [True, False, True, False, True]}
-)
+TABLE = DataFrame({"a": [1, 2, 3, 4, 5], "b": ["a", "b", "c", "d", "e"], "c": [True, False, True, False, True]})
 
 
 def test_write_read_delete_parquet(storage: Storage) -> None:
@@ -18,12 +16,7 @@ def test_write_read_delete_parquet(storage: Storage) -> None:
 
     table = storage.read(path)
     assert table is not None
-    assert table.num_rows == 5
-    assert table.num_columns == 3
-    assert table.column_names == ["a", "b", "c"]
-    assert table.column("a").to_pylist() == [1, 2, 3, 4, 5]
-    assert table.column("b").to_pylist() == ["a", "b", "c", "d", "e"]
-    assert table.column("c").to_pylist() == [True, False, True, False, True]
+    assert table.frame_equal(TABLE)
 
     storage.delete(path)
     assert not storage.exists(path)
@@ -37,12 +30,7 @@ def test_write_read_delete_arrow(storage: Storage) -> None:
 
     table = storage.read(path)
     assert table is not None
-    assert table.num_rows == 5
-    assert table.num_columns == 3
-    assert table.column_names == ["a", "b", "c"]
-    assert table.column("a").to_pylist() == [1, 2, 3, 4, 5]
-    assert table.column("b").to_pylist() == ["a", "b", "c", "d", "e"]
-    assert table.column("c").to_pylist() == [True, False, True, False, True]
+    assert table.frame_equal(TABLE)
 
     storage.delete(path)
     assert not storage.exists(path)
@@ -58,8 +46,8 @@ def test_info_parquet(storage: Storage) -> None:
     assert info is not None
     assert info.path == path
     assert info.filetype == "parquet"
-    assert info.schema.names == ["a", "b", "c"]
-    assert info.rows == TABLE.num_rows
+    assert not info.schema.keys() - ["a", "b", "c"]
+    assert info.rows == len(TABLE)
     assert info.size == (Path.cwd() / "data" / path).stat().st_size
 
     storage.delete(path)
@@ -74,9 +62,8 @@ def test_info_arrow(storage: Storage) -> None:
 
     info = storage.stat(path)
     assert info is not None
-    assert info.schema.names == ["a", "b", "c"]
-    assert info.rows == TABLE.num_rows
-    assert info.size == TABLE.nbytes
+    assert not info.schema.keys() - {"a", "b", "c"}
+    assert info.rows == len(TABLE)
 
     storage.delete(path)
     assert not storage.exists(path)

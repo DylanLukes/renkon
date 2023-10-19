@@ -17,7 +17,7 @@ def to_arrow_schema_bytes(schema: Schema) -> bytes:
     """
     Serialize a schema to bytes.
     """
-    arrow_schema = DataFrame(schema=schema).to_arrow().schema
+    arrow_schema = DataFrame([], schema=schema).to_arrow().schema
     return cast(bytes, arrow_schema.serialize().to_pybytes())
 
 
@@ -26,4 +26,4 @@ def from_arrow_schema_bytes(blob: bytes) -> Schema:
     Deserialize a schema from bytes.
     """
     arrow_schema = pa.ipc.read_schema(pa.py_buffer(blob))
-    return dict(cast(DataFrame, pl.from_arrow(pa.table([], schema=arrow_schema))).schema)
+    return dict(cast(DataFrame, pl.from_arrow(pa.table([[]] * len(arrow_schema), schema=arrow_schema))).schema)

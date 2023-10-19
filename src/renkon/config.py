@@ -47,8 +47,8 @@ class Config:
     Renkon configuration class.
     """
 
-    repository: RepositoryConfig
-    server: ServerConfig
+    repository: RepositoryConfig | None
+    server: ServerConfig | None
 
     @staticmethod
     def load(**overrides: Any) -> Config:

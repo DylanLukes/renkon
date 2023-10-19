@@ -2,10 +2,10 @@ from pathlib import Path
 from typing import cast
 
 import polars as pl
-import pyarrow as pa
 import pyarrow.csv
 import pytest
 from loguru import logger
+from polars import DataFrame
 from pyarrow import fs as pa_fs
 
 from renkon.config import Config
@@ -40,11 +40,9 @@ def registry(config: Config) -> Registry:
 
 @pytest.fixture
 def storage(config: Config) -> Storage:
-    path = config.repository.path / "data"
-    path.mkdir(parents=True, exist_ok=True)
-    local_fs = pa_fs.LocalFileSystem(use_mmap=True)
-    storage_fs = pa_fs.SubTreeFileSystem(str(path), local_fs)
-    return FileSystemStorage(storage_fs)
+    root = config.repository.path / "data"
+    root.mkdir(parents=True, exist_ok=True)
+    return FileSystemStorage(root)
 
 
 @pytest.fixture
@@ -54,16 +52,15 @@ def repo(registry: Registry, storage: Storage) -> Repository:
 
 
 @pytest.fixture
-def cereals_df() -> pl.DataFrame:
+def cereals_df() -> DataFrame:
     """
     Cereal nutrition dataset from https://www.kaggle.com/crawford/80-cereals
     """
     # Load cereal data from the data directory.
     path = TESTS_DIR / "data" / "cereals.csv"
-    table = pa.csv.read_csv(
+    table = pl.read_csv(
         path,
-        parse_options=pa.csv.ParseOptions(delimiter=";"),
-        read_options=pa.csv.ReadOptions(skip_rows_after_names=1),
-        convert_options=pa.csv.ConvertOptions(auto_dict_encode=True),
+        separator=";",
+        skip_rows_after_header=1,
     )
-    return cast(pl.DataFrame, pl.from_arrow(table))
+    return table
