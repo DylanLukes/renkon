@@ -1,25 +1,16 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from importlib import resources
 from ipaddress import IPv4Address
 from pathlib import Path
 from typing import Any
 
 import dacite
 
-# todo: load this from a default renkon.toml
-DEFAULTS: dict[str, dict[str, Any]] = {
-    "repository": {
-        "path": Path(".renkon"),
-    },
-    "server": {
-        "hostname": IPv4Address("127.0.0.1"),
-        "port": 1410,  # stroke counts of 蓮根 (renkon)
-    },
-}
-
-# DEFAULT_CONFIG =
+_DEFAULT_CONF_DATA = tomllib.load(resources.files().joinpath("defaults.toml").open("rb"))
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -28,7 +19,7 @@ class RepositoryConfig:
     Configuration for Renkon's repository.
     """
 
-    path: Path
+    path: Path = field(default=_DEFAULT_CONF_DATA["repository"]["path"])
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -37,8 +28,8 @@ class ServerConfig:
     Configuration for Renkon when running as a server.
     """
 
-    hostname: IPv4Address
-    port: int
+    hostname: IPv4Address = field(default=_DEFAULT_CONF_DATA["server"]["hostname"])
+    port: int = field(default=_DEFAULT_CONF_DATA["server"]["port"])
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -47,8 +38,12 @@ class Config:
     Renkon configuration class.
     """
 
-    repository: RepositoryConfig | None
-    server: ServerConfig | None
+    repository: RepositoryConfig = field(default_factory=RepositoryConfig)
+    server: ServerConfig = field(default_factory=ServerConfig)
+
+    @staticmethod
+    def from_dict(data: Mapping[str, Any]) -> Config:
+        return dacite.from_dict(data_class=Config, data=data, config=dacite.Config(cast=[Path, IPv4Address]))
 
     @staticmethod
     def load(**overrides: Any) -> Config:
@@ -69,5 +64,8 @@ class Config:
         # Apply overrides.
         conf_data.update(overrides)
 
-        conf = dacite.from_dict(data_class=Config, data=conf_data, config=dacite.Config(cast=[Path, IPv4Address]))
-        return conf
+        return Config.from_dict(conf_data)
+
+    @staticmethod
+    def defaults() -> Config:
+        return Config.from_dict(_DEFAULT_CONF_DATA)

@@ -25,8 +25,6 @@ def test_load_default_toml_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     # Load the configuration.
     config = Config.load()
-    assert config.server is not None
-    assert config.repository is not None
 
     # Check that the configuration has been loaded correctly.
     assert config.server.hostname == IPv4Address("1.2.3.4")

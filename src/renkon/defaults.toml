@@ -11,7 +11,7 @@
 path = ".renkon"
 
 
-# Configuration for the Renkon when running as a server.
+# Configuration for Renkon when running as a server.
 [server]
 hostname = "127.0.0.1"
 port = 1410
