@@ -6,8 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import polars as pl
 
-from renkon.core.stats.base.model import Model, Results
-from renkon.core.stats.base.params import Params
+from renkon.core.stats.base import Model, Params, Results
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
