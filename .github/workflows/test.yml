@@ -36,6 +36,18 @@ jobs:
       - name: Ensure latest pip
         run: python -m pip install --upgrade pip
 
+      - name: Install Arrow + Parquet
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install apache-arrow
+          elif [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get install -y libarrow-dev
+            sudo apt-get install -y libarrow-glib-dev
+            sudo apt-get install -y libparquet-dev
+            sudo apt-get install -y libparquet-glib-dev
+          fi
+        shell: bash
+
       - name: Install Hatch
         run: pip install --upgrade hatch
 
