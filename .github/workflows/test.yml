@@ -39,6 +39,11 @@ jobs:
       - name: Install Hatch
         run: pip install --upgrade hatch
 
+      - name: Create default environment
+        run: hatch env create
+        env:
+          PYARROW_WITH_PARQUET: 1
+
       - name: Lint
         run: |
           mkdir .mypy_cache

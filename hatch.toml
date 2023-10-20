@@ -58,20 +58,12 @@ write-summary-report = "python scripts/write_coverage_summary_report.py"
 detached = true
 dependencies = [
     "black>=23.10.0",
-    "mypy>=1.6.1",
-    "ruff>=0.1.0",
+    "ruff>=0.1.1",
     "pyright>=1.1.132"
 ]
 
 [envs.lint.scripts]
-python-path = 'hatch -q -e default run python -c "import sys; print(sys.executable)"'
-typing-mypy = """
-    mypy --install-types --non-interactive \
-         --python-executable=$(hatch -q -e default run python -c "import sys; print(sys.executable)") \
-         {args:.}
-"""
-typing-pyright = "pyright {args:src/ tests/}"
-typing = ['typing-pyright']
+typing = "pyright {args:src/ tests/}"
 
 style = [
     'ruff {args:.}',

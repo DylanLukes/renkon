@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Generator
 from typing import Protocol
 
 
@@ -8,9 +7,5 @@ class Params(Protocol):
     """
     Base class for (learned) parameters of a model.
 
-    Currently, this just needs to be unpackable. Implementations can
-    expose more functionality (like named fields), but this is the bare minimum.
+    Doesn't really do anything. Just here for type hinting.
     """
-
-    def __iter__(self) -> Generator[float, None, None]:
-        ...

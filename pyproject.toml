@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
     # Data Processing
     "aiosql", # SQL
-    "pyarrow", # Columnar data
+    "pyarrow", # Columnar data format
     "numpy", # Numerical computing
     "scipy", # Scientific computing
     "polars", # Data frames

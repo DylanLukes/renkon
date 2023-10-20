@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Generator
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -19,10 +18,6 @@ class OLSParams(Params):
 
     m: npt.NDArray[np.float64]
     c: np.float64
-
-    def __iter__(self) -> Generator[float, None, None]:
-        yield float(self.c)
-        yield from (float(m_i) for m_i in self.m)
 
 
 @dataclass(kw_only=True)
