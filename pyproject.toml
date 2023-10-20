@@ -56,30 +56,9 @@ renkon = "renkon.cli:cli"
 [tool.pyright]
 pythonVersion = "3.12"
 include = ["./src", "./tests"]
-venvPath = ".hatch"
-venv = "renkon"  # use imports from default venv
 
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
-
-# Mypy
-# ----
-
-[tool.mypy]
-python_version = "3.12"
-strict = true
-mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
-enable_incomplete_feature = "TypeVarTuple, Unpack"
-
-[[tool.mypy.overrides]]
-module = [
-    "pyarrow.*"
-]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = ["tests.*"]
-disable_error_code = ["misc"]
 
 # Pytest
 # ------

@@ -6,11 +6,11 @@ import numpy as np
 import numpy.typing as npt
 import polars as pl
 
-from renkon.core.stats.base import Model, Params, Results
+from renkon.core.stats.base import Model, ModelParams, ModelResults
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class OLSParams(Params):
+class OLSModelParams(ModelParams):
     """
     Represents the parameters of an OLS model.
     """
@@ -20,12 +20,12 @@ class OLSParams(Params):
 
 
 @dataclass(kw_only=True)
-class OLSResults(Results[OLSParams]):
+class OLSModelResults(ModelResults[OLSModelParams]):
     """ """
 
     _data: pl.DataFrame  # TRAINING data used
     _model: OLSModel
-    _params: OLSParams
+    _params: OLSModelParams
 
     # Calculated in __post__init__
     _n: int = field(init=False)
@@ -37,7 +37,6 @@ class OLSResults(Results[OLSParams]):
     _bse: npt.NDArray[np.float64] = field(init=False)
 
     def __post_init__(self) -> None:
-        # todo: cached in the wrong place or?...
         y_col, x_cols = self.model.y_col, self.model.x_cols
 
         # Calculate the number of observations, parameters, and degrees of freedom.
@@ -46,16 +45,14 @@ class OLSResults(Results[OLSParams]):
         self._dof = self._n - self._k - 1
 
         # Calculate the training data residuals.
-        y_pred = self.model.predict(self.params)
+        y_pred = self.model.predict_expr(self.params)
         self._resid = self._data.select(pl.col(y_col) - y_pred).to_series().to_numpy()
 
         # Calculate the covariance matrix of the parameters and the standard errors of the parameters.
         rss = self._resid.T @ self._resid
-
         x = self._data.drop(y_col).to_numpy()
         self._cov_x = rss / self._dof * np.linalg.inv(x.T @ x)
         self._bse = np.sqrt(np.diag(self._cov_x))
-        pass
 
     def __repr__(self) -> str:
         return f"OLSResults(m={list(self.params.m)}, c={self.params.c}, ...)"
@@ -68,11 +65,8 @@ class OLSResults(Results[OLSParams]):
         return self._model
 
     @property
-    def params(self) -> OLSParams:
+    def params(self) -> OLSModelParams:
         return self._params
-
-    def score(self) -> pl.Expr:
-        return self.rsquared(adjust=True)
 
     # Linear specific properties
     # --------------------------
@@ -92,11 +86,8 @@ class OLSResults(Results[OLSParams]):
         """The standard errors of the parameters."""
         return self._bse
 
-    def rsquared(self, *, adjust: bool = True) -> pl.Expr:
-        return self.model.rsquared(self.params, adjust=adjust)
 
-
-class OLSModel(Model[OLSParams]):
+class OLSModel(Model[OLSModelParams]):
     """
     Ordinary Least Squares model.
 
@@ -128,7 +119,7 @@ class OLSModel(Model[OLSParams]):
     def fit_intercept(self) -> bool:
         return self._fit_intercept
 
-    def fit(self, data: pl.DataFrame) -> OLSResults:
+    def fit(self, data: pl.DataFrame) -> OLSModelResults:
         y_col, x_cols = self.y_col, self.x_cols
 
         if self._fit_intercept:
@@ -142,25 +133,24 @@ class OLSModel(Model[OLSParams]):
             rcond=None,
         )
 
-        return OLSResults(_data=data, _model=self, _params=OLSParams(m=np.asarray(m), c=c))
+        return OLSModelResults(_data=data, _model=self, _params=OLSModelParams(m=np.asarray(m), c=c))
 
-    def predict(self, params: OLSParams) -> pl.Expr:
+    def predict_expr(self, params: OLSModelParams) -> pl.Expr:
         y_col, x_cols = self.y_col, self.x_cols
-
         m, c = params.m, params.c
         return (pl.sum_horizontal([pl.col(x_col) * m_i for x_col, m_i in zip(x_cols, m, strict=True)]) + c).alias(y_col)
 
-    def errors(self, params: OLSParams, *, pred_col: str | None = None) -> pl.Expr:
-        pred_expr = pl.col(pred_col) if pred_col else self.predict(params)
+    def errors_expr(self, params: OLSModelParams, *, pred_col: str | None = None) -> pl.Expr:
+        pred_expr = pl.col(pred_col) if pred_col else self.predict_expr(params)
         return pl.col(self.y_col) - pred_expr
 
-    def score(self, params: OLSParams, *, err_col: str | None = None) -> pl.Expr:
-        return self.rsquared(params, err_col=err_col, adjust=True)
+    def score_expr(self, params: OLSModelParams, *, err_col: str | None = None) -> pl.Expr:
+        return self.rsquared_expr(params, err_col=err_col, adjust=True)
 
-    def rsquared(self, params: OLSParams, *, err_col: str | None = None, adjust: bool = True) -> pl.Expr:
+    def rsquared_expr(self, params: OLSModelParams, *, err_col: str | None = None, adjust: bool = True) -> pl.Expr:
         y_col, x_cols = self.y_col, self.x_cols
 
-        y_pred = pl.col(err_col) if err_col else self.predict(params)
+        y_pred = pl.col(err_col) if err_col else self.predict_expr(params)
         y_mean = pl.col(y_col).mean().alias("y_mean")
 
         rss = ((pl.col(y_col) - y_pred) ** 2).sum().alias("rss")
@@ -177,10 +167,10 @@ class OLSModel(Model[OLSParams]):
         return adj_rsq
 
 
-def linear_fit(*, data: pl.DataFrame, y: str, x: list[str] | str) -> tuple[OLSModel, OLSResults]:
+def linear_fit(*, data: pl.DataFrame, y: str, x: list[str] | str) -> OLSModelResults:
     """
     Fit a linear model to the given data.
     """
     x = [x] if isinstance(x, str) else x
     model = OLSModel(y_col=y, x_cols=x)
-    return model, model.fit(data)
+    return model.fit(data)

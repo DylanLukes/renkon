@@ -33,7 +33,7 @@ def test_linear_perfect_fit() -> None:
     assert score == approx(1.0)
 
     # Test if the model properly predicts the test data.
-    y_pred = df_test.select(model.predict(fit.params)).get_column("y")
+    y_pred = df_test.select(model.predict_expr(fit.params)).get_column("y")
     pl_testing.assert_series_equal(y_pred, df_test["y"])
 
 

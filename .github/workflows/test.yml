@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-13-latest ]
+        os: [ ubuntu-latest, macos-13 ]
         python-version: [ '3.12' ]
 
     steps:
@@ -54,19 +54,30 @@ jobs:
         shell: bash
 
       - name: Install Hatch
-        run: pip install --upgrade hatch
+        run: | 
+          pip install --upgrade hatch
+          hatch config set dirs.env.virtual ".hatch"
 
-      - name: Create default environment
+      - name: Cache Hatch environments
+        uses: actions/cache@v3
+        with:
+          path: .hatch
+          key: hatch-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('hatch.toml', 'pyproject.toml') }}
+
+      - if: runner.os == 'macOS'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion)" >> $GITHUB_ENV
+
+      - name: Create Hatch environments
         run: hatch env create
         env:
           PYARROW_WITH_PARQUET: 1
 
-      - name: Lint
+      - name: Lint code
         run: |
           mkdir .mypy_cache
           hatch run lint:all
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: hatch run cov
 
       - name: Disambiguate coverage filename

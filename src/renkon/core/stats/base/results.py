@@ -7,13 +7,15 @@ import polars as pl
 
 if TYPE_CHECKING:
     from renkon.core.stats.base.model import Model
-    from renkon.core.stats.base.params import Params
+    from renkon.core.stats.base.params import ModelParams
 
 
-class Results[P: Params](Protocol):
+class ModelResults[P: ModelParams](Protocol):
     """
     Represents the results of a model. Can be used to predict values
     for new data, or to evaluate the model's score on new data.
+
+    For convenience, it offers a few delegate methods to the underlying model.
     """
 
     @property
@@ -32,13 +34,6 @@ class Results[P: Params](Protocol):
         """
         ...
 
-    @abstractmethod
-    def score(self) -> pl.Expr:
-        """
-        :return: an expression that evaluates to the (float, [0,1]) score of the model.
-        """
-        ...
-
     # Convenience Delegate Methods
     # ----------------------------
 
@@ -51,7 +46,7 @@ class Results[P: Params](Protocol):
         :param data: the data to predict the dependent variable for.
         :param params: the parameters to use for the prediction, or ``None`` to use the model's parameters.
         """
-        return self.model.predict(params or self.params)
+        return self.model.predict_expr(params or self.params)
 
     def errors(self, params: P | None = None) -> pl.Expr:
         """
@@ -62,4 +57,10 @@ class Results[P: Params](Protocol):
         :param data: the data to calculate the errors/residuals for.
         :param params: the parameters to use for the prediction, or ``None`` to use the model's parameters.
         """
-        return self.model.errors(params or self.params)
+        return self.model.errors_expr(params or self.params)
+
+    def score(self, params: P | None = None) -> pl.Expr:
+        """
+        :return: an expression that evaluates to the (float, [0,1]) score of the model.
+        """
+        return self.model.score_expr(params or self.params)

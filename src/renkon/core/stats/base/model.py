@@ -6,21 +6,21 @@ from typing import TYPE_CHECKING, Protocol
 import polars as pl
 
 if TYPE_CHECKING:
-    from renkon.core.stats.base.params import Params
-    from renkon.core.stats.base.results import Results
+    from renkon.core.stats.base.params import ModelParams
+    from renkon.core.stats.base.results import ModelResults
 
 
-class Model[P: Params](Protocol):
+class Model[P: ModelParams](Protocol):
     """
-    Represents a (predictive) statistical model, prior to fitting.
+    Represents an unfit (predictive) statistical model.
 
     This is a somewhat loose/broad notion of "model" which can include things like
     a normal distribution, or a linear regression, or a clustering algorithm.
 
-    A linear regression, which can be used to predict a dependent variable from
-    independent variables, would also implement SupportsPredict.
+    The predict, errors, and score methods are implemented as expressions, which
+    can be evaluated on a DataFrame to get the actual values.
 
-    @note Based loosely on statsmodels.base.model.
+    Based loosely on statsmodels.base.model.
     """
 
     @property
@@ -40,7 +40,7 @@ class Model[P: Params](Protocol):
         ...
 
     @abstractmethod
-    def fit(self, data: pl.DataFrame) -> Results[P]:
+    def fit(self, data: pl.DataFrame) -> ModelResults[P]:
         """
         Fit (or more generally "train", "learn") the model on the given data.
 
@@ -50,7 +50,7 @@ class Model[P: Params](Protocol):
         ...
 
     @abstractmethod
-    def predict(self, params: P) -> pl.Expr:
+    def predict_expr(self, params: P) -> pl.Expr:
         """
         Expression: predicted y values.
 
@@ -60,7 +60,7 @@ class Model[P: Params](Protocol):
         ...
 
     @abstractmethod
-    def errors(self, params: P, *, pred_col: str | None = None) -> pl.Expr:
+    def errors_expr(self, params: P, *, pred_col: str | None = None) -> pl.Expr:
         """
         Expression: errors/residuals (has default implementation).
 
@@ -70,12 +70,13 @@ class Model[P: Params](Protocol):
         :param params: the parameters to use for the prediction.
         :param pred_col: the name of the column containing the predicted values, or ``None`` to use the default.
         :return: an expression that evaluates to the errors/residuals of the prediction.
+
+        # todo: errors don't necessarily make sense for all models, e.g. clustering?
         """
-        pred_expr = pl.col(pred_col) if pred_col else self.predict(params)
-        return pred_expr - pl.col(self.y_col)
+        ...
 
     @abstractmethod
-    def score(self, params: P, *, err_col: str | None = None) -> pl.Expr:
+    def score_expr(self, params: P, *, err_col: str | None = None) -> pl.Expr:
         """
         Expression: Calculate the score of the model on the data.
 

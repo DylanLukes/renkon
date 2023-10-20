@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from polars import NUMERIC_DTYPES, DataFrame, PolarsDataType, Series
 
-from renkon.core.stats.linear import OLSModel, OLSResults
+from renkon.core.stats.linear import OLSModel, OLSModelResults
 from renkon.core.strategy import InferenceStrategy, RANSACInferenceStrategy
 from renkon.core.trait.base import StatTrait, TraitSketch
 
 
 class Linear(StatTrait):
     model: OLSModel
-    results: OLSResults
+    results: OLSModelResults
 
-    def __init__(self, model: OLSModel, results: OLSResults):
+    def __init__(self, model: OLSModel, results: OLSModelResults):
         self.model = model
         self.results = results
 

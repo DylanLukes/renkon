@@ -59,11 +59,15 @@ detached = true
 dependencies = [
     "black>=23.10.0",
     "ruff>=0.1.1",
-    "pyright>=1.1.132"
+    "pyright>=1.1.132",
+    "watchdog"
 ]
 
 [envs.lint.scripts]
-typing = "pyright {args:src/ tests/}"
+typing = """
+    pyright --pythonpath="$(hatch run default:python -c 'import sys; print(sys.executable)')" {args:src/ tests/}
+"""
+dummy = 'echo "$(uname -a)"'
 
 style = [
     'ruff {args:.}',
@@ -80,3 +84,5 @@ all = [
     'style',
     'typing',
 ]
+
+watch = 'watchmedo shell-command --patterns="*.py" --recursive --command="hatch run lint:all" src/ tests/'
