@@ -5,6 +5,7 @@ from typing import Protocol
 from polars import DataFrame
 
 from renkon.core.trait.base import Trait, TraitType
+from renkon.core.trait.instantiator import TraitSketchInstantiator
 
 
 class InferenceEngine(Protocol):
@@ -48,13 +49,13 @@ class BatchInferenceEngine(InferenceEngine):
 
     def run(self, run_id: str, data: DataFrame) -> None:
         # 1. Instantiate the traits on appropriate columns.
+        instantiator = TraitSketchInstantiator()
+        sketches = instantiator.instantiate(self._trait_types.values(), data.schema)
+
+        print(sketches)
+
         # 2. Run the inference strategy on the data.
         # 3. Store the results.
-        raise NotImplementedError
-
-    def _sketch_trait(self, trait_type: TraitType, _data: DataFrame) -> Trait:
-        for _arity in trait_type.arities():
-            pass
         raise NotImplementedError
 
     def get_results(self, run_id: str) -> Sequence[Trait]:

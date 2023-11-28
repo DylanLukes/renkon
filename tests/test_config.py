@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from renkon.config import Config
+from renkon.config import RenkonConfig
 
 
 def test_load_default_toml_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -24,7 +24,7 @@ def test_load_default_toml_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     )
 
     # Load the configuration.
-    config = Config.load()
+    config = RenkonConfig.load()
 
     # Check that the configuration has been loaded correctly.
     assert config.server.hostname == IPv4Address("1.2.3.4")

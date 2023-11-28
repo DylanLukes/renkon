@@ -33,7 +33,7 @@ class ServerConfig:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class Config:
+class RenkonConfig:
     """
     Renkon configuration class.
     """
@@ -42,11 +42,11 @@ class Config:
     server: ServerConfig = field(default_factory=ServerConfig)
 
     @staticmethod
-    def from_dict(data: Mapping[str, Any]) -> Config:
-        return dacite.from_dict(data_class=Config, data=data, config=dacite.Config(cast=[Path, IPv4Address]))
+    def from_dict(data: Mapping[str, Any]) -> RenkonConfig:
+        return dacite.from_dict(data_class=RenkonConfig, data=data, config=dacite.Config(cast=[Path, IPv4Address]))
 
     @staticmethod
-    def load(**overrides: Any) -> Config:
+    def load(**overrides: Any) -> RenkonConfig:
         """
         Load the configuration from renkon.toml, and apply overrides.
 
@@ -64,8 +64,8 @@ class Config:
         # Apply overrides.
         conf_data.update(overrides)
 
-        return Config.from_dict(conf_data)
+        return RenkonConfig.from_dict(conf_data)
 
     @staticmethod
-    def defaults() -> Config:
-        return Config.from_dict(_DEFAULT_CONF_DATA)
+    def defaults() -> RenkonConfig:
+        return RenkonConfig.from_dict(_DEFAULT_CONF_DATA)

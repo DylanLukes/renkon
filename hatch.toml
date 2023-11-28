@@ -58,8 +58,8 @@ write-summary-report = "python scripts/write_coverage_summary_report.py"
 detached = true
 dependencies = [
     "black>=23.10.0",
-    "ruff>=0.1.1",
-    "pyright>=1.1.132",
+    "ruff>=0.1.5",
+    "pyright>=1.1.336",
     "watchdog"
 ]
 

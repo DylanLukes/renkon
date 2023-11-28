@@ -5,7 +5,7 @@ import pytest
 from loguru import logger
 from polars import DataFrame
 
-from renkon.config import Config
+from renkon.config import RenkonConfig
 from renkon.core.repo import SQLiteRegistry, Storage
 from renkon.core.repo.registry import Registry
 from renkon.core.repo.repository import Repository
@@ -25,19 +25,19 @@ def change_test_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def config(tmp_path: Path) -> Config:
-    return Config.load(repository={"path": tmp_path})
+def config(tmp_path: Path) -> RenkonConfig:
+    return RenkonConfig.load(repository={"path": tmp_path})
 
 
 @pytest.fixture
-def registry(config: Config) -> Registry:
+def registry(config: RenkonConfig) -> Registry:
     assert config.repository is not None
     path = config.repository.path / "registry.db"
     return SQLiteRegistry(path)
 
 
 @pytest.fixture
-def storage(config: Config) -> Storage:
+def storage(config: RenkonConfig) -> Storage:
     assert config.repository is not None
     root = config.repository.path / "data"
     root.mkdir(parents=True, exist_ok=True)

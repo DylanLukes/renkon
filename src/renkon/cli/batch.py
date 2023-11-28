@@ -15,6 +15,7 @@ import polars as pl
 from loguru import logger
 from rich.logging import RichHandler
 
+from renkon.config import RenkonConfig
 from renkon.core.trait.base import TraitType
 from renkon.core.trait.loader import TraitLoader
 from renkon.errors import TraitLoaderError
@@ -33,19 +34,24 @@ def setup_simple_logging() -> None:
     )
 
 
+DEFAULT_TRAIT_LIST = [
+    "renkon.core.trait.linear.Linear",
+]
+
+
 @click.command(context_settings={"show_default": True})
-@click.argument("trait_name", type=str)
 @click.argument("data_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("columns", type=str, nargs=-1)
 @click.pass_context
-def batch(ctx: click.Context, trait_name: str, data_path: Path, columns: list[str]) -> None:  # noqa: ARG001
+def batch(ctx: click.Context, trait_name: str, data_path: Path, columns: list[str]) -> None:
     # 0. Configure logging.
     setup_simple_logging()
 
     # 1. Load the configuration.
+    config = RenkonConfig.load()
 
-    # 1. Instantiate en engine.
-    loader = TraitLoader()
+    # 2. Instantiate the default engine.
+    engine = BatchInferenceEngine()
 
     # _engine = SimpleEngine() todo
     trait_type: TraitType | None = None

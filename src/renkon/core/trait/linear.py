@@ -2,21 +2,13 @@ from __future__ import annotations
 
 from polars import NUMERIC_DTYPES, DataFrame, PolarsDataType, Series
 
-from renkon.core.stats.linear import OLSModel, OLSModelResults
-from renkon.core.strategy import InferenceStrategy, RANSACInferenceStrategy
-from renkon.core.trait.base import StatTrait, TraitSketch
+from renkon.core.infer.strategy import InferenceStrategy, RANSACInferenceStrategy
+from renkon.core.trait.base import Trait
 
 
-class Linear(StatTrait):
-    model: OLSModel
-    results: OLSModelResults
-
-    def __init__(self, model: OLSModel, results: OLSModelResults):
-        self.model = model
-        self.results = results
-
+class Linear(Trait):
     @classmethod
-    def inference_strategy(cls, _priors: tuple[TraitSketch, ...]) -> InferenceStrategy:
+    def inference_strategy(cls) -> InferenceStrategy:
         return RANSACInferenceStrategy(min_sample=2)
 
     @classmethod
@@ -35,5 +27,5 @@ class Linear(StatTrait):
     def fit(cls, data: DataFrame, columns: list[str]) -> Linear | None:
         raise NotImplementedError
 
-    def test_inlying(self, data: DataFrame) -> Series:
+    def test(self, data: DataFrame) -> Series:
         raise NotImplementedError

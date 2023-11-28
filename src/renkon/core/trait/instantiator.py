@@ -58,29 +58,34 @@ class TraitSketchInstantiator:
 
 
 def test_instantiate_many() -> None:
+    instantiator = TraitSketchInstantiator()
+
     # todo: fix Normal
     trait_types = [
         Linear,
         # Normal
     ]
     schema: SchemaDict = {"a": Int64, "b": Float64, "c": Int64, "d": Utf8}
-    TraitSketchInstantiator.instantiate(trait_types, schema)
+    instantiator.instantiate(trait_types, schema)
 
 
 def test_instantiate_one() -> None:
+    instantiator = TraitSketchInstantiator()
+
     # Linear is commutative in all positions except the first (the dependent variable).
     trait_type = Linear
     schema: SchemaDict = {"a": Int64, "b": Float64, "c": Int64, "d": Utf8}
-    TraitSketchInstantiator.instantiate_one(trait_type, schema)
+    instantiator.instantiate_one(trait_type, schema)
 
 
 def test_check_type_compatibility() -> None:
+    instantiator = TraitSketchInstantiator()
     trait_type = Linear
 
     schema_bad = {"a": Int64, "b": Float64, "c": Int64, "d": Utf8}
-    res = TraitSketchInstantiator.check_type_compatibility(trait_type, schema_bad)
+    res = instantiator.check_type_compatibility(trait_type, schema_bad)
     assert res is False  # noqa: S101
 
     schema_ok = {"a": Int64, "b": Float64, "c": Int64}
-    res = TraitSketchInstantiator.check_type_compatibility(trait_type, schema_ok)
+    res = instantiator.check_type_compatibility(trait_type, schema_ok)
     assert res is True  # noqa: S101
