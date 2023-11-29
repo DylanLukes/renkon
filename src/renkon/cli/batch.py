@@ -17,7 +17,7 @@ from rich.logging import RichHandler
 
 from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
-from renkon.core.trait import Linear2, Linear3, Linear4
+from renkon.core.trait import Linear4
 
 
 def setup_simple_logging() -> None:
@@ -25,19 +25,12 @@ def setup_simple_logging() -> None:
     logger.configure(
         handlers=[
             {
-                "sink": RichHandler(markup=True, show_time=False, show_level=True, show_path=False),
+                "sink": RichHandler(markup=True),
                 "level": os.environ.get("LOG_LEVEL", "INFO"),
                 "format": "{message}",
             }
         ]
     )
-
-
-DEFAULT_TRAIT_LIST = [
-    "renkon.core.trait.linear.Linear2",
-    "renkon.core.trait.linear.Linear3",
-    "renkon.core.trait.linear.Linear4",
-]
 
 
 @click.command(context_settings={"show_default": True})
@@ -57,7 +50,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     _config = RenkonConfig.load()
 
     # 2. Instantiate the default engine.  # todo: use config for traits
-    engine = BatchInferenceEngine(trait_types=[Linear2, Linear3, Linear4])
+    engine = BatchInferenceEngine(trait_types=[Linear4])
     engine.run("batch-0", data)
     traits = engine.get_results("batch-0")
 

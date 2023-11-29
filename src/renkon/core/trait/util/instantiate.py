@@ -35,7 +35,7 @@ def instantiate_trait[T: Trait](trait_type: type[T], schema: Schema) -> Sequence
         if not check_type_compatibility(trait_type.meta, subschema):
             continue
 
-        sketch = TraitSketch[T](trait_type=trait_type, schema=subschema)
+        sketch: TraitSketch[T] = TraitSketch(trait_type=trait_type, schema=subschema)
         sketches.append(sketch)
 
     return sketches

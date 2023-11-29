@@ -23,7 +23,8 @@ class Linear(BaseTrait["Linear"], Protocol):
 
         @property
         def commutors(self) -> Sequence[bool]:
-            return (False,) + (self.arity - 1) * (True,)
+            # return (False,) + (self.arity - 1) * (True,)
+            return (True,) * self.arity
 
         @property
         def supported_dtypes(self) -> Sequence[ColumnTypeSet]:

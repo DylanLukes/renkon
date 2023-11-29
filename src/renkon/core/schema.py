@@ -52,5 +52,5 @@ class Schema(Mapping[ColumnName, ColumnType]):
         return len(self._dict)
 
     def __repr__(self):
-        schema_str = ", ".join([f"{col}: {ty}" for col, ty in self._dict])
+        schema_str = ", ".join([f"{col}: {ty}" for col, ty in self._dict.items()])
         return f"Schema({schema_str})"

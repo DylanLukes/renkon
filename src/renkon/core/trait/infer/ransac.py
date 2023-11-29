@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from polars import DataFrame
 
-from renkon.core.trait.base import TraitSketch
+from renkon.core.trait import Trait, TraitSketch
 from renkon.core.trait.infer import InferenceStrategy
 
-if TYPE_CHECKING:
-    from renkon.core.trait import Linear
 
-
-class RANSACInferenceStrategy(InferenceStrategy[Linear]):
+class RANSACInferenceStrategy[T: Trait](InferenceStrategy[T]):
     min_sample_size: int
     max_iterations: int
     min_inlier_ratio: float
@@ -29,7 +24,7 @@ class RANSACInferenceStrategy(InferenceStrategy[Linear]):
         self.min_inlier_ratio = min_inlier_ratio
         self.min_confidence = min_confidence
 
-    def infer(self, sketch: TraitSketch[Linear], data: DataFrame) -> Linear:
+    def infer(self, sketch: TraitSketch[T], data: DataFrame) -> T:
         raise NotImplementedError
 
     def score(self, data: DataFrame) -> float:
