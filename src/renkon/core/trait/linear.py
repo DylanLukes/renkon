@@ -3,13 +3,14 @@ from __future__ import annotations
 from polars import NUMERIC_DTYPES, DataFrame, PolarsDataType, Series
 
 from renkon.core.infer.strategy import InferenceStrategy, RANSACInferenceStrategy
+from renkon.core.stats.linear import OLSModel
 from renkon.core.trait.base import Trait
 
 
 class Linear(Trait):
     @classmethod
     def inference_strategy(cls) -> InferenceStrategy:
-        return RANSACInferenceStrategy(min_sample=2)
+        return RANSACInferenceStrategy(min_sample=2, base_model=OLSModel)
 
     @classmethod
     def arities(cls) -> tuple[int, ...]:

@@ -2,6 +2,7 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Protocol
 
+from loguru import logger
 from polars import DataFrame
 
 from renkon.core.trait.base import Trait, TraitType
@@ -14,7 +15,7 @@ class InferenceEngine(Protocol):
     """
 
     @abstractmethod
-    def run(self, run_id: str, data: DataFrame) -> None:
+    def run(self, run_id: str, data: DataFrame) -> Sequence[Trait]:
         """
         Run the inference engine.
         @param run_id: the unique ID of this run, used to retrieve results.
@@ -43,20 +44,32 @@ class BatchInferenceEngine(InferenceEngine):
     """
 
     _trait_types: dict[str, TraitType]
+    _results: dict[str, Sequence[Trait]]
 
     def __init__(self, trait_types: Sequence[TraitType]) -> None:
         self._trait_types = {trait_class.__name__: trait_class for trait_class in trait_types}
+        self._results = {}
 
-    def run(self, run_id: str, data: DataFrame) -> None:
+    def run(self, run_id: str, data: DataFrame) -> Sequence[Trait]:
         # 1. Instantiate the traits on appropriate columns.
         instantiator = TraitSketchInstantiator()
         sketches = instantiator.instantiate(self._trait_types.values(), data.schema)
 
-        print(sketches)
+        traits: list[Trait] = []
 
-        # 2. Run the inference strategy on the data.
+        # 2. Run inference strategy for each trait on the data.
+        for sketch in sketches:
+            logger.info(f"Inferring sketch {sketch}...")
+            strategy = sketch.trait_type.inference_strategy()
+            trait = strategy.infer(sketch, data)
+
+            traits.append(trait)
+
         # 3. Store the results.
-        raise NotImplementedError
+        self._results[run_id] = traits
+
+        # 4. Return results as promise.
+        return traits
 
     def get_results(self, run_id: str) -> Sequence[Trait]:
-        raise NotImplementedError
+        return self._results[run_id]

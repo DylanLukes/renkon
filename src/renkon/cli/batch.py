@@ -16,9 +16,8 @@ from loguru import logger
 from rich.logging import RichHandler
 
 from renkon.config import RenkonConfig
-from renkon.core.trait.base import TraitType
-from renkon.core.trait.loader import TraitLoader
-from renkon.errors import TraitLoaderError
+from renkon.core.engine import BatchInferenceEngine
+from renkon.core.trait import Linear
 
 
 def setup_simple_logging() -> None:
@@ -43,53 +42,68 @@ DEFAULT_TRAIT_LIST = [
 @click.argument("data_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("columns", type=str, nargs=-1)
 @click.pass_context
-def batch(ctx: click.Context, trait_name: str, data_path: Path, columns: list[str]) -> None:
+def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
+    data = pl.read_csv(data_path, columns=columns or None)
+    columns = columns or data.columns
+
     # 0. Configure logging.
     setup_simple_logging()
+    logger.info("Logging enabled.")
+    logger.trace("Trace")
 
     # 1. Load the configuration.
-    config = RenkonConfig.load()
+    _config = RenkonConfig.load()
 
-    # 2. Instantiate the default engine.
-    engine = BatchInferenceEngine()
+    # 2. Instantiate the default engine.  # todo: use config for traits
+    engine = BatchInferenceEngine(
+        trait_types=[
+            Linear,
+        ]
+    )
+    engine.run("batch-0", data)
+    traits = engine.get_results("batch-0")
 
-    # _engine = SimpleEngine() todo
-    trait_type: TraitType | None = None
+    # 3. Output results.
+    for _trait in traits:
+        pass
 
-    # 2. Handle default package case.
-    if "." not in trait_name:
-        trait_name = "renkon.core.trait." + trait_name
-
-    # 3. Locate the trait and ensure it exists.
-    try:
-        trait_type = loader.load(trait_name)
-    except TraitLoaderError as err:
-        msg = f"Trait '{trait_name}' not found."
-        raise click.BadParameter(msg) from err
-    logger.info(f"Loaded trait '{trait_name}'")
-
-    # 4 Sketch the trait.
-    sketch = trait_type.sketch(columns)
-    logger.info(f"Sketched trait: {sketch}")
-
-    # 5. Try to load the data.
-    data = pl.read_csv(data_path)
-    logger.info(f"Loaded data:\n{data}")
-
-    # 6 Ensure that the columns exist and are of acceptable types.
-    for col, valid_dtypes in zip(columns, trait_type.dtypes(len(columns)), strict=True):
-        if col not in data.columns:
-            msg = f"Column '{col}' not found in data."
-            raise RuntimeError(msg)
-
-        if data[col].dtype not in valid_dtypes:
-            msg = (
-                f"Column '{col} is of unsupported type '{data[col].dtype}', "
-                f"expected: '{' | '.join([str(t) for t in valid_dtypes])}'."
-            )
-            raise RuntimeError(msg)
-
-    # 7. Run inference.
-
-    # 8. Output results.
-    pass
+    # # _engine = SimpleEngine() todo
+    # trait_type: TraitType | None = None
+    #
+    # # 2. Handle default package case.
+    # if "." not in trait_name:
+    #     trait_name = "renkon.core.trait." + trait_name
+    #
+    # # 3. Locate the trait and ensure it exists.
+    # try:
+    #     trait_type = loader.load(trait_name)
+    # except TraitLoaderError as err:
+    #     msg = f"Trait '{trait_name}' not found."
+    #     raise click.BadParameter(msg) from err
+    # logger.info(f"Loaded trait '{trait_name}'")
+    #
+    # # 4 Sketch the trait.
+    # sketch = trait_type.sketch(columns)
+    # logger.info(f"Sketched trait: {sketch}")
+    #
+    # # 5. Try to load the data.
+    # data = pl.read_csv(data_path)
+    # logger.info(f"Loaded data:\n{data}")
+    #
+    # # 6 Ensure that the columns exist and are of acceptable types.
+    # for col, valid_dtypes in zip(columns, trait_type.dtypes(len(columns)), strict=True):
+    #     if col not in data.columns:
+    #         msg = f"Column '{col}' not found in data."
+    #         raise RuntimeError(msg)
+    #
+    #     if data[col].dtype not in valid_dtypes:
+    #         msg = (
+    #             f"Column '{col} is of unsupported type '{data[col].dtype}', "
+    #             f"expected: '{' | '.join([str(t) for t in valid_dtypes])}'."
+    #         )
+    #         raise RuntimeError(msg)
+    #
+    # # 7. Run inference.
+    #
+    # # 8. Output results.
+    # pass

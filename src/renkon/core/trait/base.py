@@ -23,6 +23,9 @@ class TraitSketch:
     trait_type: TraitType
     columns: tuple[str, ...]
 
+    def __repr__(self):
+        return f"TraitSketch({self.trait_type.__qualname__}, {self.columns})"
+
 
 @runtime_checkable
 class Trait(Protocol):

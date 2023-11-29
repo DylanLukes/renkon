@@ -20,8 +20,7 @@ def cli(ctx: click.Context) -> None:
     if ctx.invoked_subcommand:
         return
 
-    # No subcommand behavior yet.
-    logger.critical("not yet implemented!")
+    ctx.invoke(batch)
 
 
 # Disabled for now.
