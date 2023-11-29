@@ -1,11 +1,11 @@
 from pathlib import PurePath
 
 from polars import Int64, Utf8
+from polars.type_aliases import SchemaDict
 
 from renkon.core.repo.registry import Registry
-from renkon.core.repo.schema import Schema
 
-DUMMY_SCHEMA: Schema = {"a": Int64, "b": Utf8}
+DUMMY_SCHEMA: SchemaDict = {"a": Int64, "b": Utf8}
 
 
 def test_register_table(registry: Registry) -> None:
