@@ -1,10 +1,9 @@
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
-if TYPE_CHECKING:
-    from polars import PolarsDataType
-    from polars.type_aliases import SchemaDict
+from polars import PolarsDataType
+from polars.type_aliases import SchemaDict
 
 type ColumnName = str
 type ColumnType = PolarsDataType
@@ -21,22 +20,27 @@ class Schema(Mapping[ColumnName, ColumnType]):
 
     _dict: OrderedDict[ColumnName, ColumnType]
 
-    def __init__(self, schema_dict: SchemaDict, *, ordering: Sequence[ColumnName] = None):
+    def __init__(self, schema_dict: SchemaDict, *, ordering: Sequence[ColumnName] | None = None):
         ordering = ordering or list(schema_dict.keys())
         self._dict = OrderedDict((col, schema_dict[col]) for col in ordering)
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return tuple(self._dict.keys())
+
+    @property
+    def dtypes(self) -> Sequence[ColumnType]:
+        return tuple(self._dict.values())
 
     @classmethod
     def from_polars(cls, schema_dict: SchemaDict) -> Self:
         return cls(schema_dict)
 
-    def columns(self) -> Sequence[ColumnName]:
-        return tuple(self._dict.keys())
-
-    def types(self) -> Sequence[ColumnType]:
-        return tuple(self._dict.values())
+    def to_polars(self) -> SchemaDict:
+        return self._dict
 
     def subschema(self, columns: Sequence[ColumnName]) -> Self:
-        return Schema({col: self._dict[col] for col in columns})
+        return self.__class__({col: self._dict[col] for col in columns})
 
     def __getitem__(self, column_name: ColumnName) -> ColumnType:
         return self._dict[column_name]

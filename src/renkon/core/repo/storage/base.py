@@ -6,7 +6,7 @@ from pathlib import PurePath
 from typing import Protocol
 
 from polars import DataFrame
-from polars.type_aliases import PolarsDataType
+from polars.type_aliases import SchemaDict
 
 from renkon.core.repo import Registry
 from renkon.core.repo.registry.base import FileType
@@ -49,7 +49,7 @@ class Storage(Protocol):  # pragma: no cover
 
         path: PurePath
         filetype: FileType
-        schema: dict[str, PolarsDataType]
+        schema: SchemaDict
         rows: int = -1
         size: int = -1
 

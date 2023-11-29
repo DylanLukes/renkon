@@ -8,7 +8,7 @@ from renkon.core.trait.base import Trait, TraitSketch
 
 
 class InferenceStrategy[T: Trait](Protocol):
-    def infer(self, sketch: TraitSketch, data: DataFrame) -> T:
+    def infer(self, sketch: TraitSketch[T], data: DataFrame) -> T:
         """
         :return: an invariant inferred from the given data.
         """

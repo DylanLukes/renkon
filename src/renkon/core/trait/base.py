@@ -10,19 +10,15 @@ from polars import DataFrame, Series
 from renkon.core.schema import ColumnTypeSet, Schema
 
 if TYPE_CHECKING:
-    from renkon.core.infer.strategy import InferenceStrategy
+    from renkon.core.trait.infer import InferenceStrategy
 
 
-# We're going to be typing this a lot, so an alias is useful.
-# type TraitType = type[Trait]
-
-
-def infer(_sketch: TraitSketch, _data: DataFrame) -> Trait:
+def infer[T: "Trait"](_sketch: TraitSketch[T], _data: DataFrame) -> T:
     raise NotImplementedError
 
 
 @dataclass(eq=True, frozen=True, kw_only=True, slots=True)
-class TraitSketch:
+class TraitSketch[T: "Trait"]:
     """
     Represents a sketch of a trait, where the arity and types of the trait are known,
     but not the parameters.
@@ -57,7 +53,7 @@ class TraitMeta[T: "Trait"](Protocol):
 
     @property
     @abstractmethod
-    def dtypes(self) -> Sequence[ColumnTypeSet]:
+    def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
         ...
 
     @property
@@ -66,6 +62,7 @@ class TraitMeta[T: "Trait"](Protocol):
         ...
 
 
+@runtime_checkable
 class Trait(Protocol):
     """
     Represents an instantiated sketch. This protocol defines the abstract interface for all traits.
@@ -76,8 +73,8 @@ class Trait(Protocol):
 
     @property
     @abstractmethod
-    def sketch(self) -> TraitSketch:
-        """The sketch that instantiated this trait."""
+    def sketch[T: "Trait"](self: T) -> TraitSketch[T]:
+        """The sketch that was instantiated into this trait."""
         ...
 
     @property
@@ -99,24 +96,24 @@ class Trait(Protocol):
         ...
 
 
-class BaseTrait(Trait, Protocol):
+class BaseTrait[T: "BaseTrait"](Trait, Protocol):
     """
     Basic implementation of a trait. This should be appropriate for most traits.
     """
 
-    _sketch: TraitSketch
+    _sketch: TraitSketch[T]
     _params: tuple[Any]
     _score: float
     _matches: Series
 
-    def __init__(self, sketch: TraitSketch, params: tuple[Any], score: float, matches: Series):
+    def __init__(self, sketch: TraitSketch[T], params: tuple[Any], score: float, matches: Series):
         self._sketch = sketch
         self._params = params
         self._score = score
         self._matches = matches
 
     @property
-    def sketch(self) -> TraitSketch:
+    def sketch(self) -> TraitSketch[T]:
         return self._sketch
 
     @property

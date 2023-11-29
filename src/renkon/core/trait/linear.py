@@ -5,14 +5,12 @@ from typing import Any, ClassVar, Protocol
 
 from polars import NUMERIC_DTYPES
 
-from renkon.core.infer.strategy import InferenceStrategy, RANSACInferenceStrategy
 from renkon.core.schema import ColumnTypeSet
 from renkon.core.trait.base import BaseTrait, TraitMeta
+from renkon.core.trait.infer import InferenceStrategy, RANSACInferenceStrategy
 
 
-class Linear(BaseTrait, Protocol):
-    meta: ClassVar[Linear.Meta]
-
+class Linear(BaseTrait["Linear"], Protocol):
     class Meta(TraitMeta["Linear"]):
         _arity: int
 
@@ -28,12 +26,14 @@ class Linear(BaseTrait, Protocol):
             return (False,) + (self.arity - 1) * (True,)
 
         @property
-        def dtypes(self) -> Sequence[ColumnTypeSet]:
+        def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
             return (NUMERIC_DTYPES,) * self.arity
 
         @property
         def inference_strategy(self) -> InferenceStrategy[Linear]:
-            return RANSACInferenceStrategy(min_sample=self.arity)
+            return RANSACInferenceStrategy(min_sample=self.arity), InferenceStrategy[Linear]  # type: ignore
+
+    meta: ClassVar[Linear.Meta]
 
     def __init_subclass__(cls, arity: int = 2, **kwargs: Any):
         super().__init_subclass__(**kwargs)

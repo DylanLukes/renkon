@@ -17,7 +17,7 @@ from rich.logging import RichHandler
 
 from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
-from renkon.core.trait import Linear
+from renkon.core.trait import Linear2, Linear3, Linear4
 
 
 def setup_simple_logging() -> None:
@@ -57,11 +57,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     _config = RenkonConfig.load()
 
     # 2. Instantiate the default engine.  # todo: use config for traits
-    engine = BatchInferenceEngine(
-        trait_types=[
-            Linear,
-        ]
-    )
+    engine = BatchInferenceEngine(trait_types=[Linear2, Linear3, Linear4])
     engine.run("batch-0", data)
     traits = engine.get_results("batch-0")
 
@@ -93,7 +89,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     # logger.info(f"Loaded data:\n{data}")
     #
     # # 6 Ensure that the columns exist and are of acceptable types.
-    # for col, valid_dtypes in zip(columns, trait_type.dtypes(len(columns)), strict=True):
+    # for col, valid_dtypes in zip(columns, trait_type.supported_dtypes(len(columns)), strict=True):
     #     if col not in data.columns:
     #         msg = f"Column '{col}' not found in data."
     #         raise RuntimeError(msg)

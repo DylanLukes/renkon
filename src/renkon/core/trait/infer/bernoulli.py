@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from polars import DataFrame, Series
+from polars import DataFrame
 
-from renkon.core.infer.strategy.base import InferenceStrategy
-from renkon.core.trait.base import Trait, TraitSketch
+from renkon.core.trait import Trait, TraitSketch
+from renkon.core.trait.infer import InferenceStrategy
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -21,11 +21,8 @@ class BernoulliInferenceStrategy[T: Trait](InferenceStrategy[T]):
 
     sample_ratio: float = 1.0
 
-    def infer(self, sketch: TraitSketch, data: DataFrame) -> T:
-        raise NotImplementedError  # todo: implement
+    def infer(self, sketch: TraitSketch[T], data: DataFrame) -> T:
+        raise NotImplementedError
 
-    def test(self, trait: Trait, data: DataFrame) -> Series:
-        raise NotImplementedError  # todo: implement
-
-    def score(self, trait: Trait, data: DataFrame) -> float:
-        raise NotImplementedError  # todo: implement
+    def score(self, data: DataFrame) -> float:
+        raise NotImplementedError

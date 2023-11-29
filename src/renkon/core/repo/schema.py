@@ -9,11 +9,10 @@ from typing import cast
 import polars as pl
 import pyarrow as pa
 from polars import DataFrame
+from polars.type_aliases import SchemaDict
 
-from renkon.core.type_aliases import Schema
 
-
-def to_arrow_schema_bytes(schema: Schema) -> bytes:
+def to_arrow_schema_bytes(schema: SchemaDict) -> bytes:
     """
     Serialize a schema to bytes.
     """
@@ -21,7 +20,7 @@ def to_arrow_schema_bytes(schema: Schema) -> bytes:
     return cast(bytes, arrow_schema.serialize().to_pybytes())
 
 
-def from_arrow_schema_bytes(blob: bytes) -> Schema:
+def from_arrow_schema_bytes(blob: bytes) -> SchemaDict:
     """
     Deserialize a schema from bytes.
     """

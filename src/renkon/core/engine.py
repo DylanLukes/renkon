@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import Protocol
+from typing import Any, Protocol
 
 from loguru import logger
 from polars import DataFrame
 
-from renkon.core.trait.base import Trait, TraitType
-from renkon.core.trait.instantiator import TraitSketchInstantiator
+from renkon.core.schema import Schema
+from renkon.core.trait import Trait, TraitSketch
+from renkon.core.trait.util.instantiate import instantiate_trait
 
 
 class InferenceEngine(Protocol):
@@ -43,28 +44,26 @@ class BatchInferenceEngine(InferenceEngine):
     given set of traits on a given dataset.
     """
 
-    _trait_types: dict[str, TraitType]
+    _trait_types: dict[str, type[Trait]]
     _results: dict[str, Sequence[Trait]]
 
-    def __init__(self, trait_types: Sequence[TraitType]) -> None:
+    def __init__(self, trait_types: Sequence[type[Trait]]) -> None:
         self._trait_types = {trait_class.__name__: trait_class for trait_class in trait_types}
         self._results = {}
 
     def run(self, run_id: str, data: DataFrame) -> Sequence[Trait]:
-        # 1. Instantiate the traits on appropriate columns.
-        instantiator = TraitSketchInstantiator()
-        sketches = instantiator.instantiate(self._trait_types.values(), data.schema)
+        schema = Schema.from_polars(data.schema)
 
-        traits: list[Trait] = []
+        # 1. Instantiate the traits on appropriate columns.
+        sketches: list[TraitSketch[Any]] = []
+        for trait_type in self._trait_types.values():
+            sketches.extend(instantiate_trait(trait_type, schema))
 
         # 2. Run inference strategy for each trait on the data.
-        for trait_type, columns in sketches:
+        traits: list[Trait] = []
+        for sketch in sketches:
             logger.info(f"Inferring sketch {sketch}...")
-
-            strategy = sketch.trait_type
-            trait = strategy.infer(sketch, data)
-
-            traits.append(trait)
+            pass  # todo: implement
 
         # 3. Store the results.
         self._results[run_id] = traits

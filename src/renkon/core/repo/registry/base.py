@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import PurePath
 from typing import Literal, Protocol
 
-from renkon.core.repo.schema import Schema
+from polars.type_aliases import SchemaDict
 
 type LookupKey = Literal["name", "path"]
 type SearchKey = Literal["name", "path"]
@@ -21,7 +21,7 @@ class Registry(Protocol):
         path: PurePath
         name: str
         filetype: FileType
-        schema: Schema
+        schema: SchemaDict
         rows: int
         size: int
 
