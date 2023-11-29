@@ -34,7 +34,9 @@ def setup_simple_logging() -> None:
 
 
 DEFAULT_TRAIT_LIST = [
-    "renkon.core.trait.linear.Linear",
+    "renkon.core.trait.linear.Linear2",
+    "renkon.core.trait.linear.Linear3",
+    "renkon.core.trait.linear.Linear4",
 ]
 
 

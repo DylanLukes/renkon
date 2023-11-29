@@ -9,7 +9,7 @@ from renkon.core.trait.base import Trait, TraitSketch
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class BernoulliInferenceStrategy(InferenceStrategy):
+class BernoulliInferenceStrategy[T: Trait](InferenceStrategy[T]):
     """
     Simple inference strategy which evaluates a simple predicate on the data.
     The confidence rate is determined by a Bernoulli test over the assigned
@@ -21,7 +21,7 @@ class BernoulliInferenceStrategy(InferenceStrategy):
 
     sample_ratio: float = 1.0
 
-    def infer(self, sketch: TraitSketch, data: DataFrame) -> Trait:
+    def infer(self, sketch: TraitSketch, data: DataFrame) -> T:
         raise NotImplementedError  # todo: implement
 
     def test(self, trait: Trait, data: DataFrame) -> Series:

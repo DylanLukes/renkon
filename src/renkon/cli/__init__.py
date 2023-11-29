@@ -1,12 +1,7 @@
 import click
-from loguru import logger
 
 from renkon.__about__ import __version__
 from renkon.cli.batch import batch
-
-# Disabled for now.
-# from renkon.cli.client import client as client_group
-# from renkon.cli.server import server as server_group
 
 
 @click.group(
@@ -23,10 +18,7 @@ def cli(ctx: click.Context) -> None:
     ctx.invoke(batch)
 
 
-# Disabled for now.
 cli.add_command(batch)
-# cli.add_command(client_group)
-# cli.add_command(server_group)
 
 if __name__ == "__main__":
     cli()

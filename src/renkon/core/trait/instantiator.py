@@ -3,9 +3,18 @@ from collections.abc import Iterable, Sequence
 from polars.datatypes import Float64, Int64, Utf8
 from polars.type_aliases import SchemaDict
 
+from renkon.core.schema import Schema
 from renkon.core.trait.base import Trait, TraitSketch, TraitType
 from renkon.core.trait.linear import Linear
 from renkon.core.util.permute import permutations_with_commutativity
+
+
+def check_type_compatibility(trait_type: TraitType, schema: Schema) -> bool:
+    arity = len(schema)
+    for col_name, valid_dtypes in zip(schema.keys(), trait_type.dtypes(arity), strict=True):
+        if schema[col_name] not in valid_dtypes:
+            return False
+    return True
 
 
 class TraitSketchInstantiator:
@@ -14,10 +23,9 @@ class TraitSketchInstantiator:
     and a given set of column names and types.
     """
 
-    @staticmethod
-    def instantiate(trait_types: Iterable[TraitType], schema: SchemaDict) -> list[TraitSketch]:
+    def instantiate(self, trait_types: Iterable[TraitType], schema: Schema) -> list[TraitSketch]:
         """
-        Given a set of traits and a schema, instantiate the traits.
+        Given a set of traits and a schema, instantiate sketches for the traits.
         """
 
         sketches: list[TraitSketch] = []
@@ -28,28 +36,29 @@ class TraitSketchInstantiator:
 
         return sketches
 
-    @staticmethod
-    def instantiate_one[T: Trait](trait_type: type[T], schema: SchemaDict) -> Sequence[TraitSketch]:
-        """Instantiates sketches for a single trait type."""
+    def instantiate_one[T: Trait](self, trait_type: type[T], schema: Schema) -> Sequence[TraitSketch]:
+        """Instantiates sketches for all arities/permutations of the given schema, for a single trait type."""
 
         sketches: list[TraitSketch] = []
 
         for arity in sorted(trait_type.arities()):
-            col_names = tuple(schema.keys())
+            col = tuple(schema.keys())
             commutors = trait_type.commutors(arity)
-            col_perms = permutations_with_commutativity(col_names, commutors, length=arity)
+            col_perms = permutations_with_commutativity(col, commutors, length=arity)
             for col_perm in col_perms:
                 # Take the subset of the schema that corresponds to the current permutation.
-                subschema = {col_name: schema[col_name] for col_name in col_perm}
-                if not TraitSketchInstantiator.check_type_compatibility(trait_type, subschema):
+
+                subschema = schema.subschema(col_perm)
+                if not check_type_compatibility(trait_type, subschema):
                     continue
-                sketch = trait_type.sketch(col_perm)
+
+                sketch = TraitSketch(trait_type=trait_type, schema=subschema)
                 sketches.append(sketch)
 
         return sketches
 
     @staticmethod
-    def check_type_compatibility(trait_type: TraitType, schema: SchemaDict) -> bool:
+    def check_type_compatibility(trait_type: TraitType, schema: Schema) -> bool:
         arity = len(schema)
         for col_name, valid_dtypes in zip(schema.keys(), trait_type.dtypes(arity), strict=True):
             if schema[col_name] not in valid_dtypes:

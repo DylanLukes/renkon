@@ -1,32 +1,54 @@
 from __future__ import annotations
 
-from polars import NUMERIC_DTYPES, DataFrame, PolarsDataType, Series
+from collections.abc import Sequence
+from typing import Any, ClassVar, Protocol
+
+from polars import NUMERIC_DTYPES
 
 from renkon.core.infer.strategy import InferenceStrategy, RANSACInferenceStrategy
-from renkon.core.stats.linear import OLSModel
-from renkon.core.trait.base import Trait
+from renkon.core.schema import ColumnTypeSet
+from renkon.core.trait.base import BaseTrait, TraitMeta
 
 
-class Linear(Trait):
-    @classmethod
-    def inference_strategy(cls) -> InferenceStrategy:
-        return RANSACInferenceStrategy(min_sample=2, base_model=OLSModel)
+class Linear(BaseTrait, Protocol):
+    meta: ClassVar[Linear.Meta]
 
-    @classmethod
-    def arities(cls) -> tuple[int, ...]:
-        return 2, 3, 4
+    class Meta(TraitMeta["Linear"]):
+        _arity: int
 
-    @classmethod
-    def commutors(cls, arity: int) -> tuple[bool, ...]:
-        return (False,) + (arity - 1) * (True,)
+        def __init__(self, arity: int = 2):
+            self._arity = arity
 
-    @classmethod
-    def dtypes(cls, arity: int) -> tuple[frozenset[PolarsDataType], ...]:
-        return (NUMERIC_DTYPES,) * arity
+        @property
+        def arity(self) -> int:
+            return self._arity
 
-    @classmethod
-    def fit(cls, data: DataFrame, columns: list[str]) -> Linear | None:
-        raise NotImplementedError
+        @property
+        def commutors(self) -> Sequence[bool]:
+            return (False,) + (self.arity - 1) * (True,)
 
-    def test(self, data: DataFrame) -> Series:
-        raise NotImplementedError
+        @property
+        def dtypes(self) -> Sequence[ColumnTypeSet]:
+            return (NUMERIC_DTYPES,) * self.arity
+
+        @property
+        def inference_strategy(self) -> InferenceStrategy[Linear]:
+            return RANSACInferenceStrategy(min_sample=self.arity)
+
+    def __init_subclass__(cls, arity: int = 2, **kwargs: Any):
+        super().__init_subclass__(**kwargs)
+
+        # See: https://github.com/python/typing/discussions/1486
+        cls.meta = Linear.Meta(arity=arity)  # type: ignore
+
+
+class Linear2(Linear, arity=2):
+    pass
+
+
+class Linear3(Linear, arity=3):
+    pass
+
+
+class Linear4(Linear, arity=4):
+    pass

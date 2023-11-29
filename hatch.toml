@@ -64,19 +64,18 @@ dependencies = [
 ]
 
 [envs.lint.scripts]
+style = [
+    'ruff {args:.}',
+    'black --check --diff {args:src/ tests/}',
+]
+
 typing = """
     pyright --pythonpath="$(hatch run default:python -c 'import sys; print(sys.executable)')" {args:src/ tests/}
 """
-dummy = 'echo "$(uname -a)"'
-
-style = [
-    'ruff {args:.}',
-    'black --check --diff {args:.}',
-]
 
 fmt = [
-    'black {args:.}',
-    'ruff --fix {args:.}',
+    'black {args:src/ tests/}',
+    'ruff --fix {args:src/ tests/}',
     'style',
 ]
 
