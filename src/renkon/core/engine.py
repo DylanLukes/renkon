@@ -12,7 +12,7 @@ from renkon.core.trait.util.instantiate import instantiate_trait
 type AnySketch = TraitSketch[Any]
 
 # For now, erase the type parameter from the mapping for results.
-type _InferenceResults[T: Trait] = Mapping[TraitSketch[T], T]
+type _InferenceResults[T: Trait] = Mapping[TraitSketch[T], T | None]
 type InferenceResults = _InferenceResults[Any]
 
 
@@ -65,16 +65,23 @@ class BatchInferenceEngine(InferenceEngine):
         for trait_type in self._trait_types.values():
             sketches.extend(instantiate_trait(trait_type, schema))
             for sketch in sketches:
-                logger.info(f"{'INSTANTIATE':>12} {sketch}")
+                logger.trace(f"{'INSTANTIATE':>12} {sketch}")
 
         # 2. Run inference for each trait on the data.
         traits: InferenceResults = {}
         for sketch in sketches:
             logger.info(f"{'BEGIN INFER':>12} {sketch}")
             trait_type = sketch.trait_type
-            trait = trait_type.infer(sketch, data)
-            traits[sketch] = trait
-            logger.info(f"{'END INFER':>12} {sketch} {trait}")
+
+            try:
+                trait = trait_type.infer(sketch, data)
+                traits[sketch] = trait
+            except Exception:
+                logger.error("Exception occurred during inference (set LOG_LEVEL=DEBUG for more details).")
+                logger.opt(exception=True).debug("Traceback")
+                traits[sketch] = None
+
+            logger.info(f"{'END INFER':>12} {trait}\n")
 
         # 3. Store the results.
         self._results[run_id] = traits

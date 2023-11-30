@@ -27,7 +27,13 @@ def setup_simple_logging() -> None:
     logger.configure(
         handlers=[
             {
-                "sink": RichHandler(markup=False, show_path=False),
+                "sink": RichHandler(
+                    markup=False,
+                    show_path=False,
+                    rich_tracebacks=True,
+                    # tracebacks_suppress=[click],
+                    tracebacks_show_locals=True,
+                ),
                 "level": os.environ.get("LOG_LEVEL", "INFO"),
                 "format": "{message}",
             }
@@ -52,7 +58,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     _config = RenkonConfig.load()
 
     # 2. Instantiate the default engine.  # todo: use config for traits
-    engine = BatchInferenceEngine(trait_types=[Linear2, Linear3, Linear4])
+    engine = BatchInferenceEngine(trait_types=[Linear4, EqualNumeric])
     engine.run("batch-0", data)
     results = engine.get_results("batch-0")
 
@@ -64,7 +70,6 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
         table.add_column(f"[italic]{col}")
 
     console = Console()
-    console.print(tuple(results.items()))
     for sketch, trait in sorted(results.items()):
         trait_type = sketch.trait_type
         schema = sketch.schema
