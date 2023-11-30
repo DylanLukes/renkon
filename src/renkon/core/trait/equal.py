@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Self
 
@@ -7,7 +10,7 @@ from renkon.core.schema import ColumnTypeSet
 from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
 
 
-class Equal(BaseTrait["Equal"]):
+class Equal(BaseTrait["Equal"], ABC):
     class Meta(TraitMeta[Self]):
         _types: ColumnTypeSet
 

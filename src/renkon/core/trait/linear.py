@@ -11,7 +11,7 @@ from renkon.core.trait import TraitSketch
 from renkon.core.trait.base import BaseTrait, TraitMeta
 
 
-class Linear(BaseTrait["Linear"], ABC):
+class Linear(BaseTrait[Self], ABC):
     class Meta(TraitMeta[Self]):
         _arity: int
 
