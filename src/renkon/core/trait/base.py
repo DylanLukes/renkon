@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, runtime_checkable
+from typing import Any, ClassVar, Protocol, Self, runtime_checkable
 
 from polars import DataFrame, Series
 
 from renkon.core.schema import ColumnTypeSet, Schema
-
-if TYPE_CHECKING:
-    from renkon.core.trait.infer import InferenceStrategy
 
 
 def infer[T: "Trait"](_sketch: TraitSketch[T], _data: DataFrame) -> T:
@@ -56,11 +53,6 @@ class TraitMeta[T: "Trait"](Protocol):
     def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
         ...
 
-    @property
-    @abstractmethod
-    def inference_strategy(self) -> InferenceStrategy[T]:
-        ...
-
 
 @runtime_checkable
 class Trait(Protocol):
@@ -95,11 +87,18 @@ class Trait(Protocol):
         """A boolean Series of whether each row matches (inlies/satisfies) the trait."""
         ...
 
+    @classmethod
+    @abstractmethod
+    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
+        ...
 
-class BaseTrait[T: "BaseTrait"](Trait, Protocol):
+
+class BaseTrait[T: "BaseTrait"](Trait, ABC):
     """
     Basic implementation of a trait. This should be appropriate for most traits.
     """
+
+    meta: ClassVar
 
     _sketch: TraitSketch[T]
     _params: tuple[Any]
@@ -127,3 +126,8 @@ class BaseTrait[T: "BaseTrait"](Trait, Protocol):
     @property
     def matches(self) -> Series:
         return self._matches
+
+    @classmethod
+    @abstractmethod
+    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
+        ...

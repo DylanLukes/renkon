@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+from abc import ABC
 from collections.abc import Sequence
-from typing import Any, ClassVar, Protocol
+from typing import Any, ClassVar
 
-from polars import NUMERIC_DTYPES
+from polars import NUMERIC_DTYPES, DataFrame
 
 from renkon.core.schema import ColumnTypeSet
+from renkon.core.trait import TraitSketch
 from renkon.core.trait.base import BaseTrait, TraitMeta
-from renkon.core.trait.infer import InferenceStrategy, RANSACInferenceStrategy
 
 
-class Linear(BaseTrait["Linear"], Protocol):
+class Linear(BaseTrait["Linear"], ABC):
     class Meta(TraitMeta["Linear"]):
         _arity: int
 
@@ -30,10 +31,6 @@ class Linear(BaseTrait["Linear"], Protocol):
         def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
             return (NUMERIC_DTYPES,) * self.arity
 
-        @property
-        def inference_strategy(self) -> InferenceStrategy[Linear]:
-            return RANSACInferenceStrategy(min_sample=self.arity), InferenceStrategy[Linear]  # type: ignore
-
     meta: ClassVar[Linear.Meta]
 
     def __init_subclass__(cls, arity: int = 2, **kwargs: Any):
@@ -41,6 +38,10 @@ class Linear(BaseTrait["Linear"], Protocol):
 
         # See: https://github.com/python/typing/discussions/1486
         cls.meta = Linear.Meta(arity=arity)  # type: ignore
+
+    @classmethod
+    def infer[T: "Linear"](cls: type[T], sketch: TraitSketch[T], data: DataFrame) -> T:
+        raise NotImplementedError
 
 
 class Linear2(Linear, arity=2):

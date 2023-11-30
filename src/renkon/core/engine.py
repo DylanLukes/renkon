@@ -59,7 +59,7 @@ class BatchInferenceEngine(InferenceEngine):
         for trait_type in self._trait_types.values():
             sketches.extend(instantiate_trait(trait_type, schema))
 
-        # 2. Run inference strategy for each trait on the data.
+        # 2. Run inference for each trait on the data.
         traits: list[Trait] = []
         for sketch in sketches:
             logger.info(f"Inferring sketch {sketch}...")
