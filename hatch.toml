@@ -65,7 +65,7 @@ dependencies = [
 
 [envs.lint.scripts]
 style = [
-    'ruff {args:.}',
+    'ruff {args:src/ tests/}',
     'black --check --diff {args:src/ tests/}',
 ]
 

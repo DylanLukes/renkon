@@ -42,7 +42,7 @@ class Model[P: ModelParams](Protocol):
     @abstractmethod
     def fit(self, data: pl.DataFrame) -> ModelResults[P]:
         """
-        Fit (or more generally "train", "learn") the model on the given data.
+        Fit the model on the given data.
 
         :param data: the data to fit the model to.
         :return: the :class:`~renkon.models.model.Results` of fitting the model to the given data.

@@ -13,11 +13,13 @@ from pathlib import Path
 import click
 import polars as pl
 from loguru import logger
+from rich.console import Console
 from rich.logging import RichHandler
+from rich.table import Table
 
 from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
-from renkon.core.trait import Linear4
+from renkon.core.trait import *
 
 
 def setup_simple_logging() -> None:
@@ -25,7 +27,7 @@ def setup_simple_logging() -> None:
     logger.configure(
         handlers=[
             {
-                "sink": RichHandler(markup=True),
+                "sink": RichHandler(markup=False, show_path=False),
                 "level": os.environ.get("LOG_LEVEL", "INFO"),
                 "format": "{message}",
             }
@@ -50,51 +52,27 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     _config = RenkonConfig.load()
 
     # 2. Instantiate the default engine.  # todo: use config for traits
-    engine = BatchInferenceEngine(trait_types=[Linear4])
+    engine = BatchInferenceEngine(trait_types=[Linear2, Linear3, Linear4])
     engine.run("batch-0", data)
-    traits = engine.get_results("batch-0")
+    results = engine.get_results("batch-0")
 
     # 3. Output results.
-    for _trait in traits:
-        pass
+    table = Table(title="Inference Results")
+    table.add_column("Trait", style="green")
+    table.add_column("Result")
+    for col in columns:
+        table.add_column(f"[italic]{col}")
 
-    # # _engine = SimpleEngine() todo
-    # trait_type: TraitType | None = None
-    #
-    # # 2. Handle default package case.
-    # if "." not in trait_name:
-    #     trait_name = "renkon.core.trait." + trait_name
-    #
-    # # 3. Locate the trait and ensure it exists.
-    # try:
-    #     trait_type = loader.load(trait_name)
-    # except TraitLoaderError as err:
-    #     msg = f"Trait '{trait_name}' not found."
-    #     raise click.BadParameter(msg) from err
-    # logger.info(f"Loaded trait '{trait_name}'")
-    #
-    # # 4 Sketch the trait.
-    # sketch = trait_type.sketch(columns)
-    # logger.info(f"Sketched trait: {sketch}")
-    #
-    # # 5. Try to load the data.
-    # data = pl.read_csv(data_path)
-    # logger.info(f"Loaded data:\n{data}")
-    #
-    # # 6 Ensure that the columns exist and are of acceptable types.
-    # for col, valid_dtypes in zip(columns, trait_type.supported_dtypes(len(columns)), strict=True):
-    #     if col not in data.columns:
-    #         msg = f"Column '{col}' not found in data."
-    #         raise RuntimeError(msg)
-    #
-    #     if data[col].dtype not in valid_dtypes:
-    #         msg = (
-    #             f"Column '{col} is of unsupported type '{data[col].dtype}', "
-    #             f"expected: '{' | '.join([str(t) for t in valid_dtypes])}'."
-    #         )
-    #         raise RuntimeError(msg)
-    #
-    # # 7. Run inference.
-    #
-    # # 8. Output results.
-    # pass
+    console = Console()
+    console.print(tuple(results.items()))
+    for sketch, trait in sorted(results.items()):
+        trait_type = sketch.trait_type
+        schema = sketch.schema
+
+        table.add_row(
+            f"{sketch.trait_type.__name__}",
+            str(trait),
+            *[":heavy_check_mark:" if col in schema.columns else "" for col in columns],
+        )
+
+    console.print(table)

@@ -2,8 +2,11 @@
 Custom iterable tools extensions.
 """
 import itertools as it
+from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol
+
+from loguru import logger
 
 # We need to define these protocols ourselves for everything to typecheck properly.
 # For some reason the stdlib typing doesn't provide anything equivalent.
@@ -43,6 +46,8 @@ def permutations_with_commutativity[
     @param preserve_order: if True, the commutative items will be sorted in the order
                            they appear in the original sequence. If False, they will
                            be sorted in ascending order.
+
+    # TODO: results are non-deterministic?
     """
 
     if length is None:
@@ -50,8 +55,11 @@ def permutations_with_commutativity[
 
     # Generate iterator of all permutations. (Note that it.permutations preserves order.)
     all_perms = it.permutations(items, r=length)
-    distinct_perms: set[tuple[T, ...]] = set()
 
+    # Used as an ordered set.
+    distinct_perms: OrderedDict[tuple[T, ...], ()] = OrderedDict()
+
+    # todo: all_perms is deterministically ordered but...
     for perm in all_perms:
         # Just the commutative items in original order.
         comm_items = tuple(perm[i] for i in range(len(perm)) if comm[i])
@@ -70,6 +78,6 @@ def permutations_with_commutativity[
 
         # Add the canonical permutation to the set of distinct permutations, if it's not already there.
         if canon_perm not in distinct_perms:
-            distinct_perms.add(canon_perm)
+            distinct_perms[canon_perm] = ()
 
-    return list(distinct_perms)
+    return list(distinct_perms.keys())

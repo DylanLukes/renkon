@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
 from loguru import logger
@@ -9,6 +9,12 @@ from renkon.core.schema import Schema
 from renkon.core.trait import Trait, TraitSketch
 from renkon.core.trait.util.instantiate import instantiate_trait
 
+type AnySketch = TraitSketch[Any]
+
+# For now, erase the type parameter from the mapping for results.
+type _InferenceResults[T: Trait] = Mapping[TraitSketch[T], T]
+type InferenceResults = _InferenceResults[Any]
+
 
 class InferenceEngine(Protocol):
     """
@@ -16,7 +22,7 @@ class InferenceEngine(Protocol):
     """
 
     @abstractmethod
-    def run(self, run_id: str, data: DataFrame) -> Sequence[Trait]:
+    def run(self, run_id: str, data: DataFrame) -> InferenceResults:
         """
         Run the inference engine.
         @param run_id: the unique ID of this run, used to retrieve results.
@@ -25,7 +31,7 @@ class InferenceEngine(Protocol):
         ...
 
     @abstractmethod
-    def get_results(self, run_id: str) -> Sequence[Trait]:
+    def get_results(self, run_id: str) -> InferenceResults:
         """
         Retrieve the results of a run.
         @param run_id: the unique ID of the run.
@@ -45,25 +51,30 @@ class BatchInferenceEngine(InferenceEngine):
     """
 
     _trait_types: dict[str, type[Trait]]
-    _results: dict[str, Sequence[Trait]]
+    _results: dict[str, InferenceResults]
 
     def __init__(self, trait_types: Sequence[type[Trait]]) -> None:
         self._trait_types = {trait_class.__name__: trait_class for trait_class in trait_types}
         self._results = {}
 
-    def run(self, run_id: str, data: DataFrame) -> Sequence[Trait]:
+    def run(self, run_id: str, data: DataFrame) -> InferenceResults:
         schema = Schema.from_polars(data.schema)
 
         # 1. Instantiate the traits on appropriate columns.
-        sketches: list[TraitSketch[Any]] = []
+        sketches: list[AnySketch] = []
         for trait_type in self._trait_types.values():
             sketches.extend(instantiate_trait(trait_type, schema))
+            for sketch in sketches:
+                logger.info(f"{'INSTANTIATE':>12} {sketch}")
 
         # 2. Run inference for each trait on the data.
-        traits: list[Trait] = []
+        traits: InferenceResults = {}
         for sketch in sketches:
-            logger.info(f"Inferring sketch {sketch}...")
-            pass  # todo: implement
+            logger.info(f"{'BEGIN INFER':>12} {sketch}")
+            trait_type = sketch.trait_type
+            trait = trait_type.infer(sketch, data)
+            traits[sketch] = trait
+            logger.info(f"{'END INFER':>12} {sketch} {trait}")
 
         # 3. Store the results.
         self._results[run_id] = traits
@@ -71,5 +82,5 @@ class BatchInferenceEngine(InferenceEngine):
         # 4. Return results as promise.
         return traits
 
-    def get_results(self, run_id: str) -> Sequence[Trait]:
+    def get_results(self, run_id: str) -> InferenceResults:
         return self._results[run_id]

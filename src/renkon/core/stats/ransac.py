@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import numpy as np
 import polars as pl
 
 from renkon.core.stats.base import Model, ModelParams, ModelResults
@@ -21,7 +22,7 @@ class RANSACModelResults[P: ModelParams](ModelResults[P]):
 
 class RANSACModel[P: ModelParams](Model[P]):
     _base_model: Model[P]
-    _max_iterations: int
+    _max_trials: int
     _min_inlier_ratio: float
     _min_score: float
 
@@ -29,14 +30,13 @@ class RANSACModel[P: ModelParams](Model[P]):
         self,
         base_model: Model[P],
         *,
-        max_iterations: int = 100,
-        min_inlier_ratio: float = 0.9,
-        min_confidence: float = 0.9,
+        max_trials: int = 100,
+        stop_inliers_pct: float = np.inf,
+        stop_score: float = np.inf,
+        stop_confidence: float = np.inf,
     ):
         self._base_model = base_model
-        self._max_iterations = max_iterations
-        self._min_inlier_ratio = min_inlier_ratio
-        self._min_score = min_confidence
+        self._max_trials = max_trials
 
     @property
     def y_col(self) -> str:

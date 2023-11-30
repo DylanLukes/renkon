@@ -28,6 +28,12 @@ class TraitSketch[T: "Trait"]:
     def arity(self) -> int:
         return len(self.schema)
 
+    def __lt__(self, other):
+        return (self.trait_type.__name__, self.schema) < (other.trait_type.__name__, other.schema)
+
+    def __iter__(self):
+        return iter((self.trait_type, self.schema))
+
     def __repr__(self):
         return f"TraitSketch({self.trait_type.__qualname__}, {self.schema})"
 
@@ -110,26 +116,6 @@ class BaseTrait[T: "BaseTrait"](Trait, ABC):
         self._params = params
         self._score = score
         self._matches = matches
-
-    def __init_subclass__(cls, **kwargs: Any):
-        super().__init_subclass__(**kwargs)
-
-        # If meta is defined, continue.
-        if hasattr(cls, "meta"):
-            return
-
-        # Otherwise, check for a Meta class and try to instantiate it.
-        if hasattr(cls, "Meta"):
-            try:
-                cls.meta = cls.Meta()  # type: ignore
-                return
-            except Exception as e:
-                msg = f"{cls.__name__}'s Meta class could not be instantiated."
-                raise RuntimeError(msg) from e
-
-        # Otherwise, we have no meta, so raise an error.
-        msg = f"{cls.__name__} has no meta class-var or Meta inner-class defined."
-        raise RuntimeError(msg)
 
     @property
     def sketch(self) -> TraitSketch[T]:

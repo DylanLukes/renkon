@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from typing import Any, Self
 
 from polars import NUMERIC_DTYPES, DataFrame
+from sklearn.linear_model import LinearRegression, RANSACRegressor
 
 from renkon.core.schema import ColumnTypeSet
 from renkon.core.trait import TraitSketch
@@ -24,8 +25,8 @@ class Linear(BaseTrait[Self], ABC):
 
         @property
         def commutors(self) -> Sequence[bool]:
-            # return (False,) + (self.arity - 1) * (True,)
-            return (True,) * self.arity
+            return (False,) + (self.arity - 1) * (True,)
+            # return (True,) * self.arity
 
         @property
         def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
@@ -37,7 +38,13 @@ class Linear(BaseTrait[Self], ABC):
 
     @classmethod
     def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
-        raise NotImplementedError
+        _ransac = RANSACRegressor(estimator=LinearRegression())
+
+        y_col, *x_cols = sketch.schema.columns
+        # print(y_col, x_cols)
+
+        y_data, x_data = data[y_col], data[x_cols]
+        return None  # type: ignore
 
 
 class Linear2(Linear, arity=2):
