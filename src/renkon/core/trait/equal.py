@@ -10,7 +10,7 @@ from renkon.core.schema import ColumnTypeSet
 from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
 
 
-class Equal(BaseTrait["Equal"], ABC):
+class Equal(BaseTrait[Self], ABC):
     class Meta(TraitMeta[Self]):
         _types: ColumnTypeSet
 
