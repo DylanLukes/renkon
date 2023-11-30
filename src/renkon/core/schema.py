@@ -2,7 +2,7 @@ from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from typing import Self
 
-from polars import PolarsDataType
+from polars.datatypes import PolarsDataType
 from polars.type_aliases import SchemaDict
 
 type ColumnName = str

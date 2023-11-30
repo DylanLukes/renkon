@@ -111,6 +111,26 @@ class BaseTrait[T: "BaseTrait"](Trait, ABC):
         self._score = score
         self._matches = matches
 
+    def __init_subclass__(cls, **kwargs: Any):
+        super().__init_subclass__(**kwargs)
+
+        # If meta is defined, continue.
+        if hasattr(cls, "meta"):
+            return
+
+        # Otherwise, check for a Meta class and try to instantiate it.
+        if hasattr(cls, "Meta"):
+            try:
+                cls.meta = cls.Meta()  # type: ignore
+                return
+            except Exception as e:
+                msg = f"{cls.__name__}'s Meta class could not be instantiated."
+                raise RuntimeError(msg) from e
+
+        # Otherwise, we have no meta, so raise an error.
+        msg = f"{cls.__name__} has no meta class-var or Meta inner-class defined."
+        raise RuntimeError(msg)
+
     @property
     def sketch(self) -> TraitSketch[T]:
         return self._sketch
