@@ -4,7 +4,8 @@ from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Self
 
-from polars import NUMERIC_DTYPES, DataFrame, Utf8
+from loguru import logger
+from polars import FLOAT_DTYPES, NUMERIC_DTYPES, DataFrame, Utf8
 
 from renkon.core.schema import ColumnTypeSet
 from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
@@ -39,7 +40,13 @@ class Equal(BaseTrait[Self], ABC):
     @classmethod
     def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
         lhs, rhs = sketch.schema.columns
-        mask = data[lhs] == data[rhs]
+
+        if set(sketch.schema.dtypes) & FLOAT_DTYPES:
+            logger.warning(f"Sketch {sketch} contains floats, using 1e-5 tolerance for fuzzy check.")
+            mask = (data[lhs] - data[rhs]).abs() < 1e-5
+        else:
+            mask = data[lhs] == data[rhs]
+
         score = mask.sum() / len(mask)
 
         return cls(sketch=sketch, params=(), mask=mask, score=score)

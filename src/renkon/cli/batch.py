@@ -13,11 +13,13 @@ import sys
 from pathlib import Path
 
 import click
+import numpy as np
 import polars as pl
 from loguru import logger
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
+from rich.text import Text
 from rich.theme import Theme
 
 from renkon.config import RenkonConfig
@@ -40,6 +42,45 @@ console = Console(
         }
     )
 )
+
+# Mapping from percentages to corresponding block characters.
+SHADE_BLOCKS = [" ", "░", "▒", "▓", "█"]
+
+H_BLOCK_CHARS = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+V_BLOCK_CHARS = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+
+
+def pct_to_block(pct: float, blocks=None) -> str:
+    """
+    Convert a percentage to a Unicode block character, where the block height is
+    proportional to the percentage.
+    """
+    blocks = blocks or V_BLOCK_CHARS
+    return blocks[int(pct * (len(blocks) - 1))]
+
+
+def mask_to_blocks(mask: pl.Series, n_chunks=20) -> str:
+    """
+    Convert a Boolean series to a string of n_chunks Unicode block characters,
+    where each character's block height is proportional to the percentage of
+    True values in that chunk of the series.
+    """
+    chunk_pcts = (
+        (
+            pl.LazyFrame({"idx": pl.int_range(0, len(mask), eager=True), "mask": mask})
+            .group_by_dynamic("idx", every=f"{len(mask) // n_chunks}i")
+            .agg((pl.sum("mask") / pl.count("mask")).alias("pct"))
+        )
+        .select("pct")
+        .collect()
+    )["pct"].to_list()
+    return "".join(map(pct_to_block, chunk_pcts))
+
+
+if __name__ == "__main__":
+    # Generate (using numpy) a boolean series of length 100.
+    series = pl.Series("bool", np.random.choice([True, False], size=1000, p=[0.2, 0.8]))
+    print(mask_to_blocks(series))
 
 
 def setup_simple_logging() -> None:
@@ -102,10 +143,10 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
 
     # 3. Output results.
     table = Table(title="Inference Results")
-    table.add_column("Class", style="green")
+    table.add_column("Sketch")
     table.add_column("Result")
     table.add_column("Score")
-    table.add_column("Match")
+    table.add_column("Matches")
     for col, dtype in data[columns].schema.items():
         table.add_column(f"[underline]{col}\n[/underline]{dtype}")
 
@@ -114,10 +155,10 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
         schema = sketch.schema
 
         table.add_row(
-            f"{sketch.trait_type.__name__}",
+            f"{sketch}",
             str(trait),
             f"{trait.score:0.3f}",
-            "",
+            Text(f"{mask_to_blocks(trait.mask)}", style="green underline"),
             *[":heavy_check_mark:" if col in schema.columns else "" for col in columns],
         )
 
