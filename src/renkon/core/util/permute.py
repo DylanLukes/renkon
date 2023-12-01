@@ -46,8 +46,6 @@ def permutations_with_commutativity[
     @param preserve_order: if True, the commutative items will be sorted in the order
                            they appear in the original sequence. If False, they will
                            be sorted in ascending order.
-
-    # TODO: results are non-deterministic?
     """
 
     if length is None:

@@ -34,6 +34,9 @@ class TraitSketch[T: "Trait"]:
     def __iter__(self):
         return iter((self.trait_type, self.schema))
 
+    def __str__(self):
+        return f"{self.trait_type.__qualname__}({str(self.schema)[1:-1]})"
+
     def __repr__(self):
         return f"TraitSketch({self.trait_type.__qualname__}, {self.schema})"
 
@@ -77,20 +80,20 @@ class Trait(Protocol):
 
     @property
     @abstractmethod
-    def params(self) -> tuple[object, ...]:
+    def params(self) -> tuple[object, ...] | None:
         """The inferred parameters of the trait."""
+        ...
+
+    @property
+    @abstractmethod
+    def mask(self) -> Series:
+        """A boolean Series of whether each row matches (inlies/satisfies) the trait."""
         ...
 
     @property
     @abstractmethod
     def score(self) -> float:
         """A [0,1] confidence of the trait."""
-        ...
-
-    @property
-    @abstractmethod
-    def matches(self) -> Series:
-        """A boolean Series of whether each row matches (inlies/satisfies) the trait."""
         ...
 
     @classmethod
@@ -107,31 +110,31 @@ class BaseTrait[T: "BaseTrait"](Trait, ABC):
     meta: ClassVar
 
     _sketch: TraitSketch[T]
-    _params: tuple[Any]
+    _params: tuple[object, ...]
+    _mask: Series
     _score: float
-    _matches: Series
 
-    def __init__(self, sketch: TraitSketch[T], params: tuple[Any], score: float, matches: Series):
+    def __init__(self, sketch: TraitSketch[T], params: tuple[object, ...], mask: Series, score: float):
         self._sketch = sketch
         self._params = params
+        self._mask = mask
         self._score = score
-        self._matches = matches
 
     @property
     def sketch(self) -> TraitSketch[T]:
         return self._sketch
 
     @property
-    def params(self) -> tuple[Any]:
+    def params(self) -> tuple[object, ...] | None:
         return self._params
+
+    @property
+    def mask(self) -> Series:
+        return self._mask
 
     @property
     def score(self) -> float:
         return self._score
-
-    @property
-    def matches(self) -> Series:
-        return self._matches
 
     @classmethod
     @abstractmethod

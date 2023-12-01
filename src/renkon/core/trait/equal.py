@@ -33,9 +33,16 @@ class Equal(BaseTrait[Self], ABC):
         cls.meta = Equal.Meta(types=types)
         super().__init_subclass__(**kwargs)
 
+    def __str__(self):
+        return f"{self.sketch.schema.columns[0]} == {self.sketch.schema.columns[1]}"
+
     @classmethod
     def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
-        raise NotImplementedError
+        lhs, rhs = sketch.schema.columns
+        mask = data[lhs] == data[rhs]
+        score = mask.sum() / len(mask)
+
+        return cls(sketch=sketch, params=(), mask=mask, score=score)
 
 
 class EqualNumeric(Equal, types=NUMERIC_DTYPES):

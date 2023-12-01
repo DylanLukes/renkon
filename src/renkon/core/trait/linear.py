@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Self
@@ -25,8 +26,8 @@ class Linear(BaseTrait[Self], ABC):
 
         @property
         def commutors(self) -> Sequence[bool]:
-            return (False,) + (self.arity - 1) * (True,)
-            # return (True,) * self.arity
+            # return (False,) + (self.arity - 1) * (True,)
+            return (True,) * self.arity
 
         @property
         def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
