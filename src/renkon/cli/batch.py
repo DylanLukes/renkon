@@ -13,6 +13,7 @@ import sys
 from base64 import b64encode
 from io import TextIOWrapper
 from pathlib import Path
+from typing import Any
 
 import click
 import numpy as np
@@ -30,11 +31,11 @@ from renkon.core.engine import BatchInferenceEngine
 from renkon.core.trait import EqualNumeric, EqualString, Linear2, Linear3, Linear4, Trait
 
 ENABLED_TRAITS: dict[type[Trait], bool] = {
-    Linear2: False,
-    Linear3: False,
-    Linear4: False,
+    Linear2: True,
+    Linear3: True,
+    Linear4: True,
     EqualNumeric: True,
-    EqualString: False,
+    EqualString: True,
 }
 
 # Mapping from percentages to corresponding block characters.
@@ -153,10 +154,14 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
             _trait_type = sketch.trait_type
             schema = sketch.schema
 
+            green_score_thresh = 0.5
+
             if trait:
                 sketch_renderable = Pretty(sketch)
-                trait_renderable = Pretty(trait)
-                score_renderable = Text(f"{trait.score:.2f}", style="green")
+                trait_renderable = Pretty(str(trait))
+                score_renderable = Text(
+                    f"{trait.score:.2f}", style="green" if trait.score > green_score_thresh else "red"
+                )
                 match_renderable = Text(f"{mask_to_blocks(trait.mask)}", style="green underline")
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
             else:
@@ -175,7 +180,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
             )
         Console(file=sys.stdout).print(table)
     else:
-        rows = []
+        rows: list[dict[str, Any]] = []
         for sketch, trait in results.items():
             if trait is None:
                 continue
@@ -185,13 +190,15 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
                     "sketch": repr(sketch),
                     "trait": str(trait),
                     "score": trait.score if trait else None,
-                    "mask_base64": b64encode(np.packbits(trait.mask.to_numpy())).decode("ascii"),
+                    "mask_base64": b64encode(np.packbits(trait.mask)).decode("ascii"),
+                    **{col: col in sketch.schema.columns for col in columns},
                 }
             )
 
         # See the comment on sys.stdout's typeshed stubs for why this is valid (unless overriden).
         if not isinstance(sys.stdout, TextIOWrapper):
-            raise RuntimeError("sys.stdout is not a TextIOWrapper, cannot write CSV output.")
+            msg = "sys.stdout is not a TextIOWrapper, cannot write CSV output."
+            raise RuntimeError(msg)
 
         # Flush stdout to ensure output is written last, just in case.
         sys.stderr.flush()

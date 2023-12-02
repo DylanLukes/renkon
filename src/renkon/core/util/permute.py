@@ -6,8 +6,6 @@ from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol
 
-from loguru import logger
-
 # We need to define these protocols ourselves for everything to typecheck properly.
 # For some reason the stdlib typing doesn't provide anything equivalent.
 # These definitions are adapted from Typeshed's private stdlib.

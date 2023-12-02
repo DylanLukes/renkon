@@ -1,7 +1,5 @@
 from collections.abc import Sequence
 
-from loguru import logger
-
 from renkon.core.schema import Schema
 from renkon.core.trait.base import Trait, TraitMeta, TraitSketch
 from renkon.core.util.permute import permutations_with_commutativity

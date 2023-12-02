@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import time
 from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Self
 
+import numpy as np
+import polars as pl
 from polars import NUMERIC_DTYPES, DataFrame
 from sklearn.linear_model import LinearRegression, RANSACRegressor
 
@@ -26,8 +27,8 @@ class Linear(BaseTrait[Self], ABC):
 
         @property
         def commutors(self) -> Sequence[bool]:
-            # return (False,) + (self.arity - 1) * (True,)
-            return (True,) * self.arity
+            return (False,) + (self.arity - 1) * (True,)
+            # return (True,) * self.arity
 
         @property
         def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
@@ -37,15 +38,33 @@ class Linear(BaseTrait[Self], ABC):
         cls.meta = Linear.Meta(arity=arity)
         super().__init_subclass__(**kwargs)
 
+    def __str__(self):
+        # Format in y = mx + b form with coefs.
+        y_col, *x_cols = self.sketch.schema.columns
+        cs = self.params[:-1]
+        m = self.params[-1]
+
+        coef_str = " + ".join(f"({c:.2f} × {x})" for c, x in zip(cs, x_cols, strict=True))
+
+        return f"{y_col} = {coef_str} + {m:.2f}"
+
     @classmethod
     def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
-        _ransac = RANSACRegressor(estimator=LinearRegression())
-
         y_col, *x_cols = sketch.schema.columns
-        # print(y_col, x_cols)
-
         y_data, x_data = data[y_col], data[x_cols]
-        return None  # type: ignore
+
+        ransac = RANSACRegressor(
+            estimator=LinearRegression(), residual_threshold=np.median(np.abs(y_data - np.median(y_data))) / 4
+        )
+
+        ransac.fit(x_data, y_data)
+
+        return cls(
+            sketch=sketch,
+            params=(*ransac.estimator_.coef_, ransac.estimator_.intercept_),
+            mask=pl.Series(ransac.inlier_mask_),
+            score=abs(ransac.score(x_data, y_data)),
+        )
 
 
 class Linear2(Linear, arity=2):
