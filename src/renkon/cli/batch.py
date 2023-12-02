@@ -10,10 +10,12 @@ This is likely a temporary feature but is useful for testing and for small-scale
 import logging
 import os
 import sys
+from base64 import b64encode
 from io import TextIOWrapper
 from pathlib import Path
 
 import click
+import numpy as np
 import polars as pl
 from loguru import logger
 from rich.console import Console
@@ -29,9 +31,9 @@ from renkon.core.trait import EqualNumeric, EqualString, Linear2, Linear3, Linea
 
 ENABLED_TRAITS: dict[type[Trait], bool] = {
     Linear2: False,
-    Linear3: True,
-    Linear4: True,
-    EqualNumeric: False,
+    Linear3: False,
+    Linear4: False,
+    EqualNumeric: True,
     EqualString: False,
 }
 
@@ -173,10 +175,26 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
             )
         Console(file=sys.stdout).print(table)
     else:
-        rows = ["foo", "bar", "baz"]
+        rows = []
         for sketch, trait in results.items():
-            pass
+            if trait is None:
+                continue
+
+            rows.append(
+                {
+                    "sketch": repr(sketch),
+                    "trait": str(trait),
+                    "score": trait.score if trait else None,
+                    "mask_base64": b64encode(np.packbits(trait.mask.to_numpy())).decode("ascii"),
+                }
+            )
 
         # See the comment on sys.stdout's typeshed stubs for why this is valid (unless overriden).
-        assert isinstance(sys.stdout, TextIOWrapper)
-        pl.DataFrame(rows).write_csv(sys.stdout)
+        if not isinstance(sys.stdout, TextIOWrapper):
+            raise RuntimeError("sys.stdout is not a TextIOWrapper, cannot write CSV output.")
+
+        # Flush stdout to ensure output is written last, just in case.
+        sys.stderr.flush()
+
+        # Write the output to stdout.
+        pl.from_dicts(rows).write_csv(sys.stdout)
