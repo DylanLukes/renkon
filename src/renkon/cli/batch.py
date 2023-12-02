@@ -10,14 +10,15 @@ This is likely a temporary feature but is useful for testing and for small-scale
 import logging
 import os
 import sys
+from io import TextIOWrapper
 from pathlib import Path
 
 import click
-import numpy as np
 import polars as pl
 from loguru import logger
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.pretty import Pretty
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
@@ -28,20 +29,11 @@ from renkon.core.trait import EqualNumeric, EqualString, Linear2, Linear3, Linea
 
 ENABLED_TRAITS: dict[type[Trait], bool] = {
     Linear2: False,
-    Linear3: False,
-    Linear4: False,
-    EqualNumeric: True,
-    EqualString: True,
+    Linear3: True,
+    Linear4: True,
+    EqualNumeric: False,
+    EqualString: False,
 }
-
-logging.addLevelName(5, "TRACE")
-console = Console(
-    theme=Theme(
-        {
-            "logging.level.trace": "bold green",
-        }
-    )
-)
 
 # Mapping from percentages to corresponding block characters.
 SHADE_BLOCKS = [" ", "░", "▒", "▓", "█"]
@@ -50,7 +42,7 @@ H_BLOCK_CHARS = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 V_BLOCK_CHARS = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
 
 
-def pct_to_block(pct: float, blocks=None) -> str:
+def pct_to_block(pct: float, blocks: list[str] | None = None) -> str:
     """
     Convert a percentage to a Unicode block character, where the block height is
     proportional to the percentage.
@@ -59,7 +51,7 @@ def pct_to_block(pct: float, blocks=None) -> str:
     return blocks[int(pct * (len(blocks) - 1))]
 
 
-def mask_to_blocks(mask: pl.Series, n_chunks=20) -> str:
+def mask_to_blocks(mask: pl.Series, n_chunks: int = 20) -> str:
     """
     Convert a Boolean series to a string of n_chunks Unicode block characters,
     where each character's block height is proportional to the percentage of
@@ -77,24 +69,27 @@ def mask_to_blocks(mask: pl.Series, n_chunks=20) -> str:
     return "".join(map(pct_to_block, chunk_pcts))
 
 
-if __name__ == "__main__":
-    # Generate (using numpy) a boolean series of length 100.
-    series = pl.Series("bool", np.random.choice([True, False], size=1000, p=[0.2, 0.8]))
-    print(mask_to_blocks(series))
-
-
 def setup_simple_logging() -> None:
+    # Add TRACE level.
+    logging.addLevelName(5, "TRACE")
+
     if sys.stdout.isatty():
-        # Prettified logging for interactive runs in a TTY.
+        # For interactive runs, log everything to stdout and use rich for human formatted output.
         logger.configure(
             handlers=[
                 {
                     "sink": RichHandler(
-                        console=console,
+                        console=Console(
+                            file=sys.stdout,
+                            theme=Theme(
+                                {
+                                    "logging.level.trace": "bold green",
+                                }
+                            ),
+                        ),
                         markup=False,
                         show_path=True,
                         rich_tracebacks=True,
-                        # Format with iso8601 timestamps.
                         omit_repeated_times=True,
                         tracebacks_suppress=[click],
                         tracebacks_show_locals=True,
@@ -106,11 +101,11 @@ def setup_simple_logging() -> None:
             ]
         )
     else:
-        # Simple logging for non-interactive runs.
+        # For non-interactive runs (e.g. piped into a file), log to stderr, reserving stdout for output data.
         logger.configure(
             handlers=[
                 {
-                    "sink": sys.stdout,
+                    "sink": sys.stderr,
                     "level": os.environ.get("LOG_LEVEL", "INFO"),
                     "format": "{time:%F %T.%f} {level.name} {message}",
                 }
@@ -150,16 +145,38 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     for col, dtype in data[columns].schema.items():
         table.add_column(f"[underline]{col}\n[/underline]{dtype}")
 
-    for sketch, trait in results.items():
-        _trait_type = sketch.trait_type
-        schema = sketch.schema
+    if sys.stdout.isatty():
+        # Nicely formatted output for interactive runs.
+        for sketch, trait in results.items():
+            _trait_type = sketch.trait_type
+            schema = sketch.schema
 
-        table.add_row(
-            f"{sketch}",
-            str(trait),
-            f"{trait.score:0.3f}",
-            Text(f"{mask_to_blocks(trait.mask)}", style="green underline"),
-            *[":heavy_check_mark:" if col in schema.columns else "" for col in columns],
-        )
+            if trait:
+                sketch_renderable = Pretty(sketch)
+                trait_renderable = Pretty(trait)
+                score_renderable = Text(f"{trait.score:.2f}", style="green")
+                match_renderable = Text(f"{mask_to_blocks(trait.mask)}", style="green underline")
+                columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
+            else:
+                sketch_renderable = Text(f"{sketch}", style="red")
+                trait_renderable = Text("n/a", style="red")
+                score_renderable = Text("n/a", style="red")
+                match_renderable = Text(" " * 20, style="red underline")
+                columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
 
-    console.print(table)
+            table.add_row(
+                sketch_renderable,
+                trait_renderable,
+                score_renderable,
+                match_renderable,
+                *columns_renderables,
+            )
+        Console(file=sys.stdout).print(table)
+    else:
+        rows = ["foo", "bar", "baz"]
+        for sketch, trait in results.items():
+            pass
+
+        # See the comment on sys.stdout's typeshed stubs for why this is valid (unless overriden).
+        assert isinstance(sys.stdout, TextIOWrapper)
+        pl.DataFrame(rows).write_csv(sys.stdout)
