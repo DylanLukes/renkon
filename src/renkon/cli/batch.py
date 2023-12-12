@@ -54,7 +54,7 @@ def pct_to_block(pct: float, blocks: list[str] | None = None) -> str:
     return blocks[int(pct * (len(blocks) - 1))]
 
 
-def mask_to_blocks(mask: pl.Series, n_chunks: int = 50) -> str:
+def mask_to_blocks(mask: pl.Series, n_chunks: int = 25) -> str:
     """
     Convert a Boolean series to a string of n_chunks Unicode block characters,
     where each character's block height is proportional to the percentage of
@@ -176,7 +176,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
                 sketch_renderable = Text(f"{sketch}", style="red")
                 trait_renderable = Text("n/a", style="red")
                 score_renderable = Text("n/a", style="red")
-                outliers_renderable = Text(" " * 50, style="red underline")
+                outliers_renderable = Text(" " * 25, style="red underline")
                 pct_outliers_renderable = Text("n/a", style="red")
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
 
