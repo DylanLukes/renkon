@@ -6,6 +6,7 @@ from typing import Any, Self
 
 import numpy as np
 import polars as pl
+import rich
 from polars import NUMERIC_DTYPES, DataFrame
 from sklearn.linear_model import LinearRegression, RANSACRegressor
 
@@ -27,14 +28,15 @@ class Linear(BaseTrait[Self], ABC):
 
         @property
         def commutors(self) -> Sequence[bool]:
-            return (False,) + (self.arity - 1) * (True,)
+            return (False,) * self.arity
+            # return (False,) + (self.arity - 1) * (True,)
             # return (True,) * self.arity
 
         @property
         def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
             return (NUMERIC_DTYPES,) * self.arity
 
-    def __init_subclass__(cls, *, arity: int, **kwargs: Any):
+    def __init_subclass__(cls, *, arity: int, **kwargs: Any):  # type: ignore
         cls.meta = Linear.Meta(arity=arity)
         super().__init_subclass__(**kwargs)
 
@@ -53,17 +55,16 @@ class Linear(BaseTrait[Self], ABC):
         y_col, *x_cols = sketch.schema.columns
         y_data, x_data = data[y_col], data[x_cols]
 
-        ransac = RANSACRegressor(
-            estimator=LinearRegression(), residual_threshold=np.median(np.abs(y_data - np.median(y_data))) / 4
-        )
-
+        ransac = RANSACRegressor()
         ransac.fit(x_data, y_data)
+
+        inlying_data = data.filter(ransac.inlier_mask_)
 
         return cls(
             sketch=sketch,
             params=(*ransac.estimator_.coef_, ransac.estimator_.intercept_),
             mask=pl.Series(ransac.inlier_mask_),
-            score=abs(ransac.score(x_data, y_data)),
+            score=abs(ransac.score(inlying_data[x_cols], inlying_data[y_col])),
         )
 
 

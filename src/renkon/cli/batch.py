@@ -54,7 +54,7 @@ def pct_to_block(pct: float, blocks: list[str] | None = None) -> str:
     return blocks[int(pct * (len(blocks) - 1))]
 
 
-def mask_to_blocks(mask: pl.Series, n_chunks: int = 20) -> str:
+def mask_to_blocks(mask: pl.Series, n_chunks: int = 50) -> str:
     """
     Convert a Boolean series to a string of n_chunks Unicode block characters,
     where each character's block height is proportional to the percentage of
@@ -119,8 +119,11 @@ def setup_simple_logging() -> None:
 @click.command(context_settings={"show_default": True})
 @click.argument("data_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("columns", type=str, nargs=-1)
+@click.option(
+    "-t", "--threshold", type=float, default=0.5, show_default=True, help="Score threshold for trait matches."
+)
 @click.pass_context
-def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
+def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: float) -> None:
     data = pl.read_csv(data_path, columns=columns or None)
     data = data.select(columns)  # reorder to match input
     columns = list(columns or data.columns)
@@ -144,7 +147,8 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
     table.add_column("Sketch")
     table.add_column("Result")
     table.add_column("Score")
-    table.add_column("Matches")
+    table.add_column("Outliers")
+    table.add_column("#")
     for col, dtype in data[columns].schema.items():
         table.add_column(f"[underline]{col}\n[/underline]{dtype}")
 
@@ -154,21 +158,27 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
             _trait_type = sketch.trait_type
             schema = sketch.schema
 
+            print(sketch, trait)
+            if trait.score < threshold:
+                continue
+
             green_score_thresh = 0.5
 
             if trait:
                 sketch_renderable = Pretty(sketch)
-                trait_renderable = Pretty(str(trait))
+                trait_renderable = Text(str(trait))
                 score_renderable = Text(
                     f"{trait.score:.2f}", style="green" if trait.score > green_score_thresh else "red"
                 )
-                match_renderable = Text(f"{mask_to_blocks(trait.mask)}", style="green underline")
+                match_renderable = Text(f"{mask_to_blocks(trait.mask.not_())}", style="red underline")
+                n_outliers_renderable = Text(f"{trait.mask.not_().sum()}", style="red")
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
             else:
                 sketch_renderable = Text(f"{sketch}", style="red")
                 trait_renderable = Text("n/a", style="red")
                 score_renderable = Text("n/a", style="red")
-                match_renderable = Text(" " * 20, style="red underline")
+                match_renderable = Text(" " * 50, style="red underline")
+                n_outliers_renderable = Text("n/a", style="red")
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
 
             table.add_row(
@@ -176,6 +186,7 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str]) -> None:
                 trait_renderable,
                 score_renderable,
                 match_renderable,
+                n_outliers_renderable,
                 *columns_renderables,
             )
         Console(file=sys.stdout).print(table)

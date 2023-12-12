@@ -4,6 +4,8 @@ from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Self
 
+import numpy as np
+import polars as pl
 from loguru import logger
 from polars import FLOAT_DTYPES, NUMERIC_DTYPES, DataFrame, Utf8
 
@@ -42,14 +44,14 @@ class Equal(BaseTrait[Self], ABC):
         lhs, rhs = sketch.schema.columns
 
         if set(sketch.schema.dtypes) & FLOAT_DTYPES:
-            logger.warning(f"Sketch {sketch} contains floats, using 1e-5 tolerance for fuzzy check.")
-            mask = (data[lhs] - data[rhs]).abs() < 1e-5
+            logger.warning(f"Sketch {sketch} contains floats, using fuzzy check with rtol=1.e-5, atol=1.e-8.")
+            mask = np.isclose(data[lhs], data[rhs])
         else:
             mask = data[lhs] == data[rhs]
 
         score = mask.sum() / len(mask)
 
-        return cls(sketch=sketch, params=(), mask=mask, score=score)
+        return cls(sketch=sketch, params=(), mask=pl.Series(mask), score=score)
 
 
 class EqualNumeric(Equal, types=NUMERIC_DTYPES):

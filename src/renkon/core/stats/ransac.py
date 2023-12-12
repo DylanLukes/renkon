@@ -25,18 +25,26 @@ class RANSACModel[P: ModelParams](Model[P]):
     _max_trials: int
     _min_inlier_ratio: float
     _min_score: float
+    _stop_inliers_pct: float
+    _stop_score: float
+
+    # Used during fit
+    _n_trials: int = 0
 
     def __init__(
         self,
         base_model: Model[P],
         *,
+        min_sample: int = 2,
         max_trials: int = 100,
         stop_inliers_pct: float = np.inf,
         stop_score: float = np.inf,
-        stop_confidence: float = np.inf,
     ):
         self._base_model = base_model
         self._max_trials = max_trials
+        self._stop_inliers_pct = stop_inliers_pct
+        self._stop_score = stop_score
+        self._stop_confidence = stop_confidence
 
     @property
     def y_col(self) -> str:
@@ -47,7 +55,14 @@ class RANSACModel[P: ModelParams](Model[P]):
         return self._base_model.x_cols
 
     def fit(self, data: pl.DataFrame) -> ModelResults[P]:
-        raise NotImplementedError
+        data = data.with_row_count("ransac_row_nr")
+
+        self._n_trials = 0
+        while self._n_trials < self._max_trials:
+            self._n_trials += 1
+
+            # Create a binary mask series with 0s everywhere and 1st in min_sample positions.
+            raise NotImplementedError()
 
     def predict_expr(self, params: P) -> pl.Expr:
         return self._base_model.predict_expr(params)
