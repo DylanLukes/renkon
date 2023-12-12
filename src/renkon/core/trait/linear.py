@@ -28,8 +28,8 @@ class Linear(BaseTrait[Self], ABC):
 
         @property
         def commutors(self) -> Sequence[bool]:
-            return (False,) * self.arity
-            # return (False,) + (self.arity - 1) * (True,)
+            # return (False,) * self.arity
+            return (False,) + (self.arity - 1) * (True,)
             # return (True,) * self.arity
 
         @property

@@ -120,7 +120,7 @@ def setup_simple_logging() -> None:
 @click.argument("data_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("columns", type=str, nargs=-1)
 @click.option(
-    "-t", "--threshold", type=float, default=0.5, show_default=True, help="Score threshold for trait matches."
+    "-t", "--threshold", type=float, default=0.95, show_default=True, help="Score threshold for trait matches."
 )
 @click.pass_context
 def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: float) -> None:
@@ -143,22 +143,21 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
     results = engine.get_results("batch-0")
 
     # 3. Output results.
-    table = Table(title="Inference Results")
+    table = Table(title="Inference Results", show_lines=True)
     table.add_column("Sketch")
     table.add_column("Result")
     table.add_column("Score")
     table.add_column("Outliers")
-    table.add_column("#")
+    table.add_column("%")
     for col, dtype in data[columns].schema.items():
         table.add_column(f"[underline]{col}\n[/underline]{dtype}")
 
     if sys.stdout.isatty():
         # Nicely formatted output for interactive runs.
-        for sketch, trait in results.items():
+        for sketch, trait in sorted(results.items(), key=lambda x: x[1].score, reverse=True):
             _trait_type = sketch.trait_type
             schema = sketch.schema
 
-            print(sketch, trait)
             if trait.score < threshold:
                 continue
 
@@ -170,23 +169,23 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
                 score_renderable = Text(
                     f"{trait.score:.2f}", style="green" if trait.score > green_score_thresh else "red"
                 )
-                match_renderable = Text(f"{mask_to_blocks(trait.mask.not_())}", style="red underline")
-                n_outliers_renderable = Text(f"{trait.mask.not_().sum()}", style="red")
+                outliers_renderable = Text(f"{mask_to_blocks(trait.mask.not_())}", style="red underline")
+                pct_outliers_renderable = Text(f"{trait.mask.not_().sum() / trait.mask.len():.2f}", style="red")
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
             else:
                 sketch_renderable = Text(f"{sketch}", style="red")
                 trait_renderable = Text("n/a", style="red")
                 score_renderable = Text("n/a", style="red")
-                match_renderable = Text(" " * 50, style="red underline")
-                n_outliers_renderable = Text("n/a", style="red")
+                outliers_renderable = Text(" " * 50, style="red underline")
+                pct_outliers_renderable = Text("n/a", style="red")
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
 
             table.add_row(
                 sketch_renderable,
                 trait_renderable,
                 score_renderable,
-                match_renderable,
-                n_outliers_renderable,
+                outliers_renderable,
+                pct_outliers_renderable,
                 *columns_renderables,
             )
         Console(file=sys.stdout).print(table)
@@ -201,7 +200,8 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
                     "sketch": repr(sketch),
                     "trait": str(trait),
                     "score": trait.score if trait else None,
-                    "mask_base64": b64encode(np.packbits(trait.mask)).decode("ascii"),
+                    "outliers_b64": b64encode(np.packbits(trait.mask.not_())).decode("ascii"),
+                    "outliers_pct": trait.mask.not_().sum() / trait.mask.len(),
                     **{col: col in sketch.schema.columns for col in columns},
                 }
             )
