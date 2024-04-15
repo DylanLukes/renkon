@@ -66,6 +66,8 @@ class RANSACModel[P: ModelParams](Model[P]):
             # Create a binary mask series with 0s everywhere and 1st in min_sample positions.
             raise NotImplementedError
 
+        raise NotImplementedError
+
     def predict_expr(self, params: P) -> pl.Expr:
         return self._base_model.predict_expr(params)
 

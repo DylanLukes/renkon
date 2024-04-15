@@ -22,15 +22,17 @@ class TableRow(BaseModel):
     This exists as an intermediate type between the database and the registry.
     """
 
+    # Type ignore is to suppress overriding deprecated pydantic method of same name.
+    # Should be removable eventually.
     path: str
     name: str
     filetype: FileType
-    schema: bytes
+    schema: bytes  # type: ignore
     rows: int
     size: int
 
     @classmethod
-    def row_factory(cls: type[TableRow], _cur: sqlite3.Cursor, row: tuple[Any, ...]) -> TableRow:
+    def row_factory(cls: type[TableRow], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> TableRow:  # noqa: ARG003
         return cls.model_construct(*row)
 
     def to_entry(self) -> Registry.Entry:

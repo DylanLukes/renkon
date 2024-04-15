@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Protocol, Self, runtime_checkable
+from typing import TYPE_CHECKING, ClassVar, Protocol, Self, runtime_checkable, Tuple
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -37,29 +37,7 @@ class TraitSketch[T: "Trait"]:
 
 
 @runtime_checkable
-class TraitMeta(Protocol):
-    """
-    Represents metadata about a trait used during instantiation and inference.
-    """
-
-    @property
-    @abstractmethod
-    def arity(self) -> int:
-        ...
-
-    @property
-    @abstractmethod
-    def commutors(self) -> Sequence[bool]:
-        ...
-
-    @property
-    @abstractmethod
-    def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
-        ...
-
-
-@runtime_checkable
-class Trait(Protocol):
+class Trait[*ParamTs](Protocol):
     """
     Represents an instantiated sketch. This protocol defines the abstract interface for all traits.
     :cvar meta: the metadata for this trait.
@@ -69,13 +47,13 @@ class Trait(Protocol):
 
     @property
     @abstractmethod
-    def sketch[T: "Trait"](self: T) -> TraitSketch[T]:
+    def sketch(self) -> TraitSketch[Self]:
         """The sketch that was instantiated into this trait."""
         ...
 
     @property
     @abstractmethod
-    def params(self) -> tuple[object, ...] | None:
+    def params(self) -> Tuple[*ParamTs]:
         """The inferred parameters of the trait."""
         ...
 
@@ -97,7 +75,29 @@ class Trait(Protocol):
         ...
 
 
-class BaseTrait(Trait, ABC):
+@runtime_checkable
+class TraitMeta(Protocol):
+    """
+    Represents metadata about a trait used during instantiation and inference.
+    """
+
+    @property
+    @abstractmethod
+    def arity(self) -> int:
+        ...
+
+    @property
+    @abstractmethod
+    def commutors(self) -> Sequence[bool]:
+        ...
+
+    @property
+    @abstractmethod
+    def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
+        ...
+
+
+class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
     """
     Basic implementation of a trait. This should be appropriate for most traits.
     """
@@ -105,7 +105,7 @@ class BaseTrait(Trait, ABC):
     meta: ClassVar
 
     _sketch: TraitSketch[Self]
-    _params: tuple[object, ...]
+    _params: Tuple[*ParamTs]
     _mask: Series
     _score: float
 
@@ -114,7 +114,7 @@ class BaseTrait(Trait, ABC):
     def __init__(
         self,
         sketch: TraitSketch[Self],
-        params: tuple[object, ...],
+        params: Tuple[*ParamTs],
         mask: Series,
         score: float,
     ):
@@ -128,7 +128,7 @@ class BaseTrait(Trait, ABC):
         return self._sketch
 
     @property
-    def params(self) -> tuple[object, ...] | None:
+    def params(self) -> Tuple[*ParamTs]:
         return self._params
 
     @property

@@ -5,7 +5,7 @@ from renkon.core.trait.base import Trait, TraitMeta, TraitSketch
 from renkon.core.util.permute import permutations_with_commutativity
 
 
-def check_type_compatibility[T: Trait](meta: TraitMeta[T], schema: Schema) -> bool:
+def check_type_compatibility(meta: TraitMeta, schema: Schema) -> bool:
     if len(schema) != meta.arity:
         return False
 

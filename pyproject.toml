@@ -26,6 +26,7 @@ dependencies = [
     "scikit-learn", # Machine learning
     "scipy", # Scientific computing
     "polars", # Data frames
+    "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
     "pyarrow", # Columnar data format
     "pydantic", # Data validation
 

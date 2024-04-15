@@ -4,10 +4,7 @@ Custom iterable tools extensions.
 import itertools as it
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
-from typing import TYPE_CHECKING, Any, Protocol
-
-if TYPE_CHECKING:
-    from types import NoneType
+from typing import Any, Protocol
 
 # We need to define these protocols ourselves for everything to typecheck properly.
 # For some reason the stdlib typing doesn't provide anything equivalent.
@@ -60,7 +57,7 @@ def permutations_with_commutativity[
     all_perms = it.permutations(items, r=length)
 
     # Used as an ordered set.
-    distinct_perms: OrderedDict[tuple[T, ...], NoneType] = OrderedDict()
+    distinct_perms: OrderedDict[tuple[T, ...], None] = OrderedDict()
 
     # TODO: all_perms is deterministically ordered but...
     for perm in all_perms:
