@@ -103,7 +103,7 @@ check = "pyright {args:src/renkon tests/}"
 
 [tool.pyright]
 include = ["./src", "./tests"]
-stubPath = "./typings"
+stubPath = "./typings/stubs/"
 
 typeCheckingMode = "strict"
 reportMissingImports = true
