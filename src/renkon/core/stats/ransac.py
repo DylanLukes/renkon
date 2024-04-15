@@ -23,6 +23,7 @@ class RANSACModelResults[P: ModelParams](ModelResults[P]):
 class RANSACModel[P: ModelParams](Model[P]):
     _base_model: Model[P]
     _max_trials: int
+    _min_samples: int
     _min_inlier_ratio: float
     _min_score: float
     _stop_inliers_pct: float
@@ -42,9 +43,10 @@ class RANSACModel[P: ModelParams](Model[P]):
     ):
         self._base_model = base_model
         self._max_trials = max_trials
+        self._min_samples = min_sample
         self._stop_inliers_pct = stop_inliers_pct
         self._stop_score = stop_score
-        self._stop_confidence = stop_confidence
+        # self._stop_confidence = stop_confidence
 
     @property
     def y_col(self) -> str:
@@ -62,7 +64,7 @@ class RANSACModel[P: ModelParams](Model[P]):
             self._n_trials += 1
 
             # Create a binary mask series with 0s everywhere and 1st in min_sample positions.
-            raise NotImplementedError()
+            raise NotImplementedError
 
     def predict_expr(self, params: P) -> pl.Expr:
         return self._base_model.predict_expr(params)
@@ -71,6 +73,6 @@ class RANSACModel[P: ModelParams](Model[P]):
         return self._base_model.errors_expr(params, pred_col=pred_col)
 
     def score_expr(self, params: P, *, err_col: str | None = None) -> pl.Expr:
-        # todo: this should probably be different for RANSAC,
-        #       i.e. modulated by the inlier ratio!
+        # TODO: this should probably be different for RANSAC,
+        #       i.e. modulated by the inlier ratio?
         return self._base_model.score_expr(params, err_col=err_col)

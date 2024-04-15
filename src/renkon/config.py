@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from importlib import resources
 from ipaddress import IPv4Address
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import dacite
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _DEFAULT_CONF_DATA = tomllib.load(resources.files().joinpath("defaults.toml").open("rb"))
 
@@ -43,7 +45,11 @@ class RenkonConfig:
 
     @staticmethod
     def from_dict(data: Mapping[str, Any]) -> RenkonConfig:
-        return dacite.from_dict(data_class=RenkonConfig, data=data, config=dacite.Config(cast=[Path, IPv4Address]))
+        return dacite.from_dict(
+            data_class=RenkonConfig,
+            data=data,
+            config=dacite.Config(cast=[Path, IPv4Address]),
+        )
 
     @staticmethod
     def load(**overrides: Any) -> RenkonConfig:

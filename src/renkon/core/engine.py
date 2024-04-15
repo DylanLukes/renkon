@@ -73,11 +73,12 @@ class BatchInferenceEngine(InferenceEngine):
             logger.trace(f"Starting inference for {sketch}")
             trait_type = sketch.trait_type
 
+            # noinspection PyBroadException
             try:
                 trait = trait_type.infer(sketch, data)
                 traits[sketch] = trait
-                logger.trace(f"Inferred {trait}\n")
-            except Exception:
+                logger.trace(f"Inferred {trait} (score = {trait.score})\n")
+            except Exception:  # noqa BLE001
                 logger.error(f"Error occurred inferring {sketch} (set LOG_LEVEL=DEBUG for details)")
                 logger.opt(exception=True).debug("")
                 traits[sketch] = None

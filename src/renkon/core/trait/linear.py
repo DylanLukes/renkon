@@ -1,22 +1,23 @@
 from __future__ import annotations
 
 from abc import ABC
-from collections.abc import Sequence
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
-import numpy as np
 import polars as pl
-import rich
 from polars import NUMERIC_DTYPES, DataFrame
-from sklearn.linear_model import LinearRegression, RANSACRegressor
+from sklearn.linear_model import RANSACRegressor
 
-from renkon.core.schema import ColumnTypeSet
-from renkon.core.trait import TraitSketch
 from renkon.core.trait.base import BaseTrait, TraitMeta
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
-class Linear(BaseTrait[Self], ABC):
-    class Meta(TraitMeta[Self]):
+    from renkon.core.schema import ColumnTypeSet
+    from renkon.core.trait import TraitSketch
+
+
+class Linear(BaseTrait, ABC):
+    class Meta(TraitMeta):
         _arity: int
 
         def __init__(self, arity: int):
@@ -46,7 +47,10 @@ class Linear(BaseTrait[Self], ABC):
         cs = self.params[:-1]
         m = self.params[-1]
 
-        coef_str = " + ".join(f"({c:.2f} × {x})" for c, x in zip(cs, x_cols, strict=True))
+        coef_str = " + ".join(
+            f"({c:.2f} × {x})"
+            for c, x in zip(cs, x_cols, strict=True)  # noqa: RUF001
+        )
 
         return f"{y_col} = {coef_str} + {m:.2f}"
 
@@ -55,7 +59,7 @@ class Linear(BaseTrait[Self], ABC):
         y_col, *x_cols = sketch.schema.columns
         y_data, x_data = data[y_col], data[x_cols]
 
-        ransac = RANSACRegressor()
+        ransac = RANSACRegressor(random_state=0, loss="squared_error")
         ransac.fit(x_data, y_data)
 
         inlying_data = data.filter(ransac.inlier_mask_)

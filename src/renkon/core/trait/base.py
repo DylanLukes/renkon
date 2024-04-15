@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import ClassVar, Protocol, Self, runtime_checkable
+from typing import TYPE_CHECKING, ClassVar, Protocol, Self, runtime_checkable
 
-from polars import DataFrame, Series
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
-from renkon.core.schema import ColumnTypeSet, Schema
+    from polars import DataFrame, Series
 
-
-def infer[T: "Trait"](_sketch: TraitSketch[T], _data: DataFrame) -> T:
-    raise NotImplementedError
+    from renkon.core.schema import ColumnTypeSet, Schema
 
 
 @dataclass(eq=True, frozen=True, kw_only=True, slots=True)
@@ -28,9 +26,6 @@ class TraitSketch[T: "Trait"]:
     def arity(self) -> int:
         return len(self.schema)
 
-    def __lt__(self, other):
-        return (self.trait_type.__name__, self.schema) < (other.trait_type.__name__, other.schema)
-
     def __iter__(self):
         return iter((self.trait_type, self.schema))
 
@@ -42,7 +37,7 @@ class TraitSketch[T: "Trait"]:
 
 
 @runtime_checkable
-class TraitMeta[T: "Trait"](Protocol):
+class TraitMeta(Protocol):
     """
     Represents metadata about a trait used during instantiation and inference.
     """
@@ -70,7 +65,7 @@ class Trait(Protocol):
     :cvar meta: the metadata for this trait.
     """
 
-    meta: ClassVar[TraitMeta[Self]]
+    meta: ClassVar[TraitMeta]
 
     @property
     @abstractmethod
@@ -102,26 +97,34 @@ class Trait(Protocol):
         ...
 
 
-class BaseTrait[T: "BaseTrait"](Trait, ABC):
+class BaseTrait(Trait, ABC):
     """
     Basic implementation of a trait. This should be appropriate for most traits.
     """
 
     meta: ClassVar
 
-    _sketch: TraitSketch[T]
+    _sketch: TraitSketch[Self]
     _params: tuple[object, ...]
     _mask: Series
     _score: float
 
-    def __init__(self, sketch: TraitSketch[T], params: tuple[object, ...], mask: Series, score: float):
+    __slots__ = ("_sketch", "_params", "_mask", "_score")
+
+    def __init__(
+        self,
+        sketch: TraitSketch[Self],
+        params: tuple[object, ...],
+        mask: Series,
+        score: float,
+    ):
         self._sketch = sketch
         self._params = params
         self._mask = mask
         self._score = score
 
     @property
-    def sketch(self) -> TraitSketch[T]:
+    def sketch(self) -> TraitSketch[Self]:
         return self._sketch
 
     @property
@@ -139,4 +142,7 @@ class BaseTrait[T: "BaseTrait"](Trait, ABC):
     @classmethod
     @abstractmethod
     def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
+        """
+        Run inference on the given data and return a new instance of the trait.
+        """
         ...

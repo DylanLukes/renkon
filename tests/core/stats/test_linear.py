@@ -4,7 +4,6 @@ import numpy as np
 import polars as pl
 import polars.testing as pl_testing
 import pytest
-from pytest import approx
 from scipy.stats import t  # type: ignore[import]
 
 from renkon.core.stats.linear import OLSModel
@@ -25,12 +24,12 @@ def test_linear_perfect_fit() -> None:
 
     # Test if the fit is correct.
     m, c = fit.params.m, fit.params.c
-    assert m == approx(13)
-    assert c == approx(37)
+    assert m == pytest.approx(13)
+    assert c == pytest.approx(37)
 
     # Test if the model properly scores the test data.
     score = df_test.select(fit.score()).item()
-    assert score == approx(1.0)
+    assert score == pytest.approx(1.0)
 
     # Test if the model properly predicts the test data.
     y_pred = df_test.select(model.predict_expr(fit.params)).get_column("y")
@@ -63,12 +62,12 @@ def test_linear_noisy_fit() -> None:
 
     # Test if the fit is correct: params within t_crit * se of the true values.
     m, c = fit.params.m, fit.params.c
-    assert m == approx(13, abs=se_m * t_crit)
-    assert c == approx(37, abs=se_c * t_crit)
+    assert m == pytest.approx(13, abs=se_m * t_crit)
+    assert c == pytest.approx(37, abs=se_c * t_crit)
 
     # Test if the model properly scores the test data.
     score = df.select(fit.score()).item()
-    assert score == approx(1.0, rel=0.01)
+    assert score == pytest.approx(1.0, rel=0.01)
 
     # Calculate the standard error of estimate (SE)
     # se_estimate = np.sqrt((results.resid**2).sum() / dof)

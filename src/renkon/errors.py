@@ -4,13 +4,9 @@ from dataclasses import dataclass
 class RenkonError(Exception):
     """Base class for all Renkon errors."""
 
-    pass
-
 
 class TraitLoaderError(RenkonError):
     """Base class for all trait loader errors."""
-
-    pass
 
 
 @dataclass

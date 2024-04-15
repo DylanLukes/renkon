@@ -9,7 +9,7 @@ def is_trait_type(cls: type | None) -> TypeGuard[type[Trait]]:
     """
     :return: whether the given class is a trait.
     """
-    return cls is not None and issubclass(cls, Trait)
+    return cls is not None and isinstance(cls, Trait)
 
 
 class TraitLoader:
@@ -28,8 +28,9 @@ class TraitLoader:
             if not is_trait_type(klass):
                 raise NotATraitError(trait_name)
 
-            return klass
         except ImportError as err:
             raise TraitNotFoundError(trait_name) from err
         except AttributeError as err:
             raise TraitNotFoundError(trait_name) from err
+        else:
+            return klass

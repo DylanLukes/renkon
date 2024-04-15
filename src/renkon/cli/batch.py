@@ -26,50 +26,23 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 
+from renkon.cli.tty import MIN_MATCH_GREEN, MIN_SCORE_GREEN, mask_to_blocks
 from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
-from renkon.core.trait import EqualNumeric, EqualString, Linear2, Linear3, Linear4, Trait
+from renkon.core.trait import Trait
+from renkon.core.trait.linear import Linear4
 
 ENABLED_TRAITS: dict[type[Trait], bool] = {
-    Linear2: True,
-    Linear3: True,
+    # Linear2: True,
+    # Linear3: True,
     Linear4: True,
-    EqualNumeric: True,
-    EqualString: True,
+    # EqualNumeric: True,
+    # EqualString: True,
+    # Positive: True,
+    # Negative: True,
+    # Nonzero: True,
+    # Integral: True,
 }
-
-# Mapping from percentages to corresponding block characters.
-SHADE_BLOCKS = [" ", "░", "▒", "▓", "█"]
-
-H_BLOCK_CHARS = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
-V_BLOCK_CHARS = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
-
-
-def pct_to_block(pct: float, blocks: list[str] | None = None) -> str:
-    """
-    Convert a percentage to a Unicode block character, where the block height is
-    proportional to the percentage.
-    """
-    blocks = blocks or V_BLOCK_CHARS
-    return blocks[int(pct * (len(blocks) - 1))]
-
-
-def mask_to_blocks(mask: pl.Series, n_chunks: int = 25) -> str:
-    """
-    Convert a Boolean series to a string of n_chunks Unicode block characters,
-    where each character's block height is proportional to the percentage of
-    True values in that chunk of the series.
-    """
-    chunk_pcts = (
-        (
-            pl.LazyFrame({"idx": pl.int_range(0, len(mask), eager=True), "mask": mask})
-            .group_by_dynamic("idx", every=f"{len(mask) // n_chunks}i")
-            .agg((pl.sum("mask") / pl.count("mask")).alias("pct"))
-        )
-        .select("pct")
-        .collect()
-    )["pct"].to_list()
-    return "".join(map(pct_to_block, chunk_pcts))
 
 
 def setup_simple_logging() -> None:
@@ -120,10 +93,29 @@ def setup_simple_logging() -> None:
 @click.argument("data_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("columns", type=str, nargs=-1)
 @click.option(
-    "-t", "--threshold", type=float, default=0.95, show_default=True, help="Score threshold for trait matches."
+    "-ts",
+    "--threshold-score",
+    type=float,
+    default=0.95,
+    show_default=True,
+    help="Score threshold for trait matches.",
+)
+@click.option(
+    "-tm",
+    "--threshold-mask",
+    type=float,
+    default=0.85,
+    show_default=True,
+    help="Mask threshold for trait matches.",
 )
 @click.pass_context
-def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: float) -> None:
+def batch(
+    _ctx: click.Context,
+    data_path: Path,
+    columns: list[str],
+    threshold_score: float,
+    threshold_mask: float,
+) -> None:
     data = pl.read_csv(data_path, columns=columns or None)
     data = data.select(columns)  # reorder to match input
     columns = list(columns or data.columns)
@@ -137,10 +129,12 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
     # 1. Load the configuration.
     _config = RenkonConfig.load()
 
-    # 2. Instantiate the default engine.  # todo: use config for traits
+    # 2. Instantiate the default engine.  # TODO: use config for traits
     engine = BatchInferenceEngine(trait_types=[trait_type for trait_type, enabled in ENABLED_TRAITS.items() if enabled])
     engine.run("batch-0", data)
     results = engine.get_results("batch-0")
+
+    # 3. Filter results. TODO
 
     # 3. Output results.
     table = Table(title="Inference Results", show_lines=True)
@@ -154,23 +148,38 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
 
     if sys.stdout.isatty():
         # Nicely formatted output for interactive runs.
-        for sketch, trait in sorted(results.items(), key=lambda x: x[1].score, reverse=True):
+
+        def score_fn(trait: Trait) -> float:
+            return trait.score + (trait.mask.sum() / trait.mask.len())
+
+        scored_results = [(sketch, trait, score_fn(trait)) for sketch, trait in results.items()]
+
+        for sketch, trait, _ in sorted(scored_results, key=lambda x: x[2], reverse=True):
             _trait_type = sketch.trait_type
             schema = sketch.schema
 
-            if trait.score < threshold:
+            if trait.score <= threshold_score:
                 continue
 
-            green_score_thresh = 0.5
+            match_pct = trait.mask.sum() / trait.mask.len()
+            if match_pct <= threshold_mask:
+                continue
+
+            outlier_mask = trait.mask.not_()
+            outlier_pct = outlier_mask.sum() / outlier_mask.len()
 
             if trait:
                 sketch_renderable = Pretty(sketch)
                 trait_renderable = Text(str(trait))
                 score_renderable = Text(
-                    f"{trait.score:.2f}", style="green" if trait.score > green_score_thresh else "red"
+                    f"{trait.score:.2f}",
+                    style="green" if trait.score >= MIN_SCORE_GREEN else "red",
                 )
-                outliers_renderable = Text(f"{mask_to_blocks(trait.mask.not_())}", style="red underline")
-                pct_outliers_renderable = Text(f"{trait.mask.not_().sum() / trait.mask.len():.2f}", style="red")
+                outliers_renderable = Text(f"{mask_to_blocks(outlier_mask)}", style="red underline")
+                pct_outliers_renderable = Text(
+                    f"{outlier_pct:.2f}",
+                    style="green" if outlier_pct <= (1 - MIN_MATCH_GREEN) else "red",
+                )
                 columns_renderables = [":heavy_check_mark:" if col in schema.columns else "" for col in columns]
             else:
                 sketch_renderable = Text(f"{sketch}", style="red")
@@ -192,17 +201,18 @@ def batch(_ctx: click.Context, data_path: Path, columns: list[str], threshold: f
     else:
         rows: list[dict[str, Any]] = []
         for sketch, trait in results.items():
-            if trait is None:
-                continue
+            outlier_mask = trait.mask.not_() if trait else None
+            outlier_pct = outlier_mask.sum() / outlier_mask.len() if trait else None
 
             rows.append(
                 {
                     "sketch": repr(sketch),
-                    "trait": str(trait),
+                    "trait": str(trait) if trait else None,
                     "score": trait.score if trait else None,
-                    "outliers_b64": b64encode(np.packbits(trait.mask.not_())).decode("ascii"),
-                    "outliers_pct": trait.mask.not_().sum() / trait.mask.len(),
-                    **{col: col in sketch.schema.columns for col in columns},
+                    "outliers_b64": b64encode(np.packbits(outlier_mask)).decode("ascii") if trait else None,
+                    "outliers_pct": outlier_pct
+                    if trait
+                    else None ** {col: col in sketch.schema.columns for col in columns},
                 }
             )
 

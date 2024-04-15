@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path, PurePath
-from sqlite3 import Connection as SQLiteConnection
-from typing import Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiosql
 from aiosql.queries import Queries
+from pydantic import BaseModel
 
 from renkon.core.repo.registry.base import FileType, Registry
 from renkon.core.repo.schema import from_arrow_schema_bytes
 
+if TYPE_CHECKING:
+    import sqlite3
+    from sqlite3 import Connection as SQLiteConnection
 
-class TableRow(NamedTuple):
+
+class TableRow(BaseModel):
     """
     Strong typing for a table record (as a tuple) returned from the SQLite registry.
 
@@ -28,7 +31,7 @@ class TableRow(NamedTuple):
 
     @classmethod
     def row_factory(cls: type[TableRow], _cur: sqlite3.Cursor, row: tuple[Any, ...]) -> TableRow:
-        return cls(*row)
+        return cls.model_construct(*row)
 
     def to_entry(self) -> Registry.Entry:
         """
@@ -58,7 +61,15 @@ class TypedQueries(Queries):
         ...
 
     def register_table(
-        self, conn: SQLiteConnection, *, path: str, name: str, filetype: str, schema: bytes, rows: int, size: int
+        self,
+        conn: SQLiteConnection,
+        *,
+        path: str,
+        name: str,
+        filetype: str,
+        schema: bytes,
+        rows: int,
+        size: int,
     ) -> None:
         ...
 

@@ -46,8 +46,7 @@ def storage(config: RenkonConfig) -> Storage:
 
 @pytest.fixture
 def repo(registry: Registry, storage: Storage) -> Repository:
-    repo = Repository(registry=registry, storage=storage)
-    return repo
+    return Repository(registry=registry, storage=storage)
 
 
 @pytest.fixture
@@ -57,9 +56,8 @@ def cereals_df() -> DataFrame:
     """
     # Load cereal data from the data directory.
     path = TESTS_DIR / "data" / "cereals.csv"
-    table = pl.read_csv(
+    return pl.read_csv(
         path,
         separator=";",
         skip_rows_after_header=1,
     )
-    return table

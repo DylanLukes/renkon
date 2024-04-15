@@ -3,13 +3,15 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Protocol
-
-from polars import DataFrame
-from polars.type_aliases import SchemaDict
+from typing import TYPE_CHECKING, Protocol
 
 from renkon.core.repo import Registry
-from renkon.core.repo.registry.base import FileType
+
+if TYPE_CHECKING:
+    from polars import DataFrame
+    from polars.type_aliases import SchemaDict
+
+    from renkon.core.repo.registry.base import FileType
 
 type StoragePath = PurePath
 

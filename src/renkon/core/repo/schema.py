@@ -25,4 +25,9 @@ def from_arrow_schema_bytes(blob: bytes) -> SchemaDict:
     Deserialize a schema from bytes.
     """
     arrow_schema = pa.ipc.read_schema(pa.py_buffer(blob))
-    return dict(cast(DataFrame, pl.from_arrow(pa.table([[]] * len(arrow_schema), schema=arrow_schema))).schema)
+    return dict(
+        cast(
+            DataFrame,
+            pl.from_arrow(pa.table([[]] * len(arrow_schema), schema=arrow_schema)),
+        ).schema
+    )

@@ -3,9 +3,9 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Protocol
 
-import polars as pl
-
 if TYPE_CHECKING:
+    import polars as pl
+
     from renkon.core.stats.base.params import ModelParams
     from renkon.core.stats.base.results import ModelResults
 

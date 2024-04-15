@@ -5,20 +5,22 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol, Self
 
-from renkon.core.repo.registry import LookupKey, SearchKey
 from renkon.core.repo.registry.base import Registry
 from renkon.core.repo.registry.sqlite import TableRow
 from renkon.core.repo.registry.sqlite.queries import queries
 from renkon.core.repo.schema import to_arrow_schema_bytes
+
+if TYPE_CHECKING:
+    from renkon.core.repo.registry import LookupKey, SearchKey
 
 type RowFactory[RowT, TupleT: tuple[Any, ...]] = Callable[[sqlite3.Cursor, TupleT], RowT]
 
 
 class SupportsRowFactory(Protocol):
     @classmethod
-    def row_factory[T](cls: type[T], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> T:
+    def row_factory(cls, cur: sqlite3.Cursor, row: tuple[Any, ...]) -> Self:
         ...
 
 

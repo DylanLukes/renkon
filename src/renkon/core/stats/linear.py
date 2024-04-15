@@ -138,7 +138,9 @@ class OLSModel(Model[OLSModelParams]):
     def predict_expr(self, params: OLSModelParams) -> pl.Expr:
         y_col, x_cols = self.y_col, self.x_cols
         m, c = params.m, params.c
-        return (pl.sum_horizontal([pl.col(x_col) * m_i for x_col, m_i in zip(x_cols, m, strict=True)]) + c).alias(y_col)
+        return (
+            pl.sum_horizontal([pl.col(x_col) * m_i for x_col, m_i in zip(x_cols, m, strict=True)]) + pl.lit(c)
+        ).alias(y_col)
 
     def errors_expr(self, params: OLSModelParams, *, pred_col: str | None = None) -> pl.Expr:
         pred_expr = pl.col(pred_col) if pred_col else self.predict_expr(params)
@@ -163,8 +165,7 @@ class OLSModel(Model[OLSModelParams]):
         n = pl.count().alias("n")
         k = len(x_cols) + int(self._fit_intercept)
         dof = (n - k - 1).alias("dof")
-        adj_rsq = (1 - (1 - rsq) * (n - 1) / dof).alias("adj_rsq")
-        return adj_rsq
+        return (1 - (1 - rsq) * (n - 1) / dof).alias("adj_rsq")  # adjusted r-squared
 
 
 def linear_fit(*, data: pl.DataFrame, y: str, x: list[str] | str) -> OLSModelResults:

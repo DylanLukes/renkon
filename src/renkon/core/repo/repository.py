@@ -33,7 +33,14 @@ class Repository:
             return None
         return self._storage.read(table_info.path)
 
-    def put(self, name: str, table: DataFrame, *, for_ipc: bool = False, for_storage: bool = True) -> None:
+    def put(
+        self,
+        name: str,
+        table: DataFrame,
+        *,
+        for_ipc: bool = False,
+        for_storage: bool = True,
+    ) -> None:
         """
         Put data into the repository.
         """

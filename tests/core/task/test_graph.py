@@ -1,11 +1,9 @@
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn
 
 import pytest
 
 from renkon.core.task.graph import TaskGraph
 from renkon.core.task.result import Err, Ok, Unk
-
-_T = TypeVar("_T")
 
 
 def mk_foo(_task_name: str) -> str:
@@ -52,7 +50,7 @@ def test_no_duplicate_task_names() -> None:
     g: TaskGraph[str] = TaskGraph()
     g.add_task("a", mk_foo, [])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=".*already exists.*"):
         g.add_task("a", mk_bar, [])
 
 
