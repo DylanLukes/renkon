@@ -1,19 +1,16 @@
 from abc import abstractmethod
 from collections.abc import MutableMapping, Sequence
-from typing import Any, Protocol
+from typing import Protocol
 
 from loguru import logger
 from polars import DataFrame
 
 from renkon.core.schema import Schema
-from renkon.core.trait import Trait, TraitSketch
+from renkon.core.trait import AnyTrait, AnyTraitSketch
 from renkon.core.trait.util.instantiate import instantiate_trait
 
-type AnySketch = TraitSketch[Any]
-
-# For now, erase the type parameter from the mapping for results.
-type _InferenceResults[T: Trait] = MutableMapping[TraitSketch[T], T | None]
-type InferenceResults = _InferenceResults[Any]
+type BatchID = str
+type BatchResults = MutableMapping[AnyTraitSketch, AnyTrait | None]
 
 
 class InferenceEngine(Protocol):
@@ -22,7 +19,7 @@ class InferenceEngine(Protocol):
     """
 
     @abstractmethod
-    def run(self, run_id: str, data: DataFrame) -> InferenceResults:
+    def run(self, run_id: str, data: DataFrame) -> BatchResults:
         """
         Run the inference engine.
         @param run_id: the unique ID of this run, used to retrieve results.
@@ -31,7 +28,7 @@ class InferenceEngine(Protocol):
         ...
 
     @abstractmethod
-    def get_results(self, run_id: str) -> InferenceResults:
+    def get_results(self, run_id: str) -> BatchResults:
         """
         Retrieve the results of a run.
         @param run_id: the unique ID of the run.
@@ -50,25 +47,25 @@ class BatchInferenceEngine(InferenceEngine):
     given set of traits on a given dataset.
     """
 
-    _trait_types: dict[str, type[Trait]]
-    _results: dict[str, InferenceResults]
+    _trait_types: dict[str, type[AnyTrait]]
+    _results: dict[BatchID, BatchResults]
 
-    def __init__(self, trait_types: Sequence[type[Trait]]) -> None:
+    def __init__(self, trait_types: Sequence[type[AnyTrait]]) -> None:
         self._trait_types = {trait_class.__name__: trait_class for trait_class in trait_types}
         self._results = {}
 
-    def run(self, run_id: str, data: DataFrame) -> InferenceResults:
+    def run(self, run_id: BatchID, data: DataFrame) -> BatchResults:
         schema = Schema.from_polars(data.schema)
 
         # 1. Instantiate the traits on appropriate columns.
-        sketches: list[AnySketch] = []
+        sketches: list[AnyTraitSketch] = []
         for trait_type in self._trait_types.values():
             sketches.extend(instantiate_trait(trait_type, schema))
             for sketch in sketches:
                 logger.trace(f"Instantiated {sketch}")
 
         # 2. Run inference for each trait on the data.
-        traits: InferenceResults = {}
+        traits: BatchResults = {}
         for sketch in sketches:
             logger.trace(f"Starting inference for {sketch}")
             trait_type = sketch.trait_type
@@ -89,5 +86,5 @@ class BatchInferenceEngine(InferenceEngine):
         # 4. Return results as promise.
         return traits
 
-    def get_results(self, run_id: str) -> InferenceResults:
+    def get_results(self, run_id: str) -> BatchResults:
         return self._results[run_id]

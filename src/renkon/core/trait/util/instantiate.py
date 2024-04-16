@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from renkon.core.schema import Schema
-from renkon.core.trait.base import Trait, TraitMeta, TraitSketch
+from renkon.core.trait import AnyTrait, TraitMeta, TraitSketch
 from renkon.core.util.permute import permutations_with_commutativity
 
 
@@ -16,7 +16,7 @@ def check_type_compatibility(meta: TraitMeta, schema: Schema) -> bool:
     return True
 
 
-def instantiate_trait[T: Trait](trait_type: type[T], schema: Schema) -> Sequence[TraitSketch[T]]:
+def instantiate_trait[T: AnyTrait](trait_type: type[T], schema: Schema) -> Sequence[TraitSketch[T]]:
     """Instantiates sketches for all arities/permutations of the given schema, for a single trait type."""
 
     meta = trait_type.meta

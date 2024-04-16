@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Protocol, Self, runtime_checkable, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, runtime_checkable
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -11,15 +11,18 @@ if TYPE_CHECKING:
 
     from renkon.core.schema import ColumnTypeSet, Schema
 
+type AnyTrait = Trait[*tuple[Any, ...]]
+type AnyTraitSketch = TraitSketch[AnyTrait]
+
 
 @dataclass(eq=True, frozen=True, kw_only=True, slots=True)
-class TraitSketch[T: "Trait"]:
+class TraitSketch[T: AnyTrait]:
     """
     Represents a sketch of a trait, where the arity and types of the trait are known,
     but not the parameters.
     """
 
-    trait_type: type[Trait]
+    trait_type: type[T]
     schema: Schema
 
     @property
@@ -37,7 +40,7 @@ class TraitSketch[T: "Trait"]:
 
 
 @runtime_checkable
-class Trait[*ParamTs](Protocol):
+class Trait[* ParamTs](Protocol):
     """
     Represents an instantiated sketch. This protocol defines the abstract interface for all traits.
     :cvar meta: the metadata for this trait.
@@ -53,7 +56,7 @@ class Trait[*ParamTs](Protocol):
 
     @property
     @abstractmethod
-    def params(self) -> Tuple[*ParamTs]:
+    def params(self) -> tuple[*ParamTs]:
         """The inferred parameters of the trait."""
         ...
 
@@ -97,7 +100,7 @@ class TraitMeta(Protocol):
         ...
 
 
-class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
+class BaseTrait[* ParamTs](Trait[*ParamTs], ABC):
     """
     Basic implementation of a trait. This should be appropriate for most traits.
     """
@@ -105,18 +108,18 @@ class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
     meta: ClassVar
 
     _sketch: TraitSketch[Self]
-    _params: Tuple[*ParamTs]
+    _params: tuple[*ParamTs]
     _mask: Series
     _score: float
 
     __slots__ = ("_sketch", "_params", "_mask", "_score")
 
     def __init__(
-        self,
-        sketch: TraitSketch[Self],
-        params: Tuple[*ParamTs],
-        mask: Series,
-        score: float,
+            self,
+            sketch: TraitSketch[Self],
+            params: tuple[*ParamTs],
+            mask: Series,
+            score: float,
     ):
         self._sketch = sketch
         self._params = params
@@ -128,7 +131,7 @@ class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
         return self._sketch
 
     @property
-    def params(self) -> Tuple[*ParamTs]:
+    def params(self) -> tuple[*ParamTs]:
         return self._params
 
     @property

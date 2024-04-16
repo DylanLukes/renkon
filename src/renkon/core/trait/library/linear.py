@@ -7,7 +7,7 @@ import polars as pl
 from polars import NUMERIC_DTYPES, DataFrame
 from sklearn.linear_model import RANSACRegressor
 
-from renkon.core.trait.base import BaseTrait, TraitMeta
+from renkon.core.trait import BaseTrait, TraitMeta
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from renkon.core.trait import TraitSketch
 
 
-class Linear[* ParamTs](BaseTrait[*ParamTs], ABC):
+class Linear[*ParamTs](BaseTrait[*ParamTs], ABC):
     class Meta(TraitMeta):
         _arity: int
 
