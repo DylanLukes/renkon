@@ -22,3 +22,17 @@ pip install renkon
 ## License
 
 `renkon` is distributed under the terms of the [BSD-3-Clause](https://spdx.org/licenses/BSD-3-Clause.html) license.
+
+## Package Overview
+
+```
+renkon
+├── api             # End-user facing API (e.g. for in notebooks)
+├── cli             # Command line interface
+├── core            
+│   ├── format      # Output formatting
+│   ├── repo        # Input/output repository management
+│   ├── stats       # Statistic implementations
+│   ├── task        # Task and task graph management
+│   └── util        # Utility functions
+└── util

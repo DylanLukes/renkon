@@ -9,7 +9,7 @@ import polars as pl
 from loguru import logger
 from polars import FLOAT_DTYPES, NUMERIC_DTYPES, DataFrame, Utf8
 
-from renkon.core.schema import ColumnTypeSet, Schema
+from renkon.core.model import ColumnTypeSet, Schema
 from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
 
 type SeriesComparator = Callable[[pl.Series, pl.Series, Schema], pl.Series]

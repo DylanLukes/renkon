@@ -18,7 +18,7 @@ def test_round_trip(repo: Repository) -> None:
     assert repo.exists("foo/bar")
     data = repo.get("foo/bar")
     assert data is not None
-    assert data.frame_equal(DATA)
+    assert data.equals(DATA)
 
 
 def test_put_bad_path(repo: Repository) -> None:

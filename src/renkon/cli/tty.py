@@ -29,7 +29,7 @@ def mask_to_blocks(mask: pl.Series, n_chunks: int = 25) -> str:
         (
             pl.LazyFrame({"idx": pl.int_range(0, len(mask), eager=True), "mask": mask})
             .group_by_dynamic("idx", every=f"{len(mask) // n_chunks}i")
-            .agg((pl.sum("mask") / pl.count("mask")).alias("pct"))
+            .agg((pl.sum("mask") / pl.len()).alias("pct"))
         )
         .select("pct")
         .collect()

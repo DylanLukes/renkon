@@ -29,7 +29,7 @@ from rich.theme import Theme
 from renkon.cli.tty import MIN_MATCH_GREEN, MIN_SCORE_GREEN, mask_to_blocks
 from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
-from renkon.core.trait import AnyTrait, Linear2, Linear3, Linear4, EqualNumeric, EqualString
+from renkon.core.trait import AnyTrait, EqualNumeric, EqualString, Linear2, Linear3, Linear4
 from renkon.core.trait.library.integral import Integral
 from renkon.core.trait.library.negative import Negative
 from renkon.core.trait.library.nonzero import Nonzero
@@ -113,11 +113,11 @@ def setup_simple_logging() -> None:
 )
 @click.pass_context
 def batch(
-        _ctx: click.Context,
-        data_path: Path,
-        columns: list[str],
-        threshold_score: float,
-        threshold_mask: float,
+    _ctx: click.Context,
+    data_path: Path,
+    columns: list[str],
+    threshold_score: float,
+    threshold_mask: float,
 ) -> None:
     data = pl.read_csv(data_path, columns=columns or None)
     data = data.select(columns)  # reorder to match input
@@ -155,11 +155,7 @@ def batch(
         def score_fn(trait: AnyTrait) -> float:
             return trait.score + (trait.mask.sum() / trait.mask.len())
 
-        scored_results = [
-            (sketch, trait, score_fn(trait))
-            for sketch, trait in results.items()
-            if trait is not None
-        ]
+        scored_results = [(sketch, trait, score_fn(trait)) for sketch, trait in results.items() if trait is not None]
 
         for sketch, trait, _ in sorted(scored_results, key=lambda x: x[2], reverse=True):
             _trait_type = sketch.trait_type
@@ -208,7 +204,9 @@ def batch(
     else:
         rows: list[dict[str, Any]] = []
         for sketch, trait in results.items():
-            assert trait is not None
+            if trait is None:
+                msg = "Trait is None, this should not happen."
+                raise RuntimeError(msg)
 
             outlier_mask = trait.mask.not_()
             outlier_pct = outlier_mask.sum() / outlier_mask.len() if trait else None
@@ -219,7 +217,7 @@ def batch(
                     "trait": str(trait),
                     "score": trait.score,
                     "outliers_b64": b64encode(np.packbits(outlier_mask)).decode("ascii") if trait else None,
-                    "outliers_pct": outlier_pct
+                    "outliers_pct": outlier_pct,
                 }
             )
 

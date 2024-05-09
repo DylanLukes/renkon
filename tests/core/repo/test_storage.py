@@ -16,7 +16,7 @@ def test_write_read_delete_parquet(storage: Storage) -> None:
 
     table = storage.read(path)
     assert table is not None
-    assert table.frame_equal(TABLE)
+    assert table.equals(TABLE)
 
     storage.delete(path)
     assert not storage.exists(path)
@@ -30,7 +30,7 @@ def test_write_read_delete_arrow(storage: Storage) -> None:
 
     table = storage.read(path)
     assert table is not None
-    assert table.frame_equal(TABLE)
+    assert table.equals(TABLE)
 
     storage.delete(path)
     assert not storage.exists(path)

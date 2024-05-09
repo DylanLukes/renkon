@@ -33,7 +33,7 @@ class TableRow(BaseModel):
 
     @classmethod
     def row_factory(cls: type[TableRow], cur: sqlite3.Cursor, row: tuple[Any, ...]) -> TableRow:  # noqa: ARG003
-        return cls.model_construct(*row)
+        return cls(**dict(zip(TableRow.model_fields.keys(), row, strict=True)))
 
     def to_entry(self) -> Registry.Entry:
         """

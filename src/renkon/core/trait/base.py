@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
     from polars import DataFrame, Series
 
-    from renkon.core.schema import ColumnTypeSet, Schema
+    from renkon.core.model import ColumnTypeSet, Schema
 
 type AnyTrait = Trait[*tuple[Any, ...]]
 type AnyTraitSketch = TraitSketch[AnyTrait]
@@ -40,7 +40,7 @@ class TraitSketch[T: AnyTrait]:
 
 
 @runtime_checkable
-class Trait[* ParamTs](Protocol):
+class Trait[*ParamTs](Protocol):
     """
     Represents an instantiated sketch. This protocol defines the abstract interface for all traits.
     :cvar meta: the metadata for this trait.
@@ -100,7 +100,7 @@ class TraitMeta(Protocol):
         ...
 
 
-class BaseTrait[* ParamTs](Trait[*ParamTs], ABC):
+class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
     """
     Basic implementation of a trait. This should be appropriate for most traits.
     """
@@ -115,11 +115,11 @@ class BaseTrait[* ParamTs](Trait[*ParamTs], ABC):
     __slots__ = ("_sketch", "_params", "_mask", "_score")
 
     def __init__(
-            self,
-            sketch: TraitSketch[Self],
-            params: tuple[*ParamTs],
-            mask: Series,
-            score: float,
+        self,
+        sketch: TraitSketch[Self],
+        params: tuple[*ParamTs],
+        mask: Series,
+        score: float,
     ):
         self._sketch = sketch
         self._params = params
@@ -146,6 +146,9 @@ class BaseTrait[* ParamTs](Trait[*ParamTs], ABC):
     @abstractmethod
     def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
         """
-        Run inference on the given data and return a new instance of the trait.
+        Infer the sketched trait from the data in a :class:`DataFrame`.
+
+        :param sketch: the sketch to infer, must be of the same type as this trait.
+        :param data: the data to infer from.
         """
         ...

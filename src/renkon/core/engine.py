@@ -5,7 +5,7 @@ from typing import Protocol
 from loguru import logger
 from polars import DataFrame
 
-from renkon.core.schema import Schema
+from renkon.core.model import Schema
 from renkon.core.trait import AnyTrait, AnyTraitSketch
 from renkon.core.trait.util.instantiate import instantiate_trait
 

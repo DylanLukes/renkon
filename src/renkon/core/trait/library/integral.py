@@ -4,7 +4,7 @@ from typing import ClassVar, Self
 import polars as pl
 from polars import NUMERIC_DTYPES, DataFrame
 
-from renkon.core.schema import ColumnTypeSet
+from renkon.core.model import ColumnTypeSet
 from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
 
 

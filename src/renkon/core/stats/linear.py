@@ -162,7 +162,7 @@ class OLSModel(Model[OLSModelParams]):
         if not adjust:
             return rsq
 
-        n = pl.count().alias("n")
+        n = pl.len().alias("n")
         k = len(x_cols) + int(self._fit_intercept)
         dof = (n - k - 1).alias("dof")
         return (1 - (1 - rsq) * (n - 1) / dof).alias("adj_rsq")  # adjusted r-squared

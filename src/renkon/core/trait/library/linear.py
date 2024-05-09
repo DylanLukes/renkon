@@ -12,7 +12,7 @@ from renkon.core.trait import BaseTrait, TraitMeta
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from renkon.core.schema import ColumnTypeSet
+    from renkon.core.model import ColumnTypeSet
     from renkon.core.trait import TraitSketch
 
 

@@ -1,7 +1,7 @@
 import importlib
 from typing import TypeGuard
 
-from renkon.core.trait import Trait, AnyTrait
+from renkon.core.trait import AnyTrait, Trait
 from renkon.errors import NotATraitError, TraitNotFoundError
 
 

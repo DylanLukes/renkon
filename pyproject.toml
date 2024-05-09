@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 license = "BSD-3-Clause"
 keywords = []
 authors = [
-    { name = "Dylan Lukes", email = "lukes.dylan@gmail.com" },
+    { name = "Dylan Lukes", email = "lukes.dylan@gmail.com, dlukes@ucsd.edu" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -28,7 +28,7 @@ dependencies = [
     "polars", # Data frames
     "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
     "pyarrow", # Columnar data format
-    "pydantic", # Data validation
+    "pydantic", # Data modeling and validation
 
     # Infrastructure
     "loguru", # Logging
@@ -91,7 +91,7 @@ python = ["3.12"]
 config-path = "ruff_defaults.toml"
 
 [tool.hatch.envs.types]
-dependencies = [
+extra-dependencies = [
   "pyright",
 ]
 
