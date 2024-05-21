@@ -20,8 +20,7 @@ type RowFactory[RowT, TupleT: tuple[Any, ...]] = Callable[[sqlite3.Cursor, Tuple
 
 class SupportsRowFactory(Protocol):
     @classmethod
-    def row_factory(cls, cur: sqlite3.Cursor, row: tuple[Any, ...]) -> Self:
-        ...
+    def row_factory(cls, cur: sqlite3.Cursor, row: tuple[Any, ...]) -> Self: ...
 
 
 class SQLiteRegistry(Registry):

@@ -1,6 +1,7 @@
 """
 Custom iterable tools extensions.
 """
+
 import itertools as it
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
@@ -12,13 +13,11 @@ from typing import Any, Protocol
 
 
 class SupportsDunderLT(Protocol):
-    def __lt__(self, __other: Any) -> bool:
-        ...
+    def __lt__(self, __other: Any) -> bool: ...
 
 
 class SupportsDunderGT(Protocol):
-    def __gt__(self, __other: Any) -> bool:
-        ...
+    def __gt__(self, __other: Any) -> bool: ...
 
 
 type SupportsRichComparison = SupportsDunderLT | SupportsDunderGT

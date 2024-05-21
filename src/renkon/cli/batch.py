@@ -7,6 +7,7 @@ special pre-processing (no extra rows to trim, types can be inferred automatical
 
 This is likely a temporary feature but is useful for testing and for small-scale inference.
 """
+
 import logging
 import os
 import sys

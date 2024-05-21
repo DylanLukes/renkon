@@ -74,8 +74,7 @@ class Trait[*ParamTs](Protocol):
 
     @classmethod
     @abstractmethod
-    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
-        ...
+    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self: ...
 
 
 @runtime_checkable
@@ -86,18 +85,15 @@ class TraitMeta(Protocol):
 
     @property
     @abstractmethod
-    def arity(self) -> int:
-        ...
+    def arity(self) -> int: ...
 
     @property
     @abstractmethod
-    def commutors(self) -> Sequence[bool]:
-        ...
+    def commutors(self) -> Sequence[bool]: ...
 
     @property
     @abstractmethod
-    def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
-        ...
+    def supported_dtypes(self) -> Sequence[ColumnTypeSet]: ...
 
 
 class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):

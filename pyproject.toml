@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 license = "BSD-3-Clause"
 keywords = []
 authors = [
-    { name = "Dylan Lukes", email = "lukes.dylan@gmail.com, dlukes@ucsd.edu" },
+    { name = "Dylan Lukes", email = "dlukes@ucsd.edu" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -34,9 +34,15 @@ dependencies = [
     "loguru", # Logging
     "dacite", # Dataclass deserialization
 
-    # Interface
+    # CLI Interface
     "click", # CLI
     "rich", # Pretty console output
+
+    # Web Interface
+    "fastapi", # Web framework
+    "uvicorn", # ASGI server
+    "jinja2", # Templating
+    "fasthx", # FastAPI extension for HTMX
 ]
 
 optional-dependencies.dev = [
@@ -122,13 +128,13 @@ pythonVersion = "3.12"
 extend = "ruff_defaults.toml"
 exclude = [".hatch", "scripts", "typings"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["renkon"]
 
-[tool.ruff.flake8-tidy-imports]
+[tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, and relative imports
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 

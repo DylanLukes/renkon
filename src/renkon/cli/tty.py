@@ -1,6 +1,7 @@
 """
 This file contains utilities related to pretty printing results when output is a TTY.
 """
+
 import polars as pl
 
 SHADE_BLOCKS = [" ", "░", "▒", "▓", "█"]

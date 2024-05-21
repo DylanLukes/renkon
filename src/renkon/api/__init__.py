@@ -7,6 +7,7 @@ This is the only module that needs to be imported by the user. Submodules don't
 need to be imported for namespacing to work, e.g. sample need not be imported::
 
     import renkon as rk
+
     df.filter(rk.sample.const(k=10).mask)
 
 In this case, `rk.sample` works as an alias for `rk.core.sample`.

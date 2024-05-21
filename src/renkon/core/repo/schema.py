@@ -4,6 +4,7 @@ This module contains some ugly hacks to work around the fact that PyArrow
 is untypes, and we want to strictly type. So, we constraint the ugly bits
 that require Pyright to run in basic mode to this file.
 """
+
 from typing import cast
 
 import polars as pl

@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from collections.abc import Generator, Hashable, Mapping, Sequence
+from collections.abc import Hashable, Iterator, Mapping, Sequence
 from typing import Self, overload
 
 from polars.type_aliases import SchemaDict
@@ -23,12 +23,10 @@ class Schema(RootModel[OrderedDict[ColumnName, ColumnType]], Mapping[ColumnName,
         return hash(tuple(self.root.items()))
 
     @overload
-    def __getitem__(self, key: ColumnName) -> ColumnType:
-        ...
+    def __getitem__(self, key: ColumnName) -> ColumnType: ...
 
     @overload
-    def __getitem__(self, key: ColumnNames) -> Self:
-        ...
+    def __getitem__(self, key: ColumnNames) -> Self: ...
 
     def __getitem__(self, key: ColumnName | ColumnNames) -> ColumnType | Self:
         match key:
@@ -37,7 +35,7 @@ class Schema(RootModel[OrderedDict[ColumnName, ColumnType]], Mapping[ColumnName,
             case tuple():
                 return self.subschema(key)
 
-    def __iter__(self) -> Generator[ColumnName, None, None]:  # type: ignore
+    def __iter__(self) -> Iterator[ColumnName]:  # type: ignore
         yield from iter(self.root)
 
     def __len__(self) -> int:

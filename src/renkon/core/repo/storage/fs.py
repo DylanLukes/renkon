@@ -1,6 +1,7 @@
 """
 Filesystem based implementation of Storage.
 """
+
 from pathlib import Path
 
 import polars as pl

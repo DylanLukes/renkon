@@ -2,6 +2,7 @@ import click
 
 from renkon.__about__ import __version__
 from renkon.cli.batch import batch
+from renkon.cli.web import web
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -11,6 +12,7 @@ def cli() -> None:
 
 
 cli.add_command(batch)
+cli.add_command(web)
 
 if __name__ == "__main__":
     cli()

@@ -20,6 +20,7 @@ class TraitSort(StrEnum):
     :cvar TEXTUAL: A textual (string) expression over columns, e.g. "a contains 'b'".
 
     """
+
     ALGEBRAIC = "algebraic"
     LOGICAL = "logical"
     MODEL = "model"
@@ -40,7 +41,7 @@ class TraitInfo(BaseModel):
     :param form: the form of the trait with metavariables, e.g. "a*x + b = c"
     """
 
-    id: TraitId
+    id_: TraitId
     name: str
     sort: TraitSort
     form: str
