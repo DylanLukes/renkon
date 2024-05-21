@@ -73,6 +73,10 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
+lint = [
+    "hatch fmt",
+    "hatch run types:check"
+]
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = [
