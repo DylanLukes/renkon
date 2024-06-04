@@ -1,9 +1,10 @@
 from enum import StrEnum
-from typing import NewType
 
 from pydantic import BaseModel
 
-TraitId = NewType("TraitId", str)
+from renkon.core.model.trait.form import TraitForm
+
+type TraitId = str
 
 
 class TraitSort(StrEnum):
@@ -35,13 +36,24 @@ class TraitInfo(BaseModel):
     This is as opposed to the behavioral functionality (e.g. inference, scoring)
     found in :class:`~renkon.core.trait.Trait`.
 
+    >>> trait = TraitInfo(
+    ...     id="renkon.core.trait.linear.Linear2",
+    ...     name="Linear Regression (2D)",
+    ...     sort=TraitSort.MODEL,
+    ...     form="y = a*x + b",
+    ...     metavars=["y", "x"],
+    ...     params=["a", "b"],
+    ... )
+
     :param id: the unique identifier of the trait.
     :param name: the name of the trait.
     :param sort: the sort of the trait, e.g. "algebraic", "model", etc.
-    :param form: the form of the trait with metavariables, e.g. "a*x + b = c"
+    :param form: the human-readable form of the trait with metavariables, e.g. "y = a*x + b"
+    :param metavars: the names of the metavariables substituted by column names in the trait form, e.g. ["x", "y"].
+    :param params: the names of the parameters to be inferred in the trait form, e.g. ["a", "b", "c"].
     """
 
-    id_: TraitId
+    id: TraitId
     name: str
     sort: TraitSort
-    form: str
+    form: TraitForm

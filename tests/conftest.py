@@ -12,6 +12,7 @@ from renkon.core.repo.repository import Repository
 from renkon.core.repo.storage import FileSystemStorage
 
 TESTS_DIR = Path(__file__).parent
+FIXTURES_DIR = TESTS_DIR / "fixtures"
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -55,7 +56,7 @@ def cereals_df() -> DataFrame:
     Cereal nutrition dataset from https://www.kaggle.com/crawford/80-cereals
     """
     # Load cereal data from the data directory.
-    path = TESTS_DIR / "data" / "cereals.csv"
+    path = FIXTURES_DIR / "data" / "cereals.csv"
     return pl.read_csv(
         path,
         separator=";",

@@ -5,7 +5,7 @@ from typing import Self, overload
 from polars.type_aliases import SchemaDict
 from pydantic import ConfigDict, RootModel
 
-from renkon.core.model.type_aliases import ColumnName, ColumnNames, ColumnType, ColumnTypes
+from renkon.core.model.types import ColumnName, ColumnNames, ColumnType, ColumnTypes
 
 
 class Schema(RootModel[OrderedDict[ColumnName, ColumnType]], Mapping[ColumnName, ColumnType], Hashable):

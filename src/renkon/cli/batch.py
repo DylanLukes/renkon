@@ -31,10 +31,10 @@ from renkon.cli.tty import MIN_MATCH_GREEN, MIN_SCORE_GREEN, mask_to_blocks
 from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
 from renkon.core.trait import AnyTrait, EqualNumeric, EqualString, Linear2, Linear3, Linear4
-from renkon.core.trait.library.integral import Integral
-from renkon.core.trait.library.negative import Negative
-from renkon.core.trait.library.nonzero import Nonzero
-from renkon.core.trait.library.positive import Positive
+from renkon.core.trait.integral import Integral
+from renkon.core.trait.negative import Negative
+from renkon.core.trait.nonzero import Nonzero
+from renkon.core.trait.positive import Positive
 
 ENABLED_TRAITS: dict[type[AnyTrait], bool] = {
     Linear2: False,

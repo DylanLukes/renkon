@@ -20,6 +20,11 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
+    # Typing and Modeling
+    "annotated-types", # Annotated type annotations
+    "pydantic", # Data modeling and validation
+    "pydantic-settings",
+
     # Data Processing
     "aiosql", # SQL
     "numpy", # Numerical computing
@@ -28,11 +33,10 @@ dependencies = [
     "polars", # Data frames
     "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
     "pyarrow", # Columnar data format
-    "pydantic", # Data modeling and validation
 
     # Infrastructure
     "loguru", # Logging
-    "dacite", # Dataclass deserialization
+    "dacite", # TODO: remove
 
     # CLI Interface
     "click", # CLI
@@ -107,6 +111,12 @@ extra-dependencies = [
 
 [tool.hatch.envs.types.scripts]
 check = "pyright {args:src/renkon tests/}"
+
+# Pytest
+# ------
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
 
 # Pyright
 # -------

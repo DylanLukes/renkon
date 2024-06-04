@@ -1,0 +1,10 @@
+{% extends 'base.html.jinja' %}
+
+{% block content %}
+    <h1>List</h1>
+    <div hx-ext="ws" ws-connect="/list">
+        <form id="submit" ws-send>
+            <input name="text">
+        </form>
+    </div>
+{% endblock content %}

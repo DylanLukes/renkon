@@ -12,4 +12,4 @@ __all__ = [
 ]
 
 from renkon.core.model.schema import Schema
-from renkon.core.model.type_aliases import ColumnName, ColumnNames, ColumnType, ColumnTypes, ColumnTypeSet
+from renkon.core.model.types import ColumnName, ColumnNames, ColumnType, ColumnTypes, ColumnTypeSet
