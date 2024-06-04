@@ -28,13 +28,13 @@ from rich.text import Text
 from rich.theme import Theme
 
 from renkon.cli.tty import MIN_MATCH_GREEN, MIN_SCORE_GREEN, mask_to_blocks
-from renkon.config import RenkonConfig
 from renkon.core.engine import BatchInferenceEngine
 from renkon.core.trait import AnyTrait, EqualNumeric, EqualString, Linear2, Linear3, Linear4
 from renkon.core.trait.integral import Integral
 from renkon.core.trait.negative import Negative
 from renkon.core.trait.nonzero import Nonzero
 from renkon.core.trait.positive import Positive
+from renkon.settings import Settings
 
 ENABLED_TRAITS: dict[type[AnyTrait], bool] = {
     Linear2: False,
@@ -131,7 +131,7 @@ def batch(
     logger.trace("Trace logging enabled.")
 
     # 1. Load the configuration.
-    _config = RenkonConfig.load()
+    _settings = Settings()
 
     # 2. Instantiate the default engine.  # TODO: use config for traits
     engine = BatchInferenceEngine(trait_types=[trait_type for trait_type, enabled in ENABLED_TRAITS.items() if enabled])

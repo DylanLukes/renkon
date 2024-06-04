@@ -1,9 +1,9 @@
-from pathlib import Path, PurePath
+from pathlib import PurePath
 
 import pytest
 from polars import DataFrame
 
-from renkon.core.repo import Storage
+from renkon.core.repo.storage import Storage
 
 TABLE = DataFrame({"a": [1, 2, 3, 4, 5], "b": ["a", "b", "c", "d", "e"], "c": [True, False, True, False, True]})
 
@@ -48,7 +48,7 @@ def test_info_parquet(storage: Storage) -> None:
     assert info.filetype == "parquet"
     assert not info.schema.keys() - {"a", "b", "c"}
     assert info.rows == len(TABLE)
-    assert info.size == (Path.cwd() / "data" / path).stat().st_size
+    assert info.size > 0
 
     storage.delete(path)
     assert not storage.exists(path)

@@ -1,0 +1,3 @@
+# Default Renkon configuration, packaged with Renkon.
+
+data_dir = ".renkon/"

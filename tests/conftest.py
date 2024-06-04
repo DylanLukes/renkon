@@ -1,3 +1,4 @@
+from importlib import resources
 from pathlib import Path
 
 import polars as pl
@@ -5,11 +6,10 @@ import pytest
 from loguru import logger
 from polars import DataFrame
 
-from renkon.config import RenkonConfig
-from renkon.core.repo import SQLiteRegistry, Storage
-from renkon.core.repo.registry import Registry
+from renkon.core.repo.registry import Registry, SQLiteRegistry
 from renkon.core.repo.repository import Repository
-from renkon.core.repo.storage import FileSystemStorage
+from renkon.core.repo.storage import FileSystemStorage, Storage
+from renkon.settings import Settings
 
 TESTS_DIR = Path(__file__).parent
 FIXTURES_DIR = TESTS_DIR / "fixtures"
@@ -20,27 +20,36 @@ def reset_loguru() -> None:
     logger.remove()
 
 
+@pytest.fixture
+def working_dir(tmp_path: Path) -> Path:
+    return tmp_path
+
+
 @pytest.fixture(autouse=True)
-def change_test_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.chdir(tmp_path)
+def setup_test_dir(working_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Copy the settings to the working directory specified in the settings.
+    settings_src = resources.files() / "renkon.tests.toml"
+    settings_dst = working_dir / "renkon.toml"
+    settings_dst.write_text(settings_src.read_text())
+
+    # Switch to the working directory.
+    monkeypatch.chdir(working_dir)
 
 
 @pytest.fixture
-def config(tmp_path: Path) -> RenkonConfig:
-    return RenkonConfig.load(repository={"path": tmp_path})
+def settings() -> Settings:
+    return Settings()
 
 
 @pytest.fixture
-def registry(config: RenkonConfig) -> Registry:
-    assert config.repository is not None
-    path = config.repository.path / "registry.db"
+def registry(settings: Settings) -> Registry:
+    path = settings.data_dir / "registry.db"
     return SQLiteRegistry(path)
 
 
 @pytest.fixture
-def storage(config: RenkonConfig) -> Storage:
-    assert config.repository is not None
-    root = config.repository.path / "data"
+def storage(settings: Settings) -> Storage:
+    root = settings.data_dir / "data"
     root.mkdir(parents=True, exist_ok=True)
     return FileSystemStorage(root)
 

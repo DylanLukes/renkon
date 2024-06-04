@@ -32,6 +32,7 @@ class SQLiteRegistry(Registry):
 
     def __init__(self, db_path: Path) -> None:
         self.db_path = db_path
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._create_tables()
 
     @contextmanager
@@ -51,6 +52,9 @@ class SQLiteRegistry(Registry):
                 if row_type is not None:
                     conn.row_factory = row_type.row_factory
                 yield conn
+        except sqlite3.OperationalError as e:
+            msg = f"Failed to connect to the registry: {e}"
+            raise RuntimeError(msg) from e
         finally:
             conn.close() if conn else None
 
