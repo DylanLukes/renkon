@@ -73,9 +73,10 @@ jobs:
           PYARROW_WITH_PARQUET: 1
 
       - name: Lint code
-        run: |
-          mkdir .mypy_cache
-          hatch run lint:all
+        run: hatch fmt --check
+
+      - name: Typecheck code
+        run: hatch run types:check
 
       - name: Run tests with coverage
         run: hatch run cov
