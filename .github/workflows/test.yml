@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .hatch
-          key: hatch-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('hatch.toml', 'pyproject.toml') }}
+          key: hatch-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
 
       - if: runner.os == 'macOS'
         run: echo "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion)" >> $GITHUB_ENV
@@ -79,7 +79,7 @@ jobs:
         run: hatch run types:check
 
       - name: Run tests with coverage
-        run: hatch run cov
+        run: hatch test --cover
 
       - name: Disambiguate coverage filename
         run: mv .coverage ".coverage.${{ matrix.os }}.${{ matrix.python-version }}"

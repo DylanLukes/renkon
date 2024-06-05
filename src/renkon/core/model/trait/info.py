@@ -36,14 +36,16 @@ class TraitInfo(BaseModel):
     This is as opposed to the behavioral functionality (e.g. inference, scoring)
     found in :class:`~renkon.core.trait.Trait`.
 
-    >>> trait = TraitInfo(
-    ...     id="renkon.core.trait.linear.Linear2",
-    ...     name="Linear Regression (2D)",
-    ...     sort=TraitSort.MODEL,
-    ...     form="y = a*x + b",
-    ...     metavars=["y", "x"],
-    ...     params=["a", "b"],
-    ... )
+    >>> trait = TraitInfo.model_validate_json('''{
+    ...     "id": "renkon.core.trait.linear.Linear2",
+    ...     "name": "Linear Regression (2D)",
+    ...     "sort": "model",
+    ...     "form": {
+    ...         "template": "{y} = {a}*{x} + {b}",
+    ...         "metavars": ["y", "x"],
+    ...         "params": ["a", "b"]
+    ...     }
+    ... }''')
 
     :param id: the unique identifier of the trait.
     :param name: the name of the trait.

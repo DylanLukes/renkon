@@ -78,7 +78,7 @@ lint = [
 ]
 
 [tool.hatch.envs.types]
-extra-dependencies = [ "pyright" ]
+extra-dependencies = [ "pyright", "pytest" ]
 
 [tool.hatch.envs.types.scripts]
 check = "pyright {args:src/renkon tests/}"
@@ -90,7 +90,7 @@ config-path = "ruff_defaults.toml"
 # ------
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules"
+addopts = "--doctest-modules --ignore=typings --ignore=scripts"
 
 # Pyright
 # -------

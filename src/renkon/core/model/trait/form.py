@@ -51,7 +51,9 @@ class TraitForm(BaseModel):
     @model_validator(mode="after")
     def check_template(self):
         for _literal_text, field_name, _format_spec, _conversion in Formatter().parse(self.template):
-            if not field_name:
+            if field_name is None:  # None means only literal text, not a field
+                continue
+            if field_name == "":  # Empty string means anonymous field
                 raise AnonymousTemplateFieldError
             if field_name not in self.metavars + self.params:
                 raise UnknownTemplateFieldError(field_name)
