@@ -116,7 +116,7 @@ jobs:
           name: coverage-data
 
       - name: Combine coverage data
-        run: hatch run coverage:combine
+        run: coverage combine
 
       - name: Generate XML coverage report
         run: coverage xml coverage.xml
