@@ -48,10 +48,19 @@ dependencies = [
     "fasthx", # FastAPI extension for HTMX
 ]
 
-#optional-dependencies.dev = [
-#    "pyright",
-#    "pytest"
-#]
+# These dependencies are helpful to install if using an IDE
+# like PyCharm to run tests (with coverage), but are not
+# required for the package to run.
+optional-dependencies.dev = [
+    "coverage-enable-subprocess",
+    "coverage[toml]",
+    "pyright",
+    "pytest",
+    "pytest-mock",
+    "pytest-randomly",
+    "pytest-rerunfailures",
+    "pytest-xdist[psutil]"
+]
 
 [project.urls]
 Documentation = "https://github.com/DylanLukes/renkon#readme"
