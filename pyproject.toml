@@ -48,10 +48,10 @@ dependencies = [
     "fasthx", # FastAPI extension for HTMX
 ]
 
-optional-dependencies.dev = [
-    "pyright",
-    "pytest"
-]
+#optional-dependencies.dev = [
+#    "pyright",
+#    "pytest"
+#]
 
 [project.urls]
 Documentation = "https://github.com/DylanLukes/renkon#readme"
@@ -87,6 +87,7 @@ check = "pyright {args:src/renkon tests/}"
 
 [tool.hatch.envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
+
 
 # Pytest
 # ------

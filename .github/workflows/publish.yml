@@ -39,11 +39,14 @@ jobs:
       - name: Install Hatch
         run: pip install --upgrade hatch
 
-      - name: Lint
+      - name: Run static analysis
         run: hatch fmt --check
 
-      - name: Test
-        run: hatch test --cover
+      - name: Run type checking
+        run: hatch run types:check
+
+      - name: Run tests
+        run: hatch test
 
       - name: Build
         run: hatch build
