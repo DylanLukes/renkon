@@ -23,7 +23,7 @@ def test_from_tuple_valid_filetype() -> None:
             path="foo",
             name="bar",
             filetype=file_type,
-            schema=to_arrow_schema_bytes({}),
+            schema_=to_arrow_schema_bytes({}),
             rows=0,
             size=0,
         ).to_entry()
@@ -38,7 +38,7 @@ def test_from_tuple_invalid_filetype() -> None:
             path="foo",
             name="bar",
             filetype="invalid",  # type: ignore[arg-type]
-            schema=to_arrow_schema_bytes({}),
+            schema_=to_arrow_schema_bytes({}),
             rows=0,
             size=0,
         ).to_entry()
