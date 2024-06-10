@@ -22,12 +22,10 @@ class TableRow(BaseModel):
     This exists as an intermediate type between the database and the registry.
     """
 
-    # Type ignore is to suppress overriding deprecated pydantic method of same name.
-    # Should be removable eventually.
     path: str
     name: str
     filetype: FileType
-    schema: bytes  # type: ignore
+    schema_: bytes
     rows: int
     size: int
 
@@ -43,7 +41,7 @@ class TableRow(BaseModel):
             name=self.name,
             path=PurePath(self.path),
             filetype=self.filetype,
-            schema=from_arrow_schema_bytes(self.schema),  # type: ignore
+            schema=from_arrow_schema_bytes(self.schema_),  # type: ignore
             rows=self.rows,
             size=self.size,
         )
