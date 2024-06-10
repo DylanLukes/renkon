@@ -36,7 +36,7 @@ def test_linear_perfect_fit() -> None:
     pl_testing.assert_series_equal(y_pred, df_test["y"])
 
 
-@pytest.mark.flaky(reruns=5)
+@pytest.mark.flaky(reruns=5, rerun_delay=1)
 def test_linear_noisy_fit() -> None:
     # This is a statistical test, and rarely may fail. Reset the random seed before each test run.
     np.random.seed()
@@ -53,7 +53,7 @@ def test_linear_noisy_fit() -> None:
     fit = model.fit(df)
 
     # Compute the critical value for a two-tailed t-test.
-    alpha = 0.01
+    alpha = 0.05
     dof = len(df) - 2 - 1
     t_crit = t.ppf(1 - alpha / 2, dof)
 
