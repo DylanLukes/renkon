@@ -1,3 +1,4 @@
+import jinja2
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 from fastapi.websockets import WebSocket
@@ -20,7 +21,17 @@ TODOS = [
 
 app = FastAPI()
 
-jinja = Jinja(Jinja2Templates("templates"))
+jinja = Jinja(
+    Jinja2Templates(
+        directory="templates",
+        loader=jinja2.ChoiceLoader(
+            [
+                jinja2.FileSystemLoader("templates"),
+                jinja2.PackageLoader("renkon.web", "templates"),
+            ]
+        ),
+    )
+)
 
 
 @app.get("/")

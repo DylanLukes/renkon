@@ -9,7 +9,7 @@ They are not intended to be imported outside of this project,
 despite usage in public facing type hints. This may change.
 """
 
-# todo: hide implementation detail of using Polars?
+# TODO: hide implementation detail of using Polars?
 from polars import PolarsDataType
 from polars import datatypes as pldt
 
