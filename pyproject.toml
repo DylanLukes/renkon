@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-build-scripts"]
 build-backend = "hatchling.build"
 
 [project]
@@ -85,6 +85,23 @@ lint = [
     "hatch fmt",
     "hatch run types:check"
 ]
+
+[[tool.hatch.build.hooks.blood-scripts.script]]
+out_dir = "out"
+commands = [
+    "echo 'Hello, world!' > hello.txt",
+    "echo 'Goodbye, world!' > goodbye.txt",
+]
+artifacts = [
+    "hello.txt",
+    "goodbye.txt",
+]
+
+#[tool.hatch.build.hooks.custom]
+#path = "scripts/hatch_build.py"
+
+# Hatch Environments
+# ------------------
 
 [tool.hatch.envs.types]
 extra-dependencies = ["pyright", "pytest"]

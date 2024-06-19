@@ -2,9 +2,12 @@
 
 {% block content %}
     <h1>List</h1>
-    <div hx-ext="ws" ws-connect="/list">
-        <form id="submit" ws-send>
-            <input name="text">
+    <div hx-ext="ws,debug" ws-connect="/ws">
+        <ul id="items">
+
+        </ul>
+        <form id="form" ws-send>
+
         </form>
     </div>
 {% endblock content %}
