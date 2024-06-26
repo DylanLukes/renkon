@@ -1,42 +1,29 @@
-from enum import StrEnum
+# SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+from abc import abstractmethod
+from typing import Annotated, Protocol, final
 
+__TRAIT_INFO__ = "__trait_info__"
+
+from annotated_types import Gt, Lt
 from pydantic import BaseModel
 
+from renkon.core.model.trait import TraitKind
 from renkon.core.model.trait.form import TraitForm
 
 type TraitId = str
+type TraitScore = Annotated[float, Gt(0.0), Lt(1.0)]
 
 
-class TraitSort(StrEnum):
-    """
-    Enum representing the possible sorts of a trait.
-
-    The sort of a trait is a high-level categorization of the trait's nature,
-    and strongly implies the process by which it is inferred and scored.
-
-    :cvar ALGEBRAIC: An algebraic (numeric) expression over columns, e.g. "a*x + b = c".
-    :cvar LOGICAL: A logical (boolean) expression over columns, e.g. "a > b".
-    :cvar MODEL: A model of the data, e.g. a linear regression model.
-    :cvar STATISTICAL: A statistical test or measure, e.g. a t-test.
-    :cvar TEXTUAL: A textual (string) expression over columns, e.g. "a contains 'b'".
-
-    """
-
-    ALGEBRAIC = "algebraic"
-    LOGICAL = "logical"
-    MODEL = "model"
-    STATISTICAL = "statistical"
-    TEXTUAL = "textual"
-
-
-class TraitInfo(BaseModel):
+class TraitSpec(BaseModel):
     """
     Model representing the descriptive identity of a trait.
 
     This is as opposed to the behavioral functionality (e.g. inference, scoring)
     found in :class:`~renkon.core.trait.Trait`.
 
-    >>> trait = TraitInfo.model_validate_json('''{
+    >>> trait = TraitSpec.model_validate_json('''{
     ...     "id": "renkon.core.trait.linear.Linear2",
     ...     "name": "Linear Regression (2D)",
     ...     "sort": "model",
@@ -57,5 +44,45 @@ class TraitInfo(BaseModel):
 
     id: TraitId
     name: str
-    sort: TraitSort
+    sort: TraitKind
     form: TraitForm
+
+
+class TraitDisplay:
+    """ """
+
+
+class TraitInfer:
+    """ """
+
+
+class Trait(Protocol):
+    """
+    :param R: the type of the result of the trait's inference.
+    :cvar info: the metadata for this trait.
+    """
+
+    @property
+    @abstractmethod
+    def info(self) -> TraitSpec: ...
+
+    @property
+    @abstractmethod
+    def view(self) -> TraitDisplay: ...
+
+    @property
+    @abstractmethod
+    def infer(self) -> TraitInfer: ...
+
+    @property
+    def form(self) -> TraitForm:
+        return self.info.form
+
+
+@final
+class Linear(Trait):
+    pass
+
+
+if __name__ == "__main__":
+    print(Linear.info)  # noqa

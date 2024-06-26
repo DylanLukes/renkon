@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
     from renkon.core.model import ColumnTypeSet, Schema
 
+
 type AnyTrait = Trait[*tuple[Any, ...]]
 type AnyTraitSketch = TraitSketch[AnyTrait]
 

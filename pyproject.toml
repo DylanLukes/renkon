@@ -23,19 +23,21 @@ dependencies = [
     # Typing and Modeling
     "annotated-types", # Annotated type annotations
     "pydantic", # Data modeling and validation
-    "pydantic-settings",
+    "pydantic-settings", # Settings management
+    "bitarray", # Bit arrays
+
     # Data Processing
     "aiosql", # SQL
     "numpy", # Numerical computing
     "scikit-learn", # Machine learning
     "scipy", # Scientific computing
     "polars", # Data frames
-    "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
+#    "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
+    "pandera", # Data validation
     "pyarrow", # Columnar data format
 
     # Infrastructure
     "loguru", # Logging
-    "dacite", # TODO: remove
 
     # CLI Interface
     "click", # CLI

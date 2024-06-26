@@ -2,7 +2,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
-from renkon.core.model.trait import TraitInfo
+from renkon.core.model.trait import TraitSpec
 
 
 class SketchInfo(BaseModel):
@@ -13,8 +13,8 @@ class SketchInfo(BaseModel):
     :param substs: the assignments of column names to metavariable names in the trait form.
     """
 
-    trait: TraitInfo
-    substs: dict[str, str]
+    trait: TraitSpec
+    substs: dict[str, str]  # TODO: include the _types_!
 
     @model_validator(mode="after")
     def check_all_metavars_subst(self) -> Self:

@@ -9,15 +9,11 @@ import sys
 from loguru import logger
 
 
-def configure_logging(intercept_loggers: list[str] | None = None, ):
-    print("CONFIGURING LOGGERS")
+def configure_logging(
+    intercept_loggers: list[str] | None = None,
+):
     if intercept_loggers is None:
-        intercept_loggers = [
-            "uvicorn.asgi",
-            "uvicorn.access",
-            "uvicorn.error",
-            "fastapi"
-        ]
+        intercept_loggers = ["uvicorn.asgi", "uvicorn.access", "uvicorn.error", "fastapi"]
 
     # Configure Loguru to handle standard logging messages.
     logger_format = (
@@ -26,12 +22,16 @@ def configure_logging(intercept_loggers: list[str] | None = None, ):
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "<level>{message}</level>"
     )
-    logger.configure(handlers=[{
-        "sink": sys.stderr,
-        "level": os.environ.get("LOG_LEVEL", "INFO"),
-        "format": logger_format,
-        "colorize": True,
-    }])
+    logger.configure(
+        handlers=[
+            {
+                "sink": sys.stderr,
+                "level": os.environ.get("LOG_LEVEL", "INFO"),
+                "format": logger_format,
+                "colorize": True,
+            }
+        ]
+    )
 
     # Intercept standard logging messages and redirect them to Loguru.
     intercept_handler = InterceptHandler()

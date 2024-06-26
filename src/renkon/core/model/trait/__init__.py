@@ -3,9 +3,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 __all__ = [
     "TraitId",
+    "TraitKind",
     "TraitForm",
-    "TraitInfo",
-    "TraitSort",
+    "TraitSpec",
+    "TraitSketch",
+    "TraitScore",
+    "TraitResult",
+
     "TraitFormValidationError",
     "DuplicateMetavarsError",
     "DuplicateParamsError",
@@ -19,7 +23,11 @@ from renkon.core.model.trait.form import (
     DuplicateMetavarsError,
     DuplicateParamsError,
     DuplicateTemplateFieldError,
+    TraitForm,
     TraitFormValidationError,
     UnknownTemplateFieldError,
 )
-from renkon.core.model.trait.info import TraitForm, TraitId, TraitInfo, TraitSort
+from renkon.core.model.trait.kind import TraitKind
+from renkon.core.model.trait.new import TraitId, TraitScore, TraitSpec
+from renkon.core.model.trait.result import TraitResult
+from renkon.core.model.trait.sketch import TraitSketch

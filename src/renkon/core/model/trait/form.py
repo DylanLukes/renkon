@@ -14,8 +14,8 @@ class TraitForm(BaseModel):
     Model representing the form of a trait, can be templated with actual values.
 
     >>> TraitForm.model_validate_json('''{
-    ...     "template": "{y} = {a}*{x} + {b}",
-    ...     "metavars": ["x", "y"],
+    ...     "template": "{Y} = {a}*{X} + {b}",
+    ...     "metavars": ["Y", "X"],
     ...     "params": ["a", "b"]
     ... }''')
     TraitForm(template='{y} = {a}*{x} + {b}', metavars=['x', 'y'], params=['a', 'b'])
@@ -29,15 +29,22 @@ class TraitForm(BaseModel):
     metavars: list[str]
     params: list[str]
 
-    def format(self, extra: TemplateExtraPolicy = "forbid", **kwargs: Any):
+    def format(self, extra: TemplateExtraPolicy = "forbid", partial: bool = False, **mapping: Any):
         """
         Template the trait form with the given metavariable and parameter substitutions. Must be
         complete, i.e. all metavariables and parameters must be substituted.
+
+        :param extra: policy for extra fields in the mapping, "allow" or "forbid".
+        :param partial: if true, missing mappings are left as template fields.
+        :param mapping: the mapping of metavariables and parameters to their values.
         """
-        if extra == "forbid" and len(extra_fields := set(kwargs.keys()) - set(self.metavars + self.params)) != 0:
+        if extra == "forbid" and len(extra_fields := set(mapping.keys()) - set(self.metavars + self.params)) != 0:
             raise ExtraTemplateSubstitutionError(extra_fields)
 
-        return self.template.format_map(kwargs)
+        if partial:
+            pass
+
+        return self.template.format_map(mapping)
 
     def format_partial(self, extra: TemplateExtraPolicy = "forbid", **kwargs: Any):
         """
@@ -117,13 +124,13 @@ class UnknownTemplateFieldError(TraitFormValidationError):
         self.field_name = field_name
 
 
-class ExtraTemplateSubstitutionError(RuntimeError):
+class ExtraTemplateSubstitutionError(TraitFormValidationError):
     def __init__(self, extra_fields: set[str]):
         super().__init__(f"Extra template substitutions: {extra_fields}", extra_fields)
         self.extra_fields = extra_fields
 
 
-class MissingTemplateSubstitutionError(RuntimeError):
+class MissingTemplateSubstitutionError(TraitFormValidationError):
     def __init__(self, missing_fields: set[str]):
         super().__init__(f"Missing template substitutions: {missing_fields}", missing_fields)
         self.missing_fields = missing_fields
