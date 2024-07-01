@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 from string import Formatter
-from typing import TYPE_CHECKING, Any, Literal, LiteralString, NamedTuple
+from typing import TYPE_CHECKING, Annotated, Any, Literal, LiteralString, NamedTuple, TypeGuard
 
 import pytest
+from annotated_types import Predicate
 from pydantic import GetCoreSchemaHandler, TypeAdapter
 from pydantic_core import core_schema as cs
 
@@ -14,14 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
 
-class FStringFieldSpec(NamedTuple):
-    literal_text: str | LiteralString
-    field_name: str | LiteralString | None
-    format_spec: str | LiteralString | None
-    conversion: str | LiteralString | None
-
-
-def is_valid_format_string(value: str) -> bool:
+def is_format_string(value: str) -> bool:
     try:
         Formatter().parse(value)
     except ValueError:
@@ -29,20 +23,31 @@ def is_valid_format_string(value: str) -> bool:
     return True
 
 
-def iter_field_specs(value: str, predicate: Callable[[FStringFieldSpec], bool] = lambda _: True) -> Iterator[
-    FStringFieldSpec]:
-    for field_spec in Formatter().parse(value):
-        field_spec = FStringFieldSpec(*field_spec)
-        if predicate(field_spec):
-            yield field_spec
-
-
-def is_metavariable_name(s: str) -> bool:
+def is_metavariable_name(s: str) -> TypeGuard[MetavariableName]:
     return s[0].isupper()
 
 
-def is_parameter_name(s: str) -> bool:
+def is_parameter_name(s: str) -> TypeGuard[ParameterName]:
     return s[0].islower()
+
+
+type FormatString = Annotated[str, Predicate(is_format_string)]
+type MetavariableName = Annotated[str, Predicate(is_metavariable_name)]
+type ParameterName = Annotated[str, Predicate(is_parameter_name)]
+
+
+class _FStringField(NamedTuple):
+    literal_text: str | LiteralString
+    field_name: str | LiteralString | None
+    format_spec: str | LiteralString | None
+    conversion: str | LiteralString | None
+
+
+def _iter_fstring_fields(value: str, pred: Callable[[_FStringField], bool] = lambda _: True) -> Iterator[_FStringField]:
+    for field_tuple in Formatter().parse(value):
+        field = _FStringField(*field_tuple)
+        if pred(field):
+            yield field
 
 
 class TraitPattern(str):
@@ -50,22 +55,20 @@ class TraitPattern(str):
     A string that represents a format string for a trait.
     None
     """
-    __slots__ = (
-        "parameters",
-        "metavariables"
-    )
 
-    def __new__(cls, value: str):
-        obj = super().__new__(cls, value)
+    __slots__ = ("parameters", "metavariables")
+
+    def __new__(cls, f_str: str):
+        obj = super().__new__(cls, f_str)
         obj.metavariables = []
         obj.parameters = []
 
-        if not is_valid_format_string(value):
+        if not is_format_string(f_str):
             msg = "format string '{value}' must be a valid f-string."
             raise ValueError(msg)
 
-        seen = set()
-        for (_, field_name, _, _) in iter_field_specs(value):
+        seen: set[str] = set()
+        for _, field_name, _, _ in _iter_fstring_fields(f_str):
             if not field_name:
                 msg = "format string fields must be named."
                 raise ValueError(msg)
@@ -86,22 +89,25 @@ class TraitPattern(str):
         return obj
 
     @classmethod
-    def __get_pydantic_core_schema__(
-            cls,
-            _source_type: Any,
-            _handler: GetCoreSchemaHandler
-    ) -> cs.CoreSchema:
-        return cs.chain_schema([
-            cs.str_schema(),
-            cs.no_info_plain_validator_function(lambda s: cls(s)),
-        ])
+    def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: GetCoreSchemaHandler) -> cs.CoreSchema:
+        return cs.chain_schema(
+            [
+                cs.str_schema(),
+                cs.no_info_plain_validator_function(lambda s: cls(s)),
+            ]
+        )
 
     def format(
-            self,
-            extra: Literal["ignore", "forbid"] = "forbid",
-            missing: Literal["partial", "forbid"] = "forbid",
-            **mapping: Any
+        self,
+        *args: Any,
+        extra: Literal["ignore", "forbid"] = "forbid",
+        missing: Literal["partial", "forbid"] = "forbid",
+        **mapping: Any,
     ) -> str:
+        if args:
+            msg = "TraitPattern.format() does not accept positional arguments."
+            raise ValueError(msg)
+
         if extra == "forbid":
             extra_fields = set(mapping.keys()) - set(self.metavariables + self.parameters)
             if extra_fields:
@@ -141,10 +147,14 @@ def test_trait_pattern_format():
     pattern = ta.validate_python("{Y} = {a}*{X} + {b}")
 
     # happy case
-    assert pattern.format(Y="money", X="time", a=3, b=4) == "money = 3*time + 4"
+    assert pattern.format(Y="money", X="time", a=3, b=4) == "money = 3*time + 4"  # noqa: S101
+
+    # positional arguments are forbidden
+    with pytest.raises(ValueError, match="does not accept positional arguments"):
+        pattern.format("money", "time", 3, 4)
 
     # extra fields are forbidden when extra="forbid"
-    with pytest.raises(ValueError, match="extra fields are forbidden: {'c'}."):
+    with pytest.raises(ValueError, match="extra fields are forbidden: {'c'}"):
         pattern.format(Y="money", X="time", a=3, b=4, c=5)
 
     # missing fields are forbidden when missing="forbid"
@@ -152,7 +162,4 @@ def test_trait_pattern_format():
         pattern.format(Y="money", X="time", a=3)
 
     # missing fields left as template fields when missing="partial"
-    assert pattern.format(Y="money", a=3, missing="partial") == "money = 3*{X} + {b}"
-
-
-
+    assert pattern.format(Y="money", a=3, missing="partial") == "money = 3*{X} + {b}"  # noqa: S101

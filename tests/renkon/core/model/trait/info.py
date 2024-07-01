@@ -1,9 +1,9 @@
-from renkon.core.model.sketch import SketchInfo
-from renkon.core.model.trait import TraitForm, TraitSort, TraitSpec
+from renkon.core.model.trait import TraitForm, TraitInfo, TraitSort
+from renkon.core.model.trait.sketch import SketchInfo
 
 
 def test_sketch_info_round_trip() -> None:
-    trait_info = TraitSpec(
+    trait_info = TraitInfo(
         id="renkon.core.trait.linear.Linear2",
         name="Linear Regression (2D)",
         sort=TraitSort.MODEL,

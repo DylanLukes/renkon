@@ -1,10 +1,17 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from pydantic import BaseModel
+from typing import Self
 
-from renkon.core.model import Schema
-from renkon.core.model.trait import TraitSpec
+from pydantic import BaseModel, model_validator
+
+from renkon.core.model.trait.spec import TraitSpec
+from renkon.core.model.type_aliases import ColumnName, ColumnType
+
+
+class TraitSketchBinding(BaseModel):
+    col_name: ColumnName
+    col_type: ColumnType
 
 
 class TraitSketch(BaseModel):
@@ -14,5 +21,15 @@ class TraitSketch(BaseModel):
     :param trait: the trait being sketched.
     :param fills: the assignments of (typed) column names to metavariable in the trait form.
     """
+
     trait: TraitSpec
-    fills: Schema
+    bindings: dict[str, TraitSketchBinding]
+
+    @model_validator(mode="after")
+    def check_columns(self) -> Self:
+        bound_colnames = set(self.bindings.keys())
+        metavars = set(self.trait.pattern.metavariables)
+        if bound_colnames != metavars:
+            msg = f"Bindings {bound_colnames} do not match trait metavariables {metavars}"
+            raise ValueError(msg)
+        return self

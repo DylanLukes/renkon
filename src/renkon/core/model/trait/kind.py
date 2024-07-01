@@ -8,7 +8,7 @@ class TraitKind(StrEnum):
     """
     Enum representing the possible sorts of a trait.
 
-    The sort of a trait is a high-level categorization of the trait's nature,
+    The kind of a trait is a high-level categorization of the trait's nature,
     and strongly implies the process by which it is inferred and scored.
 
     :cvar ALGEBRAIC: An algebraic (numeric) expression over columns, e.g. "a*x + b = c".

@@ -8,7 +8,7 @@ import base64
 from typing import TYPE_CHECKING, Annotated, Any, TypedDict, TypeGuard
 
 import polars as pl
-import pyarrow as pa
+import pyarrow as pa  # type: ignore
 from annotated_types import Predicate
 from polars import Series
 from pydantic import Base64Bytes, PositiveInt, TypeAdapter
@@ -48,9 +48,9 @@ def _validate_bitseries_from_fields(b: _BitSeriesFields) -> BitSeries:
         msg = f"Data length {len(data)} is insufficient to contain {count} bits."
         raise ValueError(msg)
 
-    buf = pa.py_buffer(data)
-    arr = pa.Array.from_buffers(pa.bool_(), length=count, buffers=[None, buf])
-    return pl.Series(arr, dtype=pl.Boolean)
+    buf = pa.py_buffer(data)  # type: ignore
+    arr = pa.Array.from_buffers(pa.bool_(), length=count, buffers=[None, buf])  # type: ignore
+    return pl.Series(arr, dtype=pl.Boolean)  # type: ignore
 
 
 def _validate_bitseries_from_series(s: Series) -> BitSeries:
@@ -62,8 +62,8 @@ def _validate_bitseries_from_series(s: Series) -> BitSeries:
 
 def _serialize_bitseries_to_fields(s: BitSeries) -> _BitSeriesFields:
     count = len(s)
-    data = base64.encodebytes(s.to_arrow().buffers()[1].to_pybytes())
-    return _BitSeriesFields(length=count, data=data)
+    data = base64.encodebytes(s.to_arrow().buffers()[1].to_pybytes())  # type: ignore
+    return _BitSeriesFields(length=count, data=data)  # type: ignore
 
 
 class _BitSeriesPydanticAnnotation:
@@ -89,33 +89,3 @@ class _BitSeriesPydanticAnnotation:
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
         return handler(core_schema)
-
-
-# if __name__ == "__main__":
-#     import numpy as np
-#     import polars as pl
-#     from pydantic import BaseModel
-#
-#
-#     class Model(BaseModel):
-#         mask: BitSeries
-#
-#
-#     data = np.packbits(np.random.randint(0, 2, 1000).astype(bool)).tobytes()
-#     print(len(data))
-#
-#     fields = _BitSeriesFields(length=1000, data=data)
-#     ta = TypeAdapter(_BitSeriesFields)
-#     print(ta.core_schema)
-#
-#     ta.validate_python(ta.dump_python(fields))
-#
-#     buf = pa.py_buffer(data)
-#     arr = pa.Array.from_buffers(pa.bool_(), 1000, [None, buf])
-#     mask = pl.Series("mask", arr)
-#     assert is_bit_series(mask)
-#     # print(mask)
-#
-#     model = Model(mask=mask)
-#     print(model.model_dump_json())
-#     roundtripped = Model.model_validate_json(model.model_dump_json())

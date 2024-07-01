@@ -3,13 +3,29 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 __all__ = [
+    "RenkonDataType",
     "ColumnName",
     "ColumnNames",
     "ColumnType",
     "ColumnTypes",
     "ColumnTypeSet",
     "Schema",
+    "BitSeries",
+    "Schema",
+    "TraitId",
+    "TraitKind",
+    "TraitPattern",
+    "TraitSpec",
+    "TraitSketch",
+    "TraitResult",
+    "TraitResultScore",
 ]
 
+from renkon.core.model.bitseries import BitSeries
 from renkon.core.model.schema import Schema
-from renkon.core.model.types import ColumnName, ColumnNames, ColumnType, ColumnTypes, ColumnTypeSet
+from renkon.core.model.trait.kind import TraitKind
+from renkon.core.model.trait.pattern import TraitPattern
+from renkon.core.model.trait.result import TraitResult, TraitResultScore
+from renkon.core.model.trait.sketch import TraitSketch
+from renkon.core.model.trait.spec import TraitId, TraitSpec
+from renkon.core.model.type_aliases import RenkonDataType, ColumnName, ColumnNames, ColumnType, ColumnTypes, ColumnTypeSet
