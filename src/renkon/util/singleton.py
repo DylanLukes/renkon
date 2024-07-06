@@ -3,40 +3,60 @@
 # SPDX-License-Identifier: BSD-3-Clause
 from __future__ import annotations
 
+import functools
 from abc import ABCMeta, abstractmethod
 from types import MethodType
-from typing import Any, Callable, reveal_type, Self, ClassVar
-from functools import singledispatchmethod
+from typing import Any, Callable, reveal_type, Concatenate
+
 
 class _SingletonMeta(ABCMeta):
     _instances: dict[type, Any] = {}
 
     def __call__(cls, *args: Any, **kwargs: Any):
-        reveal_type(cls)
         if cls not in cls._instances:
             cls._instances[cls] = super(_SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
 class Singleton(metaclass=_SingletonMeta):
-    __singleton__: ClassVar[Self | None] = None
-    ...
+    @classmethod
+    def get_instance(cls: type[Singleton]) -> Singleton:
+        return cls()
 
 
 class singletonmethod[T: Singleton, ** P, R]:
     """Descriptor for a method which when called on the class, delegates to the singleton instance."""
 
-    def __init__(self, func: Callable[P, R]):
+    func: Callable[P, R]
+
+    def __init__(self, func: Callable[P, R], *, cls: type[T] = Singleton):
+        if not callable(func) and not hasattr(func, "__get__"):
+            raise TypeError(f"{func!r} is not callable or a descriptor")
+
         self.func = func
+        functools.update_wrapper(self, func)
 
     def __get__(self, obj: T | None, cls: type[T]) -> MethodType:
         if obj is None:
-            obj = type(cls).__call__(cls)
+            obj = cls.get_instance()
         return MethodType(self.func, obj)
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        return self.func(*args, **kwargs)
 
     @property
     def __isabstractmethod__(self):
         return getattr(self.func, '__isabstractmethod__', False)
+
+
+def fsingletonmethod[S: Singleton, ** P, R](func: Callable[Concatenate[S, P], R]) -> Callable[Concatenate[S, P], R]:
+    """Decorator for a method which when called on the class, delegates to the singleton instance."""
+
+    @functools.wraps(func)
+    def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> R:
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 # Example
