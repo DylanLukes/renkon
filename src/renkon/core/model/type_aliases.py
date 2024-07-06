@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from renkon.core.model.datatypes import DataType, DataTypeClass
+from typing import Any
 
-type RenkonDataType = DataTypeClass | DataType
+type RenkonDataType = Any  # TODO: fix
 
 type ColumnName = str
 type ColumnNames = tuple[ColumnName, ...]
