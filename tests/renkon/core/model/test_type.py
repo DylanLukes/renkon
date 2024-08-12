@@ -3,10 +3,39 @@
 # SPDX-License-Identifier: BSD-3-Clause
 from __future__ import annotations
 
-from renkon.core.model.dtypes import rk_int, Int, rk_float, Float, rk_str, String, rk_bool, Bool, rk_union, rk_bottom
+from lark import Lark
+
+from renkon.core.model.type import rk_int, Int, rk_float, Float, rk_str, String, rk_bool, Bool, rk_union, rk_bottom, \
+    Type
+from renkon.core.model.type.base import TreeToType
+from renkon.core.model.type.grammar import grammar
 
 
 # todo: use hypothesis for more robust property-based testing
+
+def test_type_model_dump():
+    assert rk_int.model_dump() == "int"
+    assert rk_float.model_dump() == "float"
+    assert rk_str.model_dump() == "string"
+    assert rk_bool.model_dump() == "bool"
+    assert rk_union(rk_int, rk_float).model_dump() == "float | int"
+    assert rk_union(rk_int, rk_str).model_dump() == "int | string"
+    assert rk_bottom.model_dump() == "⊥"
+    assert rk_union().model_dump() == "⊥ | ⊥"
+
+
+def test_type_model_validate():
+    assert Type.model_validate("int") == rk_int
+    assert Type.model_validate("float") == rk_float
+    assert Type.model_validate("string") == rk_str
+    assert Type.model_validate("bool") == rk_bool
+    assert Type.model_validate("float | int") == rk_union(rk_int, rk_float)
+    assert Type.model_validate("int | string") == rk_union(rk_int, rk_str)
+    assert Type.model_validate("int | string | float") == rk_union(rk_int, rk_str, rk_float)
+    assert Type.model_validate("int | (string | float)") == rk_union(rk_int, rk_str, rk_float)
+    assert Type.model_validate("⊥") == rk_bottom
+    assert Type.model_validate("⊥ | ⊥") == rk_union()
+
 
 def test_primitive_equality():
     assert rk_int == Int()
@@ -122,3 +151,20 @@ def test_comparable():
     assert not rk_union(rk_str, rk_union(rk_int, rk_bool)).is_comparable()
     assert not rk_union(rk_str, rk_union(rk_bool, rk_float)).is_comparable()
     assert not rk_union(rk_str, rk_union(rk_bool, rk_bool)).is_comparable()
+
+
+def test_type_parser():
+    parser = Lark(grammar, parser='lalr', transformer=TreeToType())
+
+    assert parser.parse("int") == rk_int
+    assert parser.parse("float") == rk_float
+    assert parser.parse("str") == rk_str
+    assert parser.parse("string") == rk_str
+    assert parser.parse("bool") == rk_bool
+    assert parser.parse("boolean") == rk_bool
+    assert parser.parse("⊥") == rk_bottom
+    assert parser.parse("bottom") == rk_bottom
+    assert parser.parse("int | float") == rk_union(rk_int, rk_float)
+    assert parser.parse("int | float | str") == rk_union(rk_int, rk_float, rk_str)
+    assert parser.parse("int | (float | str)") == rk_union(rk_int, rk_float, rk_str)
+    assert parser.parse("⊥ | ⊥") == rk_union()

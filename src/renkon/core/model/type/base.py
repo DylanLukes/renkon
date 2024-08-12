@@ -7,14 +7,19 @@ from abc import ABC, abstractmethod
 from collections.abc import Hashable
 from typing import Any, ClassVar, Self, override
 
+from lark import Lark, Transformer
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import CoreSchema
 from pydantic_core import core_schema as cs
+
+from renkon.core.model.type.grammar import grammar
 
 
 class Type(BaseModel, ABC, Hashable):
     class Config:
         frozen = True
+
+    _parser: ClassVar[Lark] = Lark(grammar, parser="lalr")
 
     @abstractmethod
     def is_equal(self, other: Type) -> bool:
@@ -65,12 +70,13 @@ class Type(BaseModel, ABC, Hashable):
         ...
 
     @classmethod
-    @abstractmethod
-    def validate_string(cls, s: str) -> Self:
+    def validate_string(cls, s: str) -> Type:
         """
         Parse a string representation of the type.
         """
-        ...
+
+        tree = cls._parser.parse(s)
+        return TreeToType().transform(tree)
 
     def is_numeric(self) -> bool:
         return self.is_subtype(rk_numeric)
@@ -93,21 +99,17 @@ class Type(BaseModel, ABC, Hashable):
         return Union(ts=frozenset({self, other})).canonicalize()
 
     @abstractmethod
-    def __hash__(self) -> int:
-        ...
+    def __hash__(self) -> int: ...
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: type[BaseModel], handler: GetCoreSchemaHandler, /) -> CoreSchema:
-        string_schema = cs.chain_schema([
-            cs.str_schema(),
-            cs.no_info_plain_validator_function(cls.validate_string)
-        ])
+        string_schema = cs.chain_schema([cs.str_schema(), cs.no_info_plain_validator_function(cls.validate_string)])
         serializer = cs.plain_serializer_function_ser_schema(lambda t: t.dump_string())
 
         return cs.json_or_python_schema(
             python_schema=cs.union_schema([string_schema, handler(cls)]),
             json_schema=cs.json_schema(schema=string_schema),
-            serialization=serializer
+            serialization=serializer,
         )
 
 
@@ -118,7 +120,7 @@ class Bottom(Type):
     def is_equivalent(self, other: Type) -> bool:
         return self.is_equal(other)
 
-    def is_subtype(self, other: Type) -> bool:
+    def is_subtype(self, other: Type) -> bool:  # noqa: ARG002
         return True
 
     def is_supertype(self, other: Type) -> bool:
@@ -145,6 +147,7 @@ class Bottom(Type):
 
 
 # region Primitive Types
+
 
 class Primitive(Type):
     name: ClassVar[str]
@@ -211,6 +214,7 @@ class Bool(Primitive, name="bool"): ...
 
 # region Union Type
 
+
 class Union(Type):
     ts: frozenset[Type]
 
@@ -248,7 +252,10 @@ class Union(Type):
 
     @override
     def canonicalize(self) -> Union:
-        return self.flatten()
+        flat = self.flatten()
+        if flat.is_trivial_union and isinstance(flat.single(), Bottom):
+            return Union(ts=frozenset())
+        return flat
 
     @override
     def normalize(self) -> Type:
@@ -256,8 +263,8 @@ class Union(Type):
 
         if canon.is_empty_union:
             return Bottom()
-        elif canon.is_trivial_union:
-            return next(iter(canon.ts))
+        if canon.is_trivial_union:
+            return canon.single()
         return canon
 
     def union(self, other: Union) -> Union:
@@ -269,8 +276,8 @@ class Union(Type):
     def dump_string(self) -> str:
         if self.is_empty_union:
             return "⊥ | ⊥"
-        elif self.is_trivial_union:
-            return f"{next(iter(self.ts)).dump_string()} | ⊥"
+        if self.is_trivial_union:
+            return f"{self.single().dump_string()} | ⊥"
         return " | ".join(sorted(t.dump_string() for t in self.ts))
 
     @classmethod
@@ -287,7 +294,13 @@ class Union(Type):
                 ts.update(t.flatten().ts)
             else:
                 ts.add(t)
-        return Union.model_validate({'ts': ts})
+        return Union.model_validate({"ts": ts})
+
+    def single(self) -> Type:
+        if not self.is_trivial_union:
+            msg = "Union is not trivial, a single type"
+            raise ValueError(msg)
+        return next(iter(self.ts))
 
     def __hash__(self) -> int:
         return hash((type(self), self.ts))
@@ -309,14 +322,44 @@ rk_bool = Bool()
 
 
 def rk_union(*ts: Type) -> Union:
-    return Union.model_validate({'ts': ts})
+    return Union.model_validate({"ts": ts})
 
 
 rk_numeric = rk_int | rk_float
 rk_equatable = rk_int | rk_str | rk_bool
 rk_comparable = rk_int | rk_float | rk_str
 
+
 # endregion
 
-
 # region
+
+
+# noinspection PyMethodMayBeStatic
+class TreeToType(Transformer[Type]):
+    def type(self, type_: list[Type]):
+        return type_[0]
+
+    def int(self, _) -> Int:
+        return rk_int
+
+    def float(self, _) -> Float:
+        return rk_float
+
+    def string(self, _) -> String:
+        return rk_str
+
+    def bool(self, _) -> Bool:
+        return rk_bool
+
+    def bottom(self, _) -> Bottom:
+        return rk_bottom
+
+    def union(self, types: list[Type]) -> Union:
+        return rk_union(*types).canonicalize()
+
+    def paren(self, type_: list[Type]) -> Type:
+        return type_[0]
+
+
+# endregion
