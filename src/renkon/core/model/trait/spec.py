@@ -6,13 +6,13 @@ __TRAIT_INFO__ = "__trait_info__"
 
 from pydantic import BaseModel
 
-from renkon.core.model.datatypes import RenkonDataType
+from renkon.core.model.datatypes import RenkonType
 from renkon.core.model.trait.kind import TraitKind
 from renkon.core.model.trait.pattern import TraitPattern
 from renkon.core.model.type_aliases import ColumnTypeSet
 
 type TraitId = str
-type TraitTypings = dict[str, RenkonDataType]
+type TraitTypings = dict[str, RenkonType]
 
 
 class TraitSpec(BaseModel):

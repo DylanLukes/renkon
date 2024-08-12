@@ -20,10 +20,12 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    # Typing and Modeling
+    # Domain Modeling
     "annotated-types", # Annotated type annotations
     "pydantic", # Data modeling and validation
     "pydantic-settings", # Settings management
+
+    # todo: may be able to remove
     "bitarray", # Bit arrays
 
     # Data Processing
@@ -37,13 +39,18 @@ dependencies = [
     "pyarrow", # Columnar data format
 
     # Infrastructure
+    # todo replace with structlog
     "loguru", # Logging
+
+    # Miscellaneous
+    "lark-parser", # Parsing
 
     # CLI Interface
     "click", # CLI
     "rich", # Pretty console output
 
     # Web Interface
+    # todo replace with Django (for Channels) maybe?
     "fastapi", # Web framework
     "uvicorn", # ASGI server
     "jinja2", # Templating

@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 import functools
-from abc import ABCMeta, abstractmethod
-from typing import Any, Callable, reveal_type, Concatenate
+from abc import ABCMeta
+from collections.abc import Callable
+from typing import Any, Concatenate
 
 
 class _SingletonMeta(ABCMeta):
@@ -23,64 +24,79 @@ class Singleton(metaclass=_SingletonMeta):
         return cls()
 
 
+# if TYPE_CHECKING:
+#     def singletonmethod[**P, R](_method: Callable[P, R]) -> Callable[P, R]:
+#         ...
+# else:
 class singletonmethod[T: Singleton, ** P, R]:
     """Descriptor for a method which when called on the class, delegates to the singleton instance."""
 
-    func: Callable[Concatenate[T, P], R]
+    method: Callable[Concatenate[T, P], R]
+    instance: T | None
 
-    def __init__(self, func: Callable[Concatenate[T, P], R]):
-        if not callable(func) and not hasattr(func, "__get__"):
-            raise TypeError(f"{func!r} is not callable or a descriptor")
+    def __init__(self, method: Callable[Concatenate[T, P], R], instance: T | None = None):
+        if not callable(method) and not hasattr(method, "__get__"):
+            raise TypeError(f"{method!r} is not callable or a descriptor")
+        self.method = method
+        self.instance = instance
 
-        self.func = func
+    def __get__(self, instance: T | None, owner: type[T]) -> Callable[P, R]:
+        instance = instance or owner.get_instance()
+        descriptor = self.__class__(self.method, instance)
+        functools.update_wrapper(descriptor, self.method)
+        return descriptor
 
-    def __get__(self, obj: T | None, cls: type[T]) -> Callable[P, R]:
-        if obj is None:
-            obj = cls.get_instance()
-
-        @functools.wraps(self.func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            return self.func(obj, *args, **kwargs)
-
-        return wrapper
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        if self.instance is None:
+            raise TypeError("singletonmethod instance is not set")
+        return self.method(self.instance, *args, **kwargs)
 
     @property
     def __isabstractmethod__(self):
-        return getattr(self.func, '__isabstractmethod__', False)
+        return getattr(self.method, '__isabstractmethod__', False)
 
 
-# Example
+class instancemethod[T, ** P, R]:
+    method: Callable[Concatenate[T, P], R]
+    instance: T | None
 
-class Base(metaclass=ABCMeta):
-    """Defines a method that must be available on subclass instances."""
+    def __init__(self, method: Callable[Concatenate[T, P], R], instance: T | None = None):
+        self.method = method
+        self.instance = instance
 
-    @abstractmethod
-    def foo(self) -> str:
-        ...
+    def __get__(self, instance: T | None, owner: type[T]) -> Callable[P, R]:
+        descriptor = self.__class__(self.method, instance)
+        functools.update_wrapper(descriptor, self.method)
+        return descriptor
 
-
-class DerivedNormal(Base):
-    """Normal implementation."""
-
-    def foo(self):
-        return "normal"
-
-
-class DerivedSingleton(Base, Singleton):
-    """Implementation where annotation also makes foo callable from the class."""
-
-    def __init__(self):
-        self.msg = "hello world"
-
-    @singletonmethod
-    def foo(self):
-        return self.msg
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        if self.instance is None:
+            raise TypeError("instancemethod called directly, not on instance")
+        return self.method(self.instance, *args, **kwargs)
 
 
-if __name__ == "__main__":
-    reveal_type(DerivedSingleton.foo)
-    reveal_type(DerivedSingleton().foo)
-
-    assert DerivedSingleton() is DerivedSingleton()
-    print(DerivedSingleton().foo())
-    print(DerivedSingleton.foo())
+# class Base(ABC):
+#     # foo: Callable[[], str]
+#     def foo(self) -> str:
+#         return "foo"
+#
+#
+# class DerivedNormal(Base):
+#     def _foo(self) -> str:
+#         return "foo"
+#     foo = instancemethod(_foo)
+#
+# class DerivedSingleton2(Base, Singleton):
+#     @singletonmethod
+#     def foo(self) -> str:
+#         return "foo"
+#
+# class DerivedSingleton(Base, Singleton):
+#     def _foo(self) -> str:
+#         return "foo"
+#     foo = singletonmethod(_foo)
+#
+#
+# def test_singleton():
+#     assert "foo" == DerivedNormal.foo()
+#     assert "foo" == DerivedSingleton.foo() == DerivedSingleton().foo()

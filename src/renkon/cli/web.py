@@ -1,7 +1,7 @@
 import click
 import uvicorn
 
-from renkon.util.logging import configure_logging
+from renkon.util.logger import configure_logging
 
 
 @click.command(context_settings={"show_default": True})
