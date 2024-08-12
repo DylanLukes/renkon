@@ -154,7 +154,7 @@ def test_comparable():
 
 
 def test_type_parser():
-    parser = Lark(grammar, parser='lalr', transformer=TreeToType())
+    parser = Lark(grammar, parser='lalr', lexer="standard", transformer=TreeToType())
 
     assert parser.parse("int") == rk_int
     assert parser.parse("float") == rk_float

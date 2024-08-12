@@ -2,21 +2,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from renkon.core.model.type.base import (
-    Bool,
-    Bottom,
-    Float,
-    Int,
-    String,
-    Type,
-    Union,
-    rk_bool,
-    rk_bottom,
-    rk_float,
-    rk_int,
-    rk_str,
-    rk_union,
-)
 
 __all__ = [
     "Type",
@@ -32,4 +17,23 @@ __all__ = [
     "rk_bool",
     "rk_union",
     "rk_bottom",
+    "renkon_type_to_polars_type",
+    "polars_type_to_renkon_type",
 ]
+
+from renkon.core.model.type.base import (
+    Bool,
+    Bottom,
+    Float,
+    Int,
+    String,
+    Type,
+    Union,
+    rk_bool,
+    rk_bottom,
+    rk_float,
+    rk_int,
+    rk_str,
+    rk_union
+)
+from renkon.core.model.type.convert import renkon_type_to_polars_type, polars_type_to_renkon_type

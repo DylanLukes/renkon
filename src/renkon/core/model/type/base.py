@@ -19,7 +19,7 @@ class Type(BaseModel, ABC, Hashable):
     class Config:
         frozen = True
 
-    _parser: ClassVar[Lark] = Lark(grammar, parser="lalr")
+    _parser: ClassVar[Lark] = Lark(grammar, lexer="standard", parser="lalr")
 
     @abstractmethod
     def is_equal(self, other: Type) -> bool:
@@ -360,6 +360,5 @@ class TreeToType(Transformer[Type]):
 
     def paren(self, type_: list[Type]) -> Type:
         return type_[0]
-
 
 # endregion
