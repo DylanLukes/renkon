@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Hashable
 from typing import Any, ClassVar, Self, override
 
+import lark.exceptions
 from lark import Lark, Transformer
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import CoreSchema
@@ -75,8 +76,12 @@ class Type(BaseModel, ABC, Hashable):
         Parse a string representation of the type.
         """
 
-        tree = cls._parser.parse(s)
-        return TreeToType().transform(tree)
+        try:
+            tree = cls._parser.parse(s)
+            return TreeToType().transform(tree)
+        except lark.exceptions.LarkError as e:
+            msg = f"Error parsing type string: {s!r}"
+            raise ValueError(msg) from e
 
     def is_numeric(self) -> bool:
         return self.is_subtype(rk_numeric)
@@ -90,32 +95,39 @@ class Type(BaseModel, ABC, Hashable):
     def __str__(self) -> str:
         return self.dump_string()
 
+    def __repr__(self) -> str:
+        return f"Type({self.dump_string()})"
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Type):
             return super().__eq__(other)
         return self.is_equal(other)
 
-    def __or__(self, other: Type) -> Union:
-        return Union(ts=frozenset({self, other})).canonicalize()
+    def __or__(self, other: Type) -> UnionType:
+        return UnionType(ts=frozenset({self, other})).canonicalize()
 
     @abstractmethod
     def __hash__(self) -> int: ...
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: type[BaseModel], handler: GetCoreSchemaHandler, /) -> CoreSchema:
+        schema = cls.__dict__.get('__pydantic_core_schema__')
+        if schema is not None:
+            return schema
+
         string_schema = cs.chain_schema([cs.str_schema(), cs.no_info_plain_validator_function(cls.validate_string)])
         serializer = cs.plain_serializer_function_ser_schema(lambda t: t.dump_string())
 
         return cs.json_or_python_schema(
             python_schema=cs.union_schema([string_schema, handler(cls)]),
-            json_schema=cs.json_schema(schema=string_schema),
+            json_schema=string_schema,
             serialization=serializer,
         )
 
 
-class Bottom(Type):
+class BottomType(Type):
     def is_equal(self, other: Type) -> bool:
-        return isinstance(other, Bottom)
+        return isinstance(other, BottomType)
 
     def is_equivalent(self, other: Type) -> bool:
         return self.is_equal(other)
@@ -135,24 +147,22 @@ class Bottom(Type):
     def dump_string(self) -> str:
         return "⊥"
 
-    @classmethod
-    def validate_string(cls, s: str) -> Self:
-        if s == "⊥":
-            return cls()
-        msg = f"Invalid bottom type string: {s}"
-        raise ValueError(msg)
+    def __init__(self, /, **data: Any) -> None:
+        if not data:
+            return
+        super().__init__(**data)
 
     def __hash__(self) -> int:
-        return hash(Bottom)
+        return hash(BottomType)
 
 
 # region Primitive Types
 
 
-class Primitive(Type):
+class PrimitiveType(Type):
     name: ClassVar[str]
 
-    _all_subclasses: ClassVar[dict[str, type[Primitive]]] = {}
+    _all_subclasses: ClassVar[dict[str, type[PrimitiveType]]] = {}
 
     @override
     def is_equal(self, other: Type) -> bool:
@@ -164,25 +174,21 @@ class Primitive(Type):
 
     @override
     def is_subtype(self, other: Type) -> bool:
-        if isinstance(other, Primitive):
+        if isinstance(other, PrimitiveType):
             return self.name == other.name
         return super().is_subtype(other)
 
     @override
-    def canonicalize(self) -> Primitive:
+    def canonicalize(self) -> PrimitiveType:
         return self
 
     @override
-    def normalize(self) -> Primitive:
+    def normalize(self) -> PrimitiveType:
         return self
 
     @override
     def dump_string(self) -> str:
         return self.name
-
-    @classmethod
-    def validate_string(cls, s: str) -> Primitive:
-        return Primitive._all_subclasses[s]()
 
     def __init__(self, /, **data: Any) -> None:
         if not data:
@@ -192,22 +198,22 @@ class Primitive(Type):
     def __init_subclass__(cls, name: str, **kwargs: Any):
         super().__init_subclass__(**kwargs)
         cls.name = name
-        Primitive._all_subclasses[name] = cls
+        PrimitiveType._all_subclasses[name] = cls
 
     def __hash__(self) -> int:
         return hash(self.name)
 
 
-class Int(Primitive, name="int"): ...
+class IntType(PrimitiveType, name="int"): ...
 
 
-class Float(Primitive, name="float"): ...
+class FloatType(PrimitiveType, name="float"): ...
 
 
-class String(Primitive, name="string"): ...
+class StringType(PrimitiveType, name="string"): ...
 
 
-class Bool(Primitive, name="bool"): ...
+class BoolType(PrimitiveType, name="bool"): ...
 
 
 # endregion
@@ -215,7 +221,7 @@ class Bool(Primitive, name="bool"): ...
 # region Union Type
 
 
-class Union(Type):
+class UnionType(Type):
     ts: frozenset[Type]
 
     @property
@@ -230,11 +236,11 @@ class Union(Type):
     @property
     def has_nested_union(self) -> bool:
         """True if the union contains an immediate child Union."""
-        return any(isinstance(t, Union) for t in self.ts)
+        return any(isinstance(t, UnionType) for t in self.ts)
 
     @override
     def is_equal(self, other: Type) -> bool:
-        return isinstance(other, Union) and self.ts == other.ts
+        return isinstance(other, UnionType) and self.ts == other.ts
 
     @override
     def is_equivalent(self, other: Type) -> bool:
@@ -242,7 +248,7 @@ class Union(Type):
 
     @override
     def is_subtype(self, other: Type) -> bool:
-        if isinstance(other, Union):
+        if isinstance(other, UnionType):
             return self.canonicalize().ts.issubset(other.canonicalize().ts)
         return super().is_subtype(other)
 
@@ -251,10 +257,10 @@ class Union(Type):
         return other in self.canonicalize().ts
 
     @override
-    def canonicalize(self) -> Union:
+    def canonicalize(self) -> UnionType:
         flat = self.flatten()
-        if flat.is_trivial_union and isinstance(flat.single(), Bottom):
-            return Union(ts=frozenset())
+        if flat.is_trivial_union and isinstance(flat.single(), BottomType):
+            return UnionType(ts=frozenset())
         return flat
 
     @override
@@ -262,16 +268,16 @@ class Union(Type):
         canon = self.canonicalize()
 
         if canon.is_empty_union:
-            return Bottom()
+            return BottomType()
         if canon.is_trivial_union:
             return canon.single()
         return canon
 
-    def union(self, other: Union) -> Union:
-        return Union(ts=self.ts.union(other.ts)).canonicalize()
+    def union(self, other: UnionType) -> UnionType:
+        return UnionType(ts=self.ts.union(other.ts)).canonicalize()
 
-    def intersect(self, other: Union) -> Union:
-        return Union(ts=self.ts.intersection(other.ts)).canonicalize()
+    def intersect(self, other: UnionType) -> UnionType:
+        return UnionType(ts=self.ts.intersection(other.ts)).canonicalize()
 
     def dump_string(self) -> str:
         if self.is_empty_union:
@@ -280,21 +286,17 @@ class Union(Type):
             return f"{self.single().dump_string()} | ⊥"
         return " | ".join(sorted(t.dump_string() for t in self.ts))
 
-    @classmethod
-    def validate_string(cls, s: str) -> Union:
-        raise NotImplementedError
-
-    def flatten(self) -> Union:
+    def flatten(self) -> UnionType:
         """Recursively flatten nested unions."""
         if not self.has_nested_union:
             return self
         ts: set[Type] = set()
         for t in self.ts:
-            if isinstance(t, Union):
+            if isinstance(t, UnionType):
                 ts.update(t.flatten().ts)
             else:
                 ts.add(t)
-        return Union.model_validate({"ts": ts})
+        return UnionType.model_validate({"ts": ts})
 
     def single(self) -> Type:
         if not self.is_trivial_union:
@@ -305,24 +307,24 @@ class Union(Type):
     def __hash__(self) -> int:
         return hash((type(self), self.ts))
 
-    def __and__(self, other: Union) -> Union:
-        return Union(ts=self.ts.intersection(other.ts)).canonicalize()
+    def __and__(self, other: UnionType) -> UnionType:
+        return UnionType(ts=self.ts.intersection(other.ts)).canonicalize()
 
 
 # endregion
 
 # region
 
-rk_bottom = Bottom()
+rk_bottom = BottomType()
 
-rk_int = Int()
-rk_float = Float()
-rk_str = String()
-rk_bool = Bool()
+rk_int = IntType()
+rk_float = FloatType()
+rk_str = StringType()
+rk_bool = BoolType()
 
 
-def rk_union(*ts: Type) -> Union:
-    return Union.model_validate({"ts": ts})
+def rk_union(*ts: Type) -> UnionType:
+    return UnionType.model_validate({"ts": ts})
 
 
 rk_numeric = rk_int | rk_float
@@ -334,29 +336,37 @@ rk_comparable = rk_int | rk_float | rk_str
 
 # region
 
-
 # noinspection PyMethodMayBeStatic
 class TreeToType(Transformer[Type]):
     def type(self, type_: list[Type]):
         return type_[0]
 
-    def int(self, _) -> Int:
+    def int(self, _) -> IntType:
         return rk_int
 
-    def float(self, _) -> Float:
+    def float(self, _) -> FloatType:
         return rk_float
 
-    def string(self, _) -> String:
+    def string(self, _) -> StringType:
         return rk_str
 
-    def bool(self, _) -> Bool:
+    def bool(self, _) -> BoolType:
         return rk_bool
 
-    def bottom(self, _) -> Bottom:
+    def bottom(self, _) -> BottomType:
         return rk_bottom
 
-    def union(self, types: list[Type]) -> Union:
+    def union(self, types: list[Type]) -> UnionType:
         return rk_union(*types).canonicalize()
+
+    def equatable(self, _) -> UnionType:
+        return rk_equatable
+
+    def comparable(self, _) -> UnionType:
+        return rk_comparable
+
+    def numeric(self, _) -> UnionType:
+        return rk_numeric
 
     def paren(self, type_: list[Type]) -> Type:
         return type_[0]

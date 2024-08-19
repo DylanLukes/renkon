@@ -3,20 +3,25 @@ grammar = r"""
 
     type: paren
         | union
-        | prim
+        | primitive
+        | special
         | bottom
 
     paren: "(" type ")"
 
     union: type "|" type -> union
 
-    prim: "int" -> int
+    primitive: "int" -> int
         | "integer" -> int
         | "float" -> float
         | "str" -> string
         | "string" -> string
         | "bool" -> bool
         | "boolean" -> bool
+        
+    special: "equatable" -> equatable
+        | "comparable" -> comparable
+        | "numeric" -> numeric
 
     bottom: "⊥" -> bottom
         | "bottom" -> bottom

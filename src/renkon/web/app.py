@@ -1,10 +1,8 @@
 # type: ignore
 # TODO remove type ignore here
 from asyncio import sleep
-from typing import cast
 
 import jinja2
-import lorem  # type: ignore
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -44,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
     words: list[str] = []
     try:
         while True:
-            word = cast(str, lorem.sentence())  # type: ignore
+            word = "foo"
             words.append(word)
             text = templates.get_template("simple-list.html.jinja").render(
                 {"items": [{"text": word} for word in words]}

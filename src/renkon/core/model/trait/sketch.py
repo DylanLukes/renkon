@@ -9,26 +9,21 @@ from renkon.core.model.trait.spec import TraitSpec
 from renkon.core.model.type_aliases import ColumnName, ColumnType
 
 
-class TraitSketchBinding(BaseModel):
-    col_name: ColumnName
-    col_type: ColumnType
-
-
 class TraitSketch(BaseModel):
     """
     Represents a sketch of a trait with holes filled.
 
     :param trait: the trait being sketched.
-    :param fills: the assignments of (typed) column names to metavariable in the trait form.
+    :param metavar_bindings: the assignments of (typed) column names to metavariable in the trait form.
     """
 
     trait: TraitSpec
-    bindings: dict[str, TraitSketchBinding]
+    metavar_bindings: dict[str, tuple[ColumnName, ColumnType]]
 
     @model_validator(mode="after")
     def check_columns(self) -> Self:
-        bound_colnames = set(self.bindings.keys())
-        metavars = set(self.trait.pattern.metavariables)
+        bound_colnames = set(self.metavar_bindings.keys())
+        metavars = set(self.trait.pattern.metavars)
         if bound_colnames != metavars:
             msg = f"Bindings {bound_colnames} do not match trait metavariables {metavars}"
             raise ValueError(msg)

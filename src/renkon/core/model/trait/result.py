@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from typing import Annotated
+from typing import Annotated, Any
 
 from annotated_types import Gt, Lt
 from pydantic import BaseModel
@@ -18,5 +18,8 @@ class TraitResult(BaseModel):
     """
 
     sketch: TraitSketch
+
     score: TraitResultScore
     match_mask: BitSeries
+
+    param_bindings: dict[str, tuple[str, Any]]

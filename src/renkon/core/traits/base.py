@@ -1,22 +1,14 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from abc import abstractmethod
-from typing import Protocol, final
+from typing import Protocol, final, ClassVar
 
-from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSpec
-
-
-class TraitMeta(type[Protocol]):
-    @abstractmethod
-    def infer(self):
-        pass
+from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSpec, TraitSketch
+from renkon.core.model.type import rk_numeric, rk_float, Type
 
 
-class Trait(Protocol, metaclass=TraitMeta):
-    @property
-    @abstractmethod
-    def spec(self) -> TraitSpec: ...
+class Trait(Protocol):
+    spec: ClassVar[TraitSpec]
 
     @property
     def id(self) -> TraitId:
@@ -35,29 +27,31 @@ class Trait(Protocol, metaclass=TraitMeta):
         return self.spec.pattern
 
     @property
-    def metavariables(self) -> set[str]:
-        return set(self.pattern.metavariables)
+    def metavars(self) -> set[str]:
+        return set(self.pattern.metavars)
 
     @property
-    def parameters(self) -> set[str]:
-        return set(self.pattern.parameters)
+    def params(self) -> set[str]:
+        return set(self.pattern.params)
+
+    def sketch(self, **kwargs: dict[str, Type]) -> TraitSketch:
+        return TraitSketch.model_validate({
+            "trait": self.spec,
+            "metavar_bindings": kwargs,
+        })
 
 
 @final
 class Linear2(Trait):
-    info = TraitSpec(
+    spec = TraitSpec(
         id="Linear2",
         name="Linear Regression",
         kind=TraitKind.MODEL,
-        pattern=TraitPattern("{y} = {a}*{x} + {b}"),
+        pattern=TraitPattern("{Y} = {a}*{X} + {b}"),
         typings={
-            "x": {"numeric"},
-            "y": {"numeric"},
-            "a": {"float"},
-            "b": {"float"},
+            "X": rk_numeric,
+            "Y": rk_numeric,
+            "a": rk_float,
+            "b": rk_float,
         },
     )
-
-
-if __name__ == "__main__":
-    print(Linear2.info)  # noqa

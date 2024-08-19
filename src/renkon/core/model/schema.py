@@ -4,11 +4,11 @@ from typing import Self, overload
 from polars.type_aliases import SchemaDict
 from pydantic import ConfigDict, RootModel
 
-from renkon.core.model.datatypes import TypeSystem
-from renkon.core.model.type_aliases import ColumnName, ColumnNames, ColumnType, ColumnTypes
+from renkon.core.model.type import polars_type_to_renkon_type, Type
+from renkon.core.model.type_aliases import ColumnName, ColumnNames
 
 
-class Schema(RootModel[dict[ColumnName, ColumnType]], Mapping[ColumnName, ColumnType], Hashable):
+class Schema(RootModel[dict[ColumnName, Type]], Mapping[ColumnName, Type], Hashable):
     """
     Represents a schema for some or all of the columns a data frame.
 
@@ -19,20 +19,20 @@ class Schema(RootModel[dict[ColumnName, ColumnType]], Mapping[ColumnName, Column
     """
 
     model_config = ConfigDict(frozen=True)
-    root: dict[ColumnName, ColumnType]
+    root: dict[ColumnName, Type]
 
     def __hash__(self) -> int:
         return hash(tuple(self.root.items()))
 
     @overload
-    def __getitem__(self, key: ColumnName) -> ColumnType:
+    def __getitem__(self, key: ColumnName) -> Type:
         ...
 
     @overload
     def __getitem__(self, key: ColumnNames) -> Self:
         ...
 
-    def __getitem__(self, key: ColumnName | ColumnNames) -> ColumnType | Self:
+    def __getitem__(self, key: ColumnName | ColumnNames) -> Type | Self:
         match key:
             case str():
                 return self.root[key]
@@ -54,12 +54,12 @@ class Schema(RootModel[dict[ColumnName, ColumnType]], Mapping[ColumnName, Column
         return tuple(self.root.keys())
 
     @property
-    def dtypes(self) -> ColumnTypes:
+    def dtypes(self) -> tuple[Type, ...]:
         return tuple(self.root.values())
 
     @classmethod
     def from_polars(cls, schema_dict: SchemaDict) -> Self:
-        return cls(root={col_name: TypeSystem.from_polars(polars_type) for col_name, polars_type in schema_dict})
+        return cls(root={col_name: polars_type_to_renkon_type(pl_ty) for col_name, pl_ty in schema_dict.items()})
 
     def subschema(self, columns: Sequence[str]) -> Self:
         return self.__class__(root={col: self.root[col] for col in columns})

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 __all__ = [
-    "RenkonType",
+    "Type",
     "ColumnName",
     "ColumnNames",
     "ColumnType",
@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 from renkon.core.model.bitseries import BitSeries
-from renkon.core.model.datatypes import RenkonType
+from renkon.core.model.type import Type
 from renkon.core.model.schema import Schema
 from renkon.core.model.trait.kind import TraitKind
 from renkon.core.model.trait.pattern import TraitPattern
