@@ -4,7 +4,7 @@ from typing import Self, overload
 from polars.type_aliases import SchemaDict
 from pydantic import ConfigDict, RootModel
 
-from renkon.core.model.type import Type, polars_type_to_renkon_type
+from renkon.core.model.type import Type, tyconv_pl_to_rk
 from renkon.core.model.type_aliases import ColumnName, ColumnNames
 
 
@@ -57,7 +57,7 @@ class Schema(RootModel[dict[ColumnName, Type]], Mapping[ColumnName, Type], Hasha
 
     @classmethod
     def from_polars(cls, schema_dict: SchemaDict) -> Self:
-        return cls(root={col_name: polars_type_to_renkon_type(pl_ty) for col_name, pl_ty in schema_dict.items()})
+        return cls(root={col_name: tyconv_pl_to_rk(pl_ty) for col_name, pl_ty in schema_dict.items()})
 
     def subschema(self, columns: Sequence[str]) -> Self:
         return self.__class__(root={col: self.root[col] for col in columns})

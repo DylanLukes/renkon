@@ -1,9 +1,6 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-
-__TRAIT_INFO__ = "__trait_info__"
-
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -74,6 +71,19 @@ class TraitSpec(BaseModel):
     @property
     def params(self) -> set[str]:
         return set(self.pattern.params)
+
+    @model_validator(mode="after")
+    def _check_commutors_valid(self) -> Self:
+        """Only column metavariables can commute."""
+
+        # Ensure all commutors are valid metavars
+        for commutor_set in self.commutors:
+            for commutor in commutor_set:
+                if commutor not in self.metavars:
+                    msg = f"Commutor '{commutor}' not found in metavars."
+                    raise ValueError(msg)
+
+        return self
 
     @model_validator(mode="after")
     def _check_all_typed(self) -> Self:

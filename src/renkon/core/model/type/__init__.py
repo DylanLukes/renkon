@@ -4,6 +4,8 @@
 
 
 __all__ = [
+    "TypeStr",
+    "is_type_str",
     "Type",
     "IntType",
     "FloatType",
@@ -11,17 +13,8 @@ __all__ = [
     "BoolType",
     "UnionType",
     "BottomType",
-    "rk_int",
-    "rk_float",
-    "rk_str",
-    "rk_bool",
-    "rk_union",
-    "rk_bottom",
-    "rk_numeric",
-    "rk_equatable",
-    "rk_comparable",
-    "renkon_type_to_polars_type",
-    "polars_type_to_renkon_type",
+    "tyconv_rk_to_pl",
+    "tyconv_pl_to_rk",
 ]
 
 from renkon.core.model.type.base import (
@@ -32,14 +25,7 @@ from renkon.core.model.type.base import (
     StringType,
     Type,
     UnionType,
-    rk_bool,
-    rk_bottom,
-    rk_comparable,
-    rk_equatable,
-    rk_float,
-    rk_int,
-    rk_numeric,
-    rk_str,
-    rk_union,
+    TypeStr,
+    is_type_str,
 )
-from renkon.core.model.type.convert import polars_type_to_renkon_type, renkon_type_to_polars_type
+from renkon.core.model.type.convert import tyconv_pl_to_rk, tyconv_rk_to_pl

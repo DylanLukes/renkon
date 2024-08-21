@@ -4,46 +4,44 @@
 
 import polars as pl
 
-from renkon.core.model.type import rk_int
 from renkon.core.model.type.base import Type as RenkonType
-from renkon.core.model.type.base import rk_bool, rk_float, rk_str
 
 
-def polars_type_to_renkon_type(rk_ty: pl.PolarsDataType) -> RenkonType:
+def tyconv_pl_to_rk(pl_ty: pl.PolarsDataType) -> RenkonType:
     """
     Convert a Polars data type to a Renkon data type.
     """
-    if rk_ty.is_integer():
-        return rk_int
+    if pl_ty.is_integer():
+        return RenkonType.int()
 
-    if rk_ty.is_float():
-        return rk_float
+    if pl_ty.is_float():
+        return RenkonType.float()
 
-    if rk_ty.is_(pl.String):
-        return rk_str
+    if pl_ty.is_(pl.String):
+        return RenkonType.str()
 
-    if rk_ty.is_(pl.Boolean):
-        return rk_bool
+    if pl_ty.is_(pl.Boolean):
+        return RenkonType.bool()
 
-    msg = f"Unsupported Polars data type: {rk_ty}"
+    msg = f"Unsupported Polars data type: {pl_ty}"
     raise ValueError(msg)
 
 
-def renkon_type_to_polars_type(rk_ty: RenkonType) -> pl.PolarsDataType:
+def tyconv_rk_to_pl(rk_ty: RenkonType) -> pl.PolarsDataType:
     """
     Convert a Renkon data type to a Polars data type.
     """
 
-    if rk_ty.is_equal(rk_int):
+    if rk_ty.is_equal(RenkonType.int()):
         return pl.Int64
 
-    if rk_ty.is_equal(rk_float) or rk_ty.is_equal(rk_int | rk_float):
+    if rk_ty.is_equal(RenkonType.float()) or rk_ty.is_equal(RenkonType.int() | RenkonType.float()):
         return pl.Float64
 
-    if rk_ty.is_equal(rk_str):
+    if rk_ty.is_equal(RenkonType.str()):
         return pl.Utf8
 
-    if rk_ty.is_equal(rk_bool):
+    if rk_ty.is_equal(RenkonType.bool()):
         return pl.Boolean
 
     msg = f"Unsupported Renkon data type: {rk_ty}"

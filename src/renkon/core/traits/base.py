@@ -4,7 +4,7 @@
 from typing import ClassVar, Protocol, final
 
 from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
-from renkon.core.model.type import Type, rk_float, rk_numeric
+from renkon.core.model.type import Type
 
 
 class Trait(Protocol):
@@ -34,7 +34,19 @@ class Trait(Protocol):
     def params(self) -> set[str]:
         return set(self.pattern.params)
 
-    def sketch(self, **kwargs: dict[str, Type]) -> TraitSketch:
+    @property
+    def commutors(self) -> list[set[str]]:
+        return self.spec.commutors
+
+    @property
+    def typevars(self) -> dict[str, Type]:
+        return self.spec.typevars
+
+    @property
+    def typings(self) -> dict[str, Type | str]:
+        return self.spec.typings
+
+    def sketch(self, **kwargs: Type) -> TraitSketch:
         return TraitSketch.model_validate(
             {
                 "trait": self.spec,
@@ -51,9 +63,9 @@ class Linear2(Trait):
         kind=TraitKind.MODEL,
         pattern=TraitPattern("{Y} = {a}*{X} + {b}"),
         typings={
-            "X": rk_numeric,
-            "Y": rk_numeric,
-            "a": rk_float,
-            "b": rk_float,
+            "X": Type.numeric(),
+            "Y": Type.numeric(),
+            "a": Type.float(),
+            "b": Type.float(),
         },
     )

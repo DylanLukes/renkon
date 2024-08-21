@@ -3,24 +3,39 @@
 # SPDX-License-Identifier: BSD-3-Clause
 from __future__ import annotations
 
+import functools
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Any, ClassVar, Self, override
+from functools import lru_cache
+from typing import Any, ClassVar, Self, override, Literal, Union, Annotated, TypeGuard
 
-import lark.exceptions
-from lark import Lark, Transformer
+from lark.exceptions import LarkError
+from annotated_types import Predicate
+from lark import Transformer
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import CoreSchema
 from pydantic_core import core_schema as cs
 
-from renkon.core.model.type.grammar import grammar
+from renkon.core.model.type.parser import parser
+
+
+def is_type_str(s: str) -> TypeGuard[TypeStr]:
+    try:
+        Type.parse_string(s)
+        return True
+    except LarkError:
+        return False
+
+
+type TypeStr = Union[
+    Literal["int", "float", "string", "bool", "equatable", "comparable", "numeric"],
+    Annotated[str, Predicate(is_type_str)]
+]
 
 
 class Type(BaseModel, ABC, Hashable):
     class Config:
         frozen = True
-
-    _parser: ClassVar[Lark] = Lark(grammar, lexer="standard", parser="lalr")
 
     @abstractmethod
     def is_equal(self, other: Type) -> bool:
@@ -71,26 +86,26 @@ class Type(BaseModel, ABC, Hashable):
         ...
 
     @classmethod
-    def validate_string(cls, s: str) -> Type:
+    def parse_string(cls, s: str) -> Type:
         """
         Parse a string representation of the type.
         """
 
         try:
-            tree = cls._parser.parse(s)
-            return TreeToType().transform(tree)
-        except lark.exceptions.LarkError as e:
+            tree = parser.parse(s)
+            return TreeToTypeTransformer().transform(tree)
+        except LarkError as e:
             msg = f"Error parsing type string: {s!r}"
             raise ValueError(msg) from e
 
     def is_numeric(self) -> bool:
-        return self.is_subtype(rk_numeric)
+        return self.is_subtype(Type.numeric())
 
     def is_equatable(self) -> bool:
-        return self.is_subtype(rk_equatable)
+        return self.is_subtype(Type.equatable())
 
     def is_comparable(self) -> bool:
-        return self.is_subtype(rk_comparable)
+        return self.is_subtype(Type.comparable())
 
     def __str__(self) -> str:
         return self.dump_string()
@@ -107,7 +122,8 @@ class Type(BaseModel, ABC, Hashable):
         return UnionType(ts=frozenset({self, other})).canonicalize()
 
     @abstractmethod
-    def __hash__(self) -> int: ...
+    def __hash__(self) -> int:
+        ...
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: type[BaseModel], handler: GetCoreSchemaHandler, /) -> CoreSchema:
@@ -115,7 +131,7 @@ class Type(BaseModel, ABC, Hashable):
         if schema is not None:
             return schema
 
-        string_schema = cs.chain_schema([cs.str_schema(), cs.no_info_plain_validator_function(cls.validate_string)])
+        string_schema = cs.chain_schema([cs.str_schema(), cs.no_info_plain_validator_function(cls.parse_string)])
         serializer = cs.plain_serializer_function_ser_schema(lambda t: t.dump_string())
 
         return cs.json_or_python_schema(
@@ -123,6 +139,42 @@ class Type(BaseModel, ABC, Hashable):
             json_schema=string_schema,
             serialization=serializer,
         )
+
+    @staticmethod
+    def bottom() -> BottomType:
+        return BottomType()
+
+    @staticmethod
+    def int() -> IntType:
+        return IntType()
+
+    @staticmethod
+    def float() -> FloatType:
+        return FloatType()
+
+    @staticmethod
+    def str() -> StringType:
+        return StringType()
+
+    @staticmethod
+    def bool() -> BoolType:
+        return BoolType()
+
+    @staticmethod
+    def union(*types: Type) -> UnionType:
+        return UnionType(ts=frozenset(types))
+
+    @staticmethod
+    def equatable() -> UnionType:
+        return Type.union(Type.int(), Type.str(), Type.bool())
+
+    @staticmethod
+    def comparable() -> UnionType:
+        return Type.union(Type.int(), Type.float(), Type.str())
+
+    @staticmethod
+    def numeric() -> UnionType:
+        return Type.union(Type.int(), Type.float())
 
 
 class BottomType(Type):
@@ -315,62 +367,40 @@ class UnionType(Type):
 
 # region
 
-rk_bottom = BottomType()
-
-rk_int = IntType()
-rk_float = FloatType()
-rk_str = StringType()
-rk_bool = BoolType()
-
-
-def rk_union(*ts: Type) -> UnionType:
-    return UnionType.model_validate({"ts": ts})
-
-
-rk_numeric = rk_int | rk_float
-rk_equatable = rk_int | rk_str | rk_bool
-rk_comparable = rk_int | rk_float | rk_str
-
-
-# endregion
-
-# region
-
 
 # noinspection PyMethodMayBeStatic
-class TreeToType(Transformer[Type]):
+class TreeToTypeTransformer(Transformer[Type]):
     def type(self, type_: list[Type]):
         return type_[0]
 
     def int(self, _) -> IntType:
-        return rk_int
+        return Type.int()
 
     def float(self, _) -> FloatType:
-        return rk_float
+        return Type.float()
 
     def string(self, _) -> StringType:
-        return rk_str
+        return Type.str()
 
     def bool(self, _) -> BoolType:
-        return rk_bool
+        return Type.bool()
 
     def bottom(self, _) -> BottomType:
-        return rk_bottom
+        return Type.bottom()
 
     def union(self, types: list[Type]) -> UnionType:
-        return rk_union(*types).canonicalize()
+        return Type.union(*types).canonicalize()
 
     def equatable(self, _) -> UnionType:
-        return rk_equatable
+        return Type.equatable()
 
     def comparable(self, _) -> UnionType:
-        return rk_comparable
+        return Type.comparable()
 
     def numeric(self, _) -> UnionType:
-        return rk_numeric
+        return Type.numeric()
 
     def paren(self, type_: list[Type]) -> Type:
         return type_[0]
-
 
 # endregion

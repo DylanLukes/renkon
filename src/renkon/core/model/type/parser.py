@@ -1,3 +1,5 @@
+from lark import Lark, LarkError
+
 grammar = r"""
     ?start: type
 
@@ -30,3 +32,5 @@ grammar = r"""
     %import common.WS
     %ignore WS
 """
+
+parser = Lark(grammar, lexer="standard", parser="lalr")
