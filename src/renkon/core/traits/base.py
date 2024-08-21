@@ -5,6 +5,7 @@ from typing import ClassVar, Protocol, final
 
 from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
 from renkon.core.model.type import Type
+import renkon.core.model.type as rk_type
 
 
 class Trait(Protocol):
@@ -63,9 +64,9 @@ class Linear2(Trait):
         kind=TraitKind.MODEL,
         pattern=TraitPattern("{Y} = {a}*{X} + {b}"),
         typings={
-            "X": Type.numeric(),
-            "Y": Type.numeric(),
-            "a": Type.float(),
-            "b": Type.float(),
+            "X": rk_type.numeric(),
+            "Y": rk_type.numeric(),
+            "a": rk_type.float_(),
+            "b": rk_type.float_(),
         },
     )
