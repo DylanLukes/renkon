@@ -5,18 +5,32 @@ from __future__ import annotations
 
 import polars as pl
 import pytest
-
 from lark import Lark
 
 from renkon.core.model import type as rkty
-from renkon.core.model.type import rk_int, IntType, rk_float, FloatType, rk_str, StringType, rk_bool, BoolType, \
-    rk_union, rk_bottom, \
-    Type, polars_type_to_renkon_type, renkon_type_to_polars_type, rk_equatable, rk_numeric, rk_comparable
+from renkon.core.model.type import (
+    BoolType,
+    FloatType,
+    IntType,
+    StringType,
+    Type,
+    polars_type_to_renkon_type,
+    renkon_type_to_polars_type,
+    rk_bool,
+    rk_bottom,
+    rk_comparable,
+    rk_equatable,
+    rk_float,
+    rk_int,
+    rk_numeric,
+    rk_str,
+    rk_union,
+)
 from renkon.core.model.type.base import TreeToType
 from renkon.core.model.type.grammar import grammar
 
+# TODO: use hypothesis for more robust property-based testing
 
-# todo: use hypothesis for more robust property-based testing
 
 def test_type_model_dump():
     assert rk_int.model_dump() == "int"
@@ -166,7 +180,7 @@ def test_comparable():
 
 
 def test_type_parser():
-    parser = Lark(grammar, parser='lalr', lexer="standard", transformer=TreeToType())
+    parser = Lark(grammar, parser="lalr", lexer="standard", transformer=TreeToType())
 
     assert parser.parse("int") == rk_int
     assert parser.parse("float") == rk_float
@@ -188,9 +202,13 @@ def test_polars_type_to_renkon_type():
     assert polars_type_to_renkon_type(pl.Utf8) == rkty.rk_str
     assert polars_type_to_renkon_type(pl.Boolean) == rkty.rk_bool
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Unsupported Polars data type"):
         polars_type_to_renkon_type(pl.Date)
+
+    with pytest.raises(ValueError, match="Unsupported Polars data type"):
         polars_type_to_renkon_type(pl.Time)
+
+    with pytest.raises(ValueError, match="Unsupported Polars data type"):
         polars_type_to_renkon_type(pl.Datetime)
 
 

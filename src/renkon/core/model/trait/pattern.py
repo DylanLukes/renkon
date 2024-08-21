@@ -7,11 +7,12 @@ from string import Formatter
 from typing import TYPE_CHECKING, Annotated, Any, Literal, LiteralString, NamedTuple, TypeGuard
 
 from annotated_types import Predicate
-from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema as cs
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+
+    from pydantic import GetCoreSchemaHandler
 
 
 def is_format_string(value: str) -> bool:
@@ -127,5 +128,3 @@ class TraitPattern(str):
             mapping = {k: mapping.get(k, "{" + k + "}") for k in self.metavars + self.params}
 
         return self.format_map(mapping)
-
-

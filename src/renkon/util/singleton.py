@@ -5,16 +5,18 @@ from __future__ import annotations
 
 import functools
 from abc import ABCMeta
-from collections.abc import Callable
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, ClassVar, Concatenate
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class _SingletonMeta(ABCMeta):
-    _instances: dict[type, Any] = {}
+    _instances: ClassVar[dict[type, Any]] = {}
 
     def __call__(cls, *args: Any, **kwargs: Any):
         if cls not in cls._instances:
-            cls._instances[cls] = super(_SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -28,7 +30,7 @@ class Singleton(metaclass=_SingletonMeta):
 #     def singletonmethod[**P, R](_method: Callable[P, R]) -> Callable[P, R]:
 #         ...
 # else:
-class singletonmethod[T: Singleton, ** P, R]:
+class singletonmethod[T: Singleton, **P, R]:  # noqa: N801
     """Descriptor for a method which when called on the class, delegates to the singleton instance."""
 
     method: Callable[Concatenate[T, P], R]
@@ -36,7 +38,8 @@ class singletonmethod[T: Singleton, ** P, R]:
 
     def __init__(self, method: Callable[Concatenate[T, P], R], instance: T | None = None):
         if not callable(method) and not hasattr(method, "__get__"):
-            raise TypeError(f"{method!r} is not callable or a descriptor")
+            msg = f"{method!r} is not callable or a descriptor"
+            raise TypeError(msg)
         self.method = method
         self.instance = instance
 
@@ -48,15 +51,16 @@ class singletonmethod[T: Singleton, ** P, R]:
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         if self.instance is None:
-            raise TypeError("singletonmethod instance is not set")
+            msg = "singletonmethod instance is not set"
+            raise TypeError(msg)
         return self.method(self.instance, *args, **kwargs)
 
     @property
     def __isabstractmethod__(self):
-        return getattr(self.method, '__isabstractmethod__', False)
+        return getattr(self.method, "__isabstractmethod__", False)
 
 
-class instancemethod[T, ** P, R]:
+class instancemethod[T, **P, R]:  # noqa: N801
     method: Callable[Concatenate[T, P], R]
     instance: T | None
 
@@ -71,7 +75,8 @@ class instancemethod[T, ** P, R]:
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         if self.instance is None:
-            raise TypeError("instancemethod called directly, not on instance")
+            msg = "instancemethod called directly, not on instance"
+            raise TypeError(msg)
         return self.method(self.instance, *args, **kwargs)
 
 

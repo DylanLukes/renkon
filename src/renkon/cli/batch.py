@@ -223,9 +223,9 @@ def batch(
             )
 
         # See the comment on sys.stdout's typeshed stubs for why this is valid (unless overriden).
-        if not isinstance(sys.stdout, TextIOWrapper):
-            msg = "sys.stdout is not a TextIOWrapper, cannot write CSV output."
-            raise RuntimeError(msg)
+        # if not isinstance(sys.stdout, TextIOWrapper):
+        #     msg = "sys.stdout is not a TextIOWrapper, cannot write CSV output."
+        #     raise RuntimeError(msg)
 
         # Flush stdout to ensure output is written last, just in case.
         sys.stderr.flush()

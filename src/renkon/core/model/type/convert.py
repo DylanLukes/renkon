@@ -5,7 +5,8 @@
 import polars as pl
 
 from renkon.core.model.type import rk_int
-from renkon.core.model.type.base import Type as RenkonType, rk_float, rk_str, rk_bool
+from renkon.core.model.type.base import Type as RenkonType
+from renkon.core.model.type.base import rk_bool, rk_float, rk_str
 
 
 def polars_type_to_renkon_type(rk_ty: pl.PolarsDataType) -> RenkonType:
@@ -24,7 +25,8 @@ def polars_type_to_renkon_type(rk_ty: pl.PolarsDataType) -> RenkonType:
     if rk_ty.is_(pl.Boolean):
         return rk_bool
 
-    raise ValueError(f"Unsupported Polars data type: {rk_ty}")
+    msg = f"Unsupported Polars data type: {rk_ty}"
+    raise ValueError(msg)
 
 
 def renkon_type_to_polars_type(rk_ty: RenkonType) -> pl.PolarsDataType:
@@ -44,4 +46,5 @@ def renkon_type_to_polars_type(rk_ty: RenkonType) -> pl.PolarsDataType:
     if rk_ty.is_equal(rk_bool):
         return pl.Boolean
 
-    raise ValueError(f"Unsupported Renkon data type: {rk_ty}")
+    msg = f"Unsupported Renkon data type: {rk_ty}"
+    raise ValueError(msg)

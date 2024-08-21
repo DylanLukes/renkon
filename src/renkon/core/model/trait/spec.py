@@ -16,6 +16,7 @@ type TraitId = str
 
 type TypeFallbackTypevarStr = Annotated[Type | str, Field(union_mode="left_to_right")]
 
+
 class TraitSpec(BaseModel):
     """
     Model representing the descriptive identity of a trait.
@@ -46,8 +47,8 @@ class TraitSpec(BaseModel):
     name: str
     kind: TraitKind
     pattern: TraitPattern
-    typevars: dict[str, Type] = dict()
-    typings: dict[str, TypeFallbackTypevarStr] = dict()
+    typevars: dict[str, Type] = {}
+    typings: dict[str, TypeFallbackTypevarStr] = {}
 
     @property
     def metavars(self) -> set[str]:

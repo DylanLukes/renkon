@@ -111,7 +111,7 @@ class Type(BaseModel, ABC, Hashable):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: type[BaseModel], handler: GetCoreSchemaHandler, /) -> CoreSchema:
-        schema = cls.__dict__.get('__pydantic_core_schema__')
+        schema = cls.__dict__.get("__pydantic_core_schema__")
         if schema is not None:
             return schema
 
@@ -336,6 +336,7 @@ rk_comparable = rk_int | rk_float | rk_str
 
 # region
 
+
 # noinspection PyMethodMayBeStatic
 class TreeToType(Transformer[Type]):
     def type(self, type_: list[Type]):
@@ -370,5 +371,6 @@ class TreeToType(Transformer[Type]):
 
     def paren(self, type_: list[Type]) -> Type:
         return type_[0]
+
 
 # endregion

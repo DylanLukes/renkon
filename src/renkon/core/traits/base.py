@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from typing import Protocol, final, ClassVar
+from typing import ClassVar, Protocol, final
 
-from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSpec, TraitSketch
-from renkon.core.model.type import rk_numeric, rk_float, Type
+from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
+from renkon.core.model.type import Type, rk_float, rk_numeric
 
 
 class Trait(Protocol):
@@ -35,10 +35,12 @@ class Trait(Protocol):
         return set(self.pattern.params)
 
     def sketch(self, **kwargs: dict[str, Type]) -> TraitSketch:
-        return TraitSketch.model_validate({
-            "trait": self.spec,
-            "metavar_bindings": kwargs,
-        })
+        return TraitSketch.model_validate(
+            {
+                "trait": self.spec,
+                "metavar_bindings": kwargs,
+            }
+        )
 
 
 @final

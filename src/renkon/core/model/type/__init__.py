@@ -34,12 +34,12 @@ from renkon.core.model.type.base import (
     UnionType,
     rk_bool,
     rk_bottom,
+    rk_comparable,
+    rk_equatable,
     rk_float,
     rk_int,
+    rk_numeric,
     rk_str,
     rk_union,
-    rk_numeric,
-    rk_equatable,
-    rk_comparable,
 )
-from renkon.core.model.type.convert import renkon_type_to_polars_type, polars_type_to_renkon_type
+from renkon.core.model.type.convert import polars_type_to_renkon_type, renkon_type_to_polars_type

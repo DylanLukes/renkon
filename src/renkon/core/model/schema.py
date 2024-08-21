@@ -4,7 +4,7 @@ from typing import Self, overload
 from polars.type_aliases import SchemaDict
 from pydantic import ConfigDict, RootModel
 
-from renkon.core.model.type import polars_type_to_renkon_type, Type
+from renkon.core.model.type import Type, polars_type_to_renkon_type
 from renkon.core.model.type_aliases import ColumnName, ColumnNames
 
 
@@ -25,12 +25,10 @@ class Schema(RootModel[dict[ColumnName, Type]], Mapping[ColumnName, Type], Hasha
         return hash(tuple(self.root.items()))
 
     @overload
-    def __getitem__(self, key: ColumnName) -> Type:
-        ...
+    def __getitem__(self, key: ColumnName) -> Type: ...
 
     @overload
-    def __getitem__(self, key: ColumnNames) -> Self:
-        ...
+    def __getitem__(self, key: ColumnNames) -> Self: ...
 
     def __getitem__(self, key: ColumnName | ColumnNames) -> Type | Self:
         match key:

@@ -1,5 +1,5 @@
 # type: ignore
-# TODO remove type ignore here
+# TODO: remove type ignore here
 from asyncio import sleep
 
 import jinja2

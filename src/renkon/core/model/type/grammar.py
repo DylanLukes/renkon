@@ -18,7 +18,7 @@ grammar = r"""
         | "string" -> string
         | "bool" -> bool
         | "boolean" -> bool
-        
+
     special: "equatable" -> equatable
         | "comparable" -> comparable
         | "numeric" -> numeric
