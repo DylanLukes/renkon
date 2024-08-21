@@ -14,8 +14,6 @@ from renkon.core.model.type import Type
 
 type TraitId = str
 
-type TypeFallbackTypevarStr = Annotated[Type | str, Field(union_mode="left_to_right")]
-
 
 class TraitSpec(BaseModel):
     """
@@ -48,7 +46,7 @@ class TraitSpec(BaseModel):
     kind: TraitKind
     pattern: TraitPattern
     typevars: dict[str, Type] = {}
-    typings: dict[str, TypeFallbackTypevarStr] = {}
+    typings: dict[str, Annotated[Type | str, Field(union_mode="left_to_right")]] = {}
 
     @property
     def metavars(self) -> set[str]:

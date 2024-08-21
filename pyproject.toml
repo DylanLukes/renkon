@@ -131,6 +131,11 @@ extra-dependencies = ["httpx"]
 # Pytest
 # ------
 
+[tool.pytest]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
+
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=typings --ignore=scripts"
 

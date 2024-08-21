@@ -54,6 +54,7 @@ def test_no_duplicate_task_names() -> None:
         g.add_task("a", mk_bar, [])
 
 
+@pytest.mark.slow
 def test_run_line() -> None:
     g: TaskGraph[str] = TaskGraph()
 
@@ -72,6 +73,7 @@ def test_run_line() -> None:
     assert g.get_result(g.task_name_to_id["c"]) == Ok("baz")
 
 
+@pytest.mark.slow
 def test_run_diamond() -> None:
     g: TaskGraph[str] = TaskGraph()
 
@@ -92,6 +94,7 @@ def test_run_diamond() -> None:
     assert g.get_result(g.task_name_to_id["d"]) == Ok("qux")
 
 
+@pytest.mark.slow
 def test_run_prune_line() -> None:
     g: TaskGraph[str] = TaskGraph()
 
@@ -110,6 +113,7 @@ def test_run_prune_line() -> None:
     assert type(g.get_result(g.task_name_to_id["c"])) is Unk
 
 
+@pytest.mark.slow
 def test_run_prune_complex() -> None:
     g: TaskGraph[str] = TaskGraph()
 
