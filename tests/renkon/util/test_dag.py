@@ -1,4 +1,4 @@
-from renkon.util.dag import DAG
+from renkon._internal.dag import DAG
 
 
 def test_dag_line() -> None:

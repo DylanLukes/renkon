@@ -2,8 +2,8 @@ from typing import Any, NoReturn
 
 import pytest
 
-from renkon.core.task.graph import TaskGraph
-from renkon.core.task.result import Err, Ok, Unk
+from renkon._internal.task.graph import TaskGraph
+from renkon._internal.task.result import Err, Ok, Unk
 
 
 def mk_foo(_task_name: str) -> str:

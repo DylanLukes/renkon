@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from renkon.core.model import Schema
 from renkon.core.old_trait import AnyTrait, TraitMeta, TraitSketch
-from renkon.util.permute import permutations_with_commutativity
+from renkon._internal.permute import permutations_with_commutativity
 
 
 def check_type_compatibility(meta: TraitMeta, schema: Schema) -> bool:

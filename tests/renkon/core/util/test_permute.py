@@ -1,4 +1,4 @@
-from renkon.util.permute import permutations_with_commutativity
+from renkon._internal.permute import permutations_with_commutativity
 
 
 def test_permutations_with_commutativity_trivial() -> None:

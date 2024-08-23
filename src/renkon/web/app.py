@@ -11,7 +11,7 @@ from fasthx import Jinja
 from loguru import logger
 from starlette.websockets import WebSocketDisconnect
 
-from renkon.util.logger import configure_logging
+from renkon._internal.logger import configure_logging
 
 app = FastAPI(on_startup=[configure_logging])
 

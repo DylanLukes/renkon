@@ -1,4 +1,4 @@
-from renkon.core.task.task import Task
+from renkon._internal.task.task import Task
 
 
 def test_task() -> None:
