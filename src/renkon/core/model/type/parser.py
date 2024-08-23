@@ -1,4 +1,4 @@
-from lark import Lark, LarkError
+from lark import Lark
 
 grammar = r"""
     ?start: type
@@ -37,6 +37,6 @@ grammar = r"""
 
     %import common.WS
     %ignore WS
-"""
+"""  # noqa: RUF001
 
 parser = Lark(grammar, lexer="standard", parser="lalr")

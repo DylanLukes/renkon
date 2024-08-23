@@ -25,7 +25,7 @@ def instantiate_trait[T: AnyTrait](trait_type: type[T], schema: Schema) -> Seque
     arity = meta.arity
     commutors = meta.commutors
 
-    column_perms = permutations_with_commutativity(columns, coxmmutors, length=arity)
+    column_perms = permutations_with_commutativity(columns, commutors, length=arity)
 
     sketches: list[TraitSketch[T]] = []
     for column_perm in column_perms:

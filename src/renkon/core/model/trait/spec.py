@@ -40,20 +40,19 @@ class TraitSpec(BaseModel):
     ...     }
     ... }''')
 
-    >>> trait = TraitSpec.model_validate({
-    ...     "id": "renkon.core.doctest.traits.Equal",
-    ...     "name": "Equal",
-    ...     "kind": "logical",
-    ...     "pattern": "{A} = {B}",
-    ...     "commutors": [{"A", "B"}],
-    ...     "typevars": {
-    ...         "T": "equatable",
-    ...      },
-    ...     "typings": {
-    ...         "A": "T",
-    ...         "B": "T"
+    >>> trait = TraitSpec.model_validate(
+    ...     {
+    ...         "id": "renkon.core.doctest.traits.Equal",
+    ...         "name": "Equal",
+    ...         "kind": "logical",
+    ...         "pattern": "{A} = {B}",
+    ...         "commutors": [{"A", "B"}],
+    ...         "typevars": {
+    ...             "T": "equatable",
+    ...         },
+    ...         "typings": {"A": "T", "B": "T"},
     ...     }
-    ... })
+    ... )
     """
 
     id: TraitId
@@ -101,7 +100,7 @@ class TraitSpec(BaseModel):
 
     @model_validator(mode="after")
     def _check_typings_keys_in_pattern(self) -> Self:
-        for key, _ in self.typings.items():
+        for key in self.typings:
             if key not in self.metavars | self.params:
                 msg = f"Typing key '{key}' not found in pattern."
                 raise ValueError(msg)

@@ -23,5 +23,3 @@ def test_type_parser():
     assert parser.parse("int | float | str") == rk.union(rk.int_(), rk.float_(), rk.str_())
     assert parser.parse("int | (float | str)") == rk.union(rk.int_(), rk.float_(), rk.str_())
     assert parser.parse("⊥ | ⊥") == rk.union()
-
-

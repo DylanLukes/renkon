@@ -12,7 +12,6 @@ import logging
 import os
 import sys
 from base64 import b64encode
-from io import TextIOWrapper
 from pathlib import Path
 from typing import Any
 

@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 from typing import ClassVar, Protocol, final
 
+import renkon.core.model.type as rk_type
 from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
 from renkon.core.model.type import Type
-import renkon.core.model.type as rk_type
 
 
 class Trait(Protocol):

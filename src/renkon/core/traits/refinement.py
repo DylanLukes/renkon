@@ -9,6 +9,7 @@ of just integers.
 Refinements in a Renkon sense are a stronger concept than predicates, as they quantify the
 conformance of the column's data. For example, _how close_ to being integral.
 """
+
 from abc import ABC
 from typing import ClassVar
 
@@ -19,7 +20,6 @@ from renkon.core.traits.base import Trait
 class _Refinement(Trait, ABC):
     refines: ClassVar[UnionType]
 
-    #noinspection PyMethodOverriding
+    # noinspection PyMethodOverriding
     def __init_subclass__(cls, *, refines: UnionType, **kwargs: None):
-
-
+        pass

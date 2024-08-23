@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Any, ClassVar, Self, override, Literal, Union, Annotated, TypeGuard
+from typing import Annotated, Any, ClassVar, Literal, Self, TypeGuard, override
 
 from annotated_types import Predicate
 from lark import Transformer
@@ -69,12 +69,14 @@ def is_type_str(s: str) -> TypeGuard[TypeStr]:
         return True
     except LarkError:
         return False
+    else:
+        return True
 
 
-type TypeStr = Union[
-    Literal["int", "float", "string", "bool", "equatable", "comparable", "numeric"],
-    Annotated[str, Predicate(is_type_str)]
-]
+type TypeStr = (
+    Literal["int", "float", "string", "bool", "equatable", "comparable", "numeric"]
+    | Annotated[str, Predicate(is_type_str)]
+)
 
 
 class Type(BaseModel, ABC, Hashable):
@@ -166,8 +168,7 @@ class Type(BaseModel, ABC, Hashable):
         return UnionType(ts=frozenset({self, other})).canonicalize()
 
     @abstractmethod
-    def __hash__(self) -> int:
-        ...
+    def __hash__(self) -> int: ...
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: type[BaseModel], handler: GetCoreSchemaHandler, /) -> CoreSchema:
@@ -192,7 +193,7 @@ class TopType(Type):
     def is_equivalent(self, other: Type) -> bool:
         return self.is_equal(other)
 
-    def is_subtype(self, other: Type) -> bool:
+    def is_subtype(self, other: Type) -> bool:  # noqa: ARG002
         return False
 
     def is_supertype(self, other: Type) -> bool:
@@ -205,7 +206,7 @@ class TopType(Type):
         return self
 
     def dump_string(self) -> str:
-        return "⊤"
+        return "any"
 
     def __init__(self, /, **data: Any) -> None:
         if not data:
@@ -236,7 +237,7 @@ class BottomType(Type):
         return self
 
     def dump_string(self) -> str:
-        return "⊥"
+        return "none"
 
     def __init__(self, /, **data: Any) -> None:
         if not data:
@@ -457,5 +458,6 @@ class TreeToTypeTransformer(Transformer[Type]):
 
     def paren(self, type_: list[Type]) -> Type:
         return type_[0]
+
 
 # endregion

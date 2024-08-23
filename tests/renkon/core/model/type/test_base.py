@@ -2,22 +2,30 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from renkon.core.model.type import Type, any_, int_, float_, str_, bool_, union, none, equatable, comparable, numeric
-
+from renkon.core.model.type import Type, any_, bool_, comparable, equatable, float_, int_, none, numeric, str_, union
 
 # TODO: use hypothesis for more robust property-based testing
 
 
-def test_type_model_dump():
+def test_type_model_dump_primitive():
     assert int_().model_dump() == "int"
     assert float_().model_dump() == "float"
     assert str_().model_dump() == "string"
     assert bool_().model_dump() == "bool"
+
+
+def test_type_model_dump_union():
     assert union(int_(), float_()).model_dump() == "float | int"
     assert union(int_(), str_()).model_dump() == "int | string"
-    assert any_().model_dump() == "⊤"
-    assert none().model_dump() == "⊥"
     assert union().model_dump() == "⊥ | ⊥"
+
+
+def test_type_model_dump_any():
+    assert any_().model_dump() == "any"
+
+
+def test_type_model_dump_none():
+    assert none().model_dump() == "none"
 
 
 def test_type_model_validate_primitive():
@@ -34,11 +42,19 @@ def test_type_model_validate_union():
     assert Type.model_validate("int | (string | float)") == union(int_(), str_(), float_())
 
 
-def test_type_model_validate_top():
-    assert Type.model_validate("⊤") == any_()
+def test_type_model_validate_any():
+    assert Type.model_validate("any") == any_()
+    assert Type.model_validate("⊤") == any_()  # noqa: RUF001
+    assert Type.model_validate("⊤ | ⊤") == union(any_())  # noqa: RUF001
+
+
+def test_type_model_validate_none():
+    assert Type.model_validate("none") == none()
     assert Type.model_validate("⊥") == none()
-    assert Type.model_validate("⊤ | ⊤") == union(any_())
     assert Type.model_validate("⊥ | ⊥") == union()
+
+
+def test_type_model_validate_specials():
     assert Type.model_validate("equatable") == equatable()
     assert Type.model_validate("comparable") == comparable()
     assert Type.model_validate("numeric") == numeric()
@@ -49,6 +65,7 @@ def test_type_model_validate_json():
     assert Type.model_validate_json(r'"int"') == int_()
     assert Type.model_validate_json(r'"float"') == float_()
     assert Type.model_validate_json(r'"string"') == str_()
+    # TODO: write types for validating JSON
 
 
 def test_primitive_equals_symmetry():
