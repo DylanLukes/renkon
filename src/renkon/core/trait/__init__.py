@@ -1,18 +1,6 @@
-__all__ = [
-    "AnyTrait",
-    "AnyTraitSketch",
-    "Trait",
-    "TraitSketch",
-    "TraitMeta",
-    "BaseTrait",
-    "Linear",
-    "Linear2",
-    "Linear3",
-    "Linear4",
-    "EqualNumeric",
-    "EqualString",
-]
+# SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+__all__ = ["Equal", "Less", "LessOrEqual", "Greater", "GreaterOrEqual"]
 
-from renkon.core.trait.base import AnyTrait, AnyTraitSketch, BaseTrait, Trait, TraitMeta, TraitSketch
-from renkon.core.trait.compare import EqualNumeric, EqualString
-from renkon.core.trait.linear import Linear, Linear2, Linear3, Linear4
+from renkon.core.trait.compare import Equal, Greater, GreaterOrEqual, Less, LessOrEqual

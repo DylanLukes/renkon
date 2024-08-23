@@ -6,7 +6,7 @@
 __all__ = [
     "TypeStr",
     "is_type_str",
-    "Type",
+    "RenkonType",
     "IntType",
     "FloatType",
     "StringType",
@@ -32,8 +32,8 @@ from renkon.core.model.type.base import (
     BottomType,
     FloatType,
     IntType,
+    RenkonType,
     StringType,
-    Type,
     TypeStr,
     UnionType,
     any_,

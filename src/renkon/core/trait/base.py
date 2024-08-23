@@ -1,151 +1,72 @@
-from __future__ import annotations
+# SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+from typing import ClassVar, Protocol, final
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, runtime_checkable
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from polars import DataFrame, Series
-
-    from renkon.core.model import ColumnTypeSet, Schema
+import renkon.core.model.type as rk_type
+from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
+from renkon.core.model.type import RenkonType
 
 
-type AnyTrait = Trait[*tuple[Any, ...]]
-type AnyTraitSketch = TraitSketch[AnyTrait]
-
-
-@dataclass(eq=True, frozen=True, kw_only=True, slots=True)
-class TraitSketch[T: AnyTrait]:
-    """
-    Represents a sketch of a trait, where the arity and types of the trait are known,
-    but not the parameters.
-    """
-
-    trait_type: type[T]
-    schema: Schema
+class Trait(Protocol):
+    spec: ClassVar[TraitSpec]
 
     @property
-    def arity(self) -> int:
-        return len(self.schema)
-
-    def __iter__(self):
-        return iter((self.trait_type, self.schema))
-
-    def __str__(self):
-        return f"{self.trait_type.__qualname__}({str(self.schema)[1:-1]})"
-
-    def __repr__(self):
-        return f"TraitSketch({self.trait_type.__qualname__}, {self.schema})"
-
-
-@runtime_checkable
-class Trait[*ParamTs](Protocol):
-    """
-    Represents an instantiated sketch. This protocol defines the abstract interface for all traits.
-    :cvar meta: the metadata for this trait.
-    """
-
-    meta: ClassVar[TraitMeta]
+    def id(self) -> TraitId:
+        return self.spec.id
 
     @property
-    @abstractmethod
-    def sketch(self) -> TraitSketch[Self]:
-        """The sketch that was instantiated into this trait."""
-        ...
+    def name(self) -> str:
+        return self.spec.name
 
     @property
-    @abstractmethod
-    def params(self) -> tuple[*ParamTs]:
-        """The inferred parameters of the trait."""
-        ...
+    def kind(self) -> TraitKind:
+        return self.spec.kind
 
     @property
-    @abstractmethod
-    def mask(self) -> Series:
-        """A boolean Series of whether each row matches (inlies/satisfies) the trait."""
-        ...
+    def pattern(self) -> TraitPattern:
+        return self.spec.pattern
 
     @property
-    @abstractmethod
-    def score(self) -> float:
-        """A [0,1] confidence of the trait."""
-        ...
-
-    @classmethod
-    @abstractmethod
-    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self: ...
-
-
-@runtime_checkable
-class TraitMeta(Protocol):
-    """
-    Represents metadata about a trait used during instantiation and inference.
-    """
+    def metavars(self) -> set[str]:
+        return set(self.pattern.metavars)
 
     @property
-    @abstractmethod
-    def arity(self) -> int: ...
+    def params(self) -> set[str]:
+        return set(self.pattern.params)
 
     @property
-    @abstractmethod
-    def commutors(self) -> Sequence[bool]: ...
+    def commutors(self) -> list[set[str]]:
+        return self.spec.commutors
 
     @property
-    @abstractmethod
-    def supported_dtypes(self) -> Sequence[ColumnTypeSet]: ...
-
-
-class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
-    """
-    Basic implementation of a trait. This should be appropriate for most traits.
-    """
-
-    meta: ClassVar
-
-    _sketch: TraitSketch[Self]
-    _params: tuple[*ParamTs]
-    _mask: Series
-    _score: float
-
-    __slots__ = ("_sketch", "_params", "_mask", "_score")
-
-    def __init__(
-        self,
-        sketch: TraitSketch[Self],
-        params: tuple[*ParamTs],
-        mask: Series,
-        score: float,
-    ):
-        self._sketch = sketch
-        self._params = params
-        self._mask = mask
-        self._score = score
+    def typevars(self) -> dict[str, RenkonType]:
+        return self.spec.typevars
 
     @property
-    def sketch(self) -> TraitSketch[Self]:
-        return self._sketch
+    def typings(self) -> dict[str, RenkonType | str]:
+        return self.spec.typings
 
-    @property
-    def params(self) -> tuple[*ParamTs]:
-        return self._params
+    def sketch(self, **kwargs: RenkonType) -> TraitSketch:
+        return TraitSketch.model_validate(
+            {
+                "trait": self.spec,
+                "metavar_bindings": kwargs,
+            }
+        )
 
-    @property
-    def mask(self) -> Series:
-        return self._mask
 
-    @property
-    def score(self) -> float:
-        return self._score
-
-    @classmethod
-    @abstractmethod
-    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
-        """
-        Infer the sketched trait from the data in a :class:`DataFrame`.
-
-        :param sketch: the sketch to infer, must be of the same type as this trait.
-        :param data: the data to infer from.
-        """
-        ...
+@final
+class Linear2(Trait):
+    spec = TraitSpec(
+        id="Linear2",
+        name="Linear Regression",
+        kind=TraitKind.MODEL,
+        pattern=TraitPattern("{Y} = {a}*{X} + {b}"),
+        typings={
+            "X": rk_type.numeric(),
+            "Y": rk_type.numeric(),
+            "a": rk_type.float_(),
+            "b": rk_type.float_(),
+        },
+    )

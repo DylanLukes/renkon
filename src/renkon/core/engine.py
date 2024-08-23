@@ -6,8 +6,8 @@ from loguru import logger
 from polars import DataFrame
 
 from renkon.core.model import Schema
-from renkon.core.trait import AnyTrait, AnyTraitSketch
-from renkon.core.trait.util.instantiate import instantiate_trait
+from renkon.core.old_trait import AnyTrait, AnyTraitSketch
+from renkon.core.old_trait.util.instantiate import instantiate_trait
 
 type BatchID = str
 type BatchResults = MutableMapping[AnyTraitSketch, AnyTrait | None]

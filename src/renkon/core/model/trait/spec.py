@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from renkon.core.model.trait.kind import TraitKind
 from renkon.core.model.trait.pattern import TraitPattern
-from renkon.core.model.type import Type
+from renkon.core.model.type import RenkonType
 
 type TraitId = str
 
@@ -60,8 +60,8 @@ class TraitSpec(BaseModel):
     kind: TraitKind
     pattern: TraitPattern
     commutors: list[set[str]] = []
-    typevars: dict[str, Type] = {}
-    typings: dict[str, Annotated[Type | str, Field(union_mode="left_to_right")]] = {}
+    typevars: dict[str, RenkonType] = {}
+    typings: dict[str, Annotated[RenkonType | str, Field(union_mode="left_to_right")]] = {}
 
     @property
     def metavars(self) -> set[str]:
@@ -109,7 +109,7 @@ class TraitSpec(BaseModel):
     @model_validator(mode="after")
     def _check_typings_vals_valid_types_or_typevars(self) -> Self:
         for key, value in self.typings.items():
-            if isinstance(value, Type):
+            if isinstance(value, RenkonType):
                 continue
 
             if value not in self.typevars:

@@ -22,4 +22,4 @@ class TraitResult(BaseModel):
     score: TraitResultScore
     match_mask: BitSeries
 
-    param_bindings: dict[str, tuple[str, Any]]
+    params: dict[str, tuple[str, Any]]

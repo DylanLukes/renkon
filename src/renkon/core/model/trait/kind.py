@@ -16,6 +16,7 @@ class TraitKind(StrEnum):
     :cvar MODEL: A model of the data, e.g. a linear regression model.
     :cvar STATISTICAL: A statistical test or measure, e.g. a t-test.
     :cvar TEXTUAL: A textual (string) expression over columns, e.g. "a contains 'b'".
+    :cvar REFINEMENT: A refinement of the type of a column (e.g. not null, positive, etc).
 
     """
 
@@ -24,3 +25,4 @@ class TraitKind(StrEnum):
     MODEL = "model"
     STATISTICAL = "statistical"
     TEXTUAL = "textual"
+    REFINEMENT = "refinement"

@@ -47,7 +47,7 @@ def bottom() -> BottomType:
 none = bottom
 
 
-def union(*types: Type) -> UnionType:
+def union(*types: RenkonType) -> UnionType:
     return UnionType(ts=frozenset(types)).canonicalize()
 
 
@@ -65,7 +65,7 @@ def numeric() -> UnionType:
 
 def is_type_str(s: str) -> TypeGuard[TypeStr]:
     try:
-        Type.parse_string(s)
+        RenkonType.parse_string(s)
         return True
     except LarkError:
         return False
@@ -79,32 +79,32 @@ type TypeStr = (
 )
 
 
-class Type(BaseModel, ABC, Hashable):
+class RenkonType(BaseModel, ABC, Hashable):
     class Config:
         frozen = True
 
     @abstractmethod
-    def is_equal(self, other: Type) -> bool:
+    def is_equal(self, other: RenkonType) -> bool:
         """
         Two types are equal iff they are equal under canonicalization.
         """
         ...
 
     @abstractmethod
-    def is_equivalent(self, other: Type) -> bool:
+    def is_equivalent(self, other: RenkonType) -> bool:
         """
         Two types are equivalent iff they are equal under normalization,
         i.e. they are witnessed by exactly the same set of values.
         """
         ...
 
-    def is_subtype(self, other: Type) -> bool:
+    def is_subtype(self, other: RenkonType) -> bool:
         """
         A type is a subtype of another type iff all values of the former are also values of the latter.
         """
         return other.is_supertype(self)
 
-    def is_supertype(self, other: Type) -> bool:
+    def is_supertype(self, other: RenkonType) -> bool:
         """
         A type is a supertype of another type iff the latter is a subtype of the former.
         """
@@ -118,7 +118,7 @@ class Type(BaseModel, ABC, Hashable):
         ...
 
     @abstractmethod
-    def normalize(self) -> Type:
+    def normalize(self) -> RenkonType:
         """
         Return a normalized representation of the type, which may be of a different, simpler type.
         """
@@ -132,7 +132,7 @@ class Type(BaseModel, ABC, Hashable):
         ...
 
     @classmethod
-    def parse_string(cls, s: str) -> Type:
+    def parse_string(cls, s: str) -> RenkonType:
         """
         Parse a string representation of the type.
         """
@@ -160,11 +160,11 @@ class Type(BaseModel, ABC, Hashable):
         return f"Type({self.dump_string()})"
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Type):
+        if not isinstance(other, RenkonType):
             return super().__eq__(other)
         return self.is_equal(other)
 
-    def __or__(self, other: Type) -> UnionType:
+    def __or__(self, other: RenkonType) -> UnionType:
         return UnionType(ts=frozenset({self, other})).canonicalize()
 
     @abstractmethod
@@ -186,23 +186,23 @@ class Type(BaseModel, ABC, Hashable):
         )
 
 
-class TopType(Type):
-    def is_equal(self, other: Type) -> bool:
+class TopType(RenkonType):
+    def is_equal(self, other: RenkonType) -> bool:
         return isinstance(other, TopType)
 
-    def is_equivalent(self, other: Type) -> bool:
+    def is_equivalent(self, other: RenkonType) -> bool:
         return self.is_equal(other)
 
-    def is_subtype(self, other: Type) -> bool:  # noqa: ARG002
+    def is_subtype(self, other: RenkonType) -> bool:  # noqa: ARG002
         return False
 
-    def is_supertype(self, other: Type) -> bool:
+    def is_supertype(self, other: RenkonType) -> bool:
         return self.is_equal(other)
 
     def canonicalize(self) -> Self:
         return self
 
-    def normalize(self) -> Type:
+    def normalize(self) -> RenkonType:
         return self
 
     def dump_string(self) -> str:
@@ -217,23 +217,23 @@ class TopType(Type):
         return hash(TopType)
 
 
-class BottomType(Type):
-    def is_equal(self, other: Type) -> bool:
+class BottomType(RenkonType):
+    def is_equal(self, other: RenkonType) -> bool:
         return isinstance(other, BottomType)
 
-    def is_equivalent(self, other: Type) -> bool:
+    def is_equivalent(self, other: RenkonType) -> bool:
         return self.is_equal(other)
 
-    def is_subtype(self, other: Type) -> bool:  # noqa: ARG002
+    def is_subtype(self, other: RenkonType) -> bool:  # noqa: ARG002
         return True
 
-    def is_supertype(self, other: Type) -> bool:
+    def is_supertype(self, other: RenkonType) -> bool:
         return self.is_equal(other)
 
     def canonicalize(self) -> Self:
         return self
 
-    def normalize(self) -> Type:
+    def normalize(self) -> RenkonType:
         return self
 
     def dump_string(self) -> str:
@@ -251,21 +251,21 @@ class BottomType(Type):
 # region Primitive Types
 
 
-class PrimitiveType(Type):
+class PrimitiveType(RenkonType):
     name: ClassVar[str]
 
     _all_subclasses: ClassVar[dict[str, type[PrimitiveType]]] = {}
 
     @override
-    def is_equal(self, other: Type) -> bool:
+    def is_equal(self, other: RenkonType) -> bool:
         return type(other) == type(self)
 
     @override
-    def is_equivalent(self, other: Type) -> bool:
+    def is_equivalent(self, other: RenkonType) -> bool:
         return self.is_equal(other)
 
     @override
-    def is_subtype(self, other: Type) -> bool:
+    def is_subtype(self, other: RenkonType) -> bool:
         if isinstance(other, PrimitiveType):
             return self.name == other.name
         return super().is_subtype(other)
@@ -313,8 +313,8 @@ class BoolType(PrimitiveType, name="bool"): ...
 # region Union Type
 
 
-class UnionType(Type):
-    ts: frozenset[Type]
+class UnionType(RenkonType):
+    ts: frozenset[RenkonType]
 
     @property
     def is_empty_union(self) -> bool:
@@ -336,21 +336,21 @@ class UnionType(Type):
         return bool(any(isinstance(t, UnionType) for t in self.ts))
 
     @override
-    def is_equal(self, other: Type) -> bool:
+    def is_equal(self, other: RenkonType) -> bool:
         return isinstance(other, UnionType) and self.ts == other.ts
 
     @override
-    def is_equivalent(self, other: Type) -> bool:
+    def is_equivalent(self, other: RenkonType) -> bool:
         return self.normalize() == other.normalize()
 
     @override
-    def is_subtype(self, other: Type) -> bool:
+    def is_subtype(self, other: RenkonType) -> bool:
         if isinstance(other, UnionType):
             return self.canonicalize().ts.issubset(other.canonicalize().ts)
         return super().is_subtype(other)
 
     @override
-    def is_supertype(self, other: Type) -> bool:
+    def is_supertype(self, other: RenkonType) -> bool:
         return other in self.canonicalize().ts
 
     @override
@@ -367,7 +367,7 @@ class UnionType(Type):
         return UnionType(ts=frozenset(ts))
 
     @override
-    def normalize(self) -> Type:
+    def normalize(self) -> RenkonType:
         canon = self.canonicalize()
 
         if canon.contains_top:
@@ -395,7 +395,7 @@ class UnionType(Type):
         """Recursively flatten nested unions."""
         if not self.contains_union:
             return self
-        ts: set[Type] = set()
+        ts: set[RenkonType] = set()
         for t in self.ts:
             if isinstance(t, UnionType):
                 ts.update(t.flatten().ts)
@@ -403,7 +403,7 @@ class UnionType(Type):
                 ts.add(t)
         return UnionType.model_validate({"ts": ts})
 
-    def single(self) -> Type:
+    def single(self) -> RenkonType:
         if not self.is_trivial_union:
             msg = "Union is not trivial, a single type"
             raise ValueError(msg)
@@ -422,8 +422,8 @@ class UnionType(Type):
 
 
 # noinspection PyMethodMayBeStatic
-class TreeToTypeTransformer(Transformer[Type]):
-    def type(self, type_: list[Type]):
+class TreeToTypeTransformer(Transformer[RenkonType]):
+    def type(self, type_: list[RenkonType]):
         return type_[0]
 
     def int(self, _) -> IntType:
@@ -438,13 +438,13 @@ class TreeToTypeTransformer(Transformer[Type]):
     def bool(self, _) -> BoolType:
         return bool_()
 
-    def top(self, _) -> Type:
+    def top(self, _) -> RenkonType:
         return any_()
 
     def bottom(self, _) -> BottomType:
         return none()
 
-    def union(self, types: list[Type]) -> UnionType:
+    def union(self, types: list[RenkonType]) -> UnionType:
         return union(*types)
 
     def equatable(self, _) -> UnionType:
@@ -456,7 +456,7 @@ class TreeToTypeTransformer(Transformer[Type]):
     def numeric(self, _) -> UnionType:
         return numeric()
 
-    def paren(self, type_: list[Type]) -> Type:
+    def paren(self, type_: list[RenkonType]) -> RenkonType:
         return type_[0]
 
 

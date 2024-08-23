@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from renkon.core.model import Schema
-from renkon.core.trait import AnyTrait, TraitMeta, TraitSketch
+from renkon.core.old_trait import AnyTrait, TraitMeta, TraitSketch
 from renkon.util.permute import permutations_with_commutativity
 
 

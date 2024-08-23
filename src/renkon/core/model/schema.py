@@ -4,11 +4,11 @@ from typing import Self, overload
 from polars.type_aliases import SchemaDict
 from pydantic import ConfigDict, RootModel
 
-from renkon.core.model.type import Type, tyconv_pl_to_rk
+from renkon.core.model.type import RenkonType, tyconv_pl_to_rk
 from renkon.core.model.type_aliases import ColumnName, ColumnNames
 
 
-class Schema(RootModel[dict[ColumnName, Type]], Mapping[ColumnName, Type], Hashable):
+class Schema(RootModel[dict[ColumnName, RenkonType]], Mapping[ColumnName, RenkonType], Hashable):
     """
     Represents a schema for some or all of the columns a data frame.
 
@@ -19,18 +19,18 @@ class Schema(RootModel[dict[ColumnName, Type]], Mapping[ColumnName, Type], Hasha
     """
 
     model_config = ConfigDict(frozen=True)
-    root: dict[ColumnName, Type]
+    root: dict[ColumnName, RenkonType]
 
     def __hash__(self) -> int:
         return hash(tuple(self.root.items()))
 
     @overload
-    def __getitem__(self, key: ColumnName) -> Type: ...
+    def __getitem__(self, key: ColumnName) -> RenkonType: ...
 
     @overload
     def __getitem__(self, key: ColumnNames) -> Self: ...
 
-    def __getitem__(self, key: ColumnName | ColumnNames) -> Type | Self:
+    def __getitem__(self, key: ColumnName | ColumnNames) -> RenkonType | Self:
         match key:
             case str():
                 return self.root[key]
@@ -52,7 +52,7 @@ class Schema(RootModel[dict[ColumnName, Type]], Mapping[ColumnName, Type], Hasha
         return tuple(self.root.keys())
 
     @property
-    def dtypes(self) -> tuple[Type, ...]:
+    def dtypes(self) -> tuple[RenkonType, ...]:
         return tuple(self.root.values())
 
     @classmethod

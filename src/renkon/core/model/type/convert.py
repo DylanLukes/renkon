@@ -7,7 +7,7 @@ import polars as pl
 from renkon.core.model import type as rk
 
 
-def tyconv_pl_to_rk(pl_ty: pl.PolarsDataType) -> rk.Type:
+def tyconv_pl_to_rk(pl_ty: pl.PolarsDataType) -> rk.RenkonType:
     """
     Convert a Polars data type to a Renkon data type.
     """
@@ -27,7 +27,7 @@ def tyconv_pl_to_rk(pl_ty: pl.PolarsDataType) -> rk.Type:
     raise ValueError(msg)
 
 
-def tyconv_rk_to_pl(rk_ty: rk.Type) -> pl.PolarsDataType:
+def tyconv_rk_to_pl(rk_ty: rk.RenkonType) -> pl.PolarsDataType:
     """
     Convert a Renkon data type to a Polars data type.
     """

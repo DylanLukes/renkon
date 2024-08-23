@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from renkon.core.model import TraitSpec, Type
+from renkon.core.model import RenkonType, TraitSpec
 
 
 def test_trait_spec_validate_json():
@@ -37,10 +37,10 @@ def test_trait_spec_validate_concrete_typings():
 
     assert trait_spec.metavars == {"Y", "X"}
     assert trait_spec.params == {"a", "b"}
-    assert isinstance(trait_spec.typings["X"], Type)
-    assert isinstance(trait_spec.typings["Y"], Type)
-    assert isinstance(trait_spec.typings["a"], Type)
-    assert isinstance(trait_spec.typings["b"], Type)
+    assert isinstance(trait_spec.typings["X"], RenkonType)
+    assert isinstance(trait_spec.typings["Y"], RenkonType)
+    assert isinstance(trait_spec.typings["a"], RenkonType)
+    assert isinstance(trait_spec.typings["b"], RenkonType)
 
 
 def test_trait_spec_validate_typevar_typings():
@@ -62,7 +62,7 @@ def test_trait_spec_validate_typevar_typings():
 
     assert trait_spec.metavars == {"X", "Y"}
     assert trait_spec.params == set()
-    assert isinstance(trait_spec.typevars["T"], Type)
+    assert isinstance(trait_spec.typevars["T"], RenkonType)
     assert isinstance(trait_spec.typings["X"], str)
     assert isinstance(trait_spec.typings["Y"], str)
 
@@ -83,6 +83,6 @@ def test_trait_spec_validate_mixed_typings():
 
     assert trait_spec.metavars == {"X", "Y"}
     assert trait_spec.params == {"eps"}
-    assert isinstance(trait_spec.typevars["T"], Type)
+    assert isinstance(trait_spec.typevars["T"], RenkonType)
     assert isinstance(trait_spec.typings["X"], str)
     assert isinstance(trait_spec.typings["Y"], str)

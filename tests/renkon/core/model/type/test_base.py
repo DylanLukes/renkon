@@ -2,7 +2,19 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from renkon.core.model.type import Type, any_, bool_, comparable, equatable, float_, int_, none, numeric, str_, union
+from renkon.core.model.type import (
+    RenkonType,
+    any_,
+    bool_,
+    comparable,
+    equatable,
+    float_,
+    int_,
+    none,
+    numeric,
+    str_,
+    union,
+)
 
 # TODO: use hypothesis for more robust property-based testing
 
@@ -29,42 +41,42 @@ def test_type_model_dump_none():
 
 
 def test_type_model_validate_primitive():
-    assert Type.model_validate("int") == int_()
-    assert Type.model_validate("float") == float_()
-    assert Type.model_validate("string") == str_()
-    assert Type.model_validate("bool") == bool_()
+    assert RenkonType.model_validate("int") == int_()
+    assert RenkonType.model_validate("float") == float_()
+    assert RenkonType.model_validate("string") == str_()
+    assert RenkonType.model_validate("bool") == bool_()
 
 
 def test_type_model_validate_union():
-    assert Type.model_validate("float | int") == union(int_(), float_())
-    assert Type.model_validate("int | string") == union(int_(), str_())
-    assert Type.model_validate("int | string | float") == union(int_(), str_(), float_())
-    assert Type.model_validate("int | (string | float)") == union(int_(), str_(), float_())
+    assert RenkonType.model_validate("float | int") == union(int_(), float_())
+    assert RenkonType.model_validate("int | string") == union(int_(), str_())
+    assert RenkonType.model_validate("int | string | float") == union(int_(), str_(), float_())
+    assert RenkonType.model_validate("int | (string | float)") == union(int_(), str_(), float_())
 
 
 def test_type_model_validate_any():
-    assert Type.model_validate("any") == any_()
-    assert Type.model_validate("⊤") == any_()  # noqa: RUF001
-    assert Type.model_validate("⊤ | ⊤") == union(any_())  # noqa: RUF001
+    assert RenkonType.model_validate("any") == any_()
+    assert RenkonType.model_validate("⊤") == any_()  # noqa: RUF001
+    assert RenkonType.model_validate("⊤ | ⊤") == union(any_())  # noqa: RUF001
 
 
 def test_type_model_validate_none():
-    assert Type.model_validate("none") == none()
-    assert Type.model_validate("⊥") == none()
-    assert Type.model_validate("⊥ | ⊥") == union()
+    assert RenkonType.model_validate("none") == none()
+    assert RenkonType.model_validate("⊥") == none()
+    assert RenkonType.model_validate("⊥ | ⊥") == union()
 
 
 def test_type_model_validate_specials():
-    assert Type.model_validate("equatable") == equatable()
-    assert Type.model_validate("comparable") == comparable()
-    assert Type.model_validate("numeric") == numeric()
+    assert RenkonType.model_validate("equatable") == equatable()
+    assert RenkonType.model_validate("comparable") == comparable()
+    assert RenkonType.model_validate("numeric") == numeric()
 
 
 def test_type_model_validate_json():
-    assert Type.model_validate_json(r'"bool"') == bool_()
-    assert Type.model_validate_json(r'"int"') == int_()
-    assert Type.model_validate_json(r'"float"') == float_()
-    assert Type.model_validate_json(r'"string"') == str_()
+    assert RenkonType.model_validate_json(r'"bool"') == bool_()
+    assert RenkonType.model_validate_json(r'"int"') == int_()
+    assert RenkonType.model_validate_json(r'"float"') == float_()
+    assert RenkonType.model_validate_json(r'"string"') == str_()
     # TODO: write types for validating JSON
 
 

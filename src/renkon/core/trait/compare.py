@@ -1,85 +1,68 @@
+# SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
 from __future__ import annotations
 
+import operator as op
 from abc import ABC
-from collections.abc import Callable, Sequence
-from typing import Any, ClassVar, Self
+from collections.abc import Callable
+from typing import Any, ClassVar, Literal, final
 
-import numpy as np
-import polars as pl
-from loguru import logger
-from polars import FLOAT_DTYPES, NUMERIC_DTYPES, DataFrame, Utf8
+from renkon.core.model import TraitKind, TraitPattern, TraitSpec
+from renkon.core.model.type import comparable, numeric
+from renkon.core.trait.base import Trait
 
-from renkon.core.model import ColumnTypeSet, Schema
-from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
+type _CmpOpStr = Literal["<", "≤", "=", "≥", ">"]
+type _CmpLookup[T] = dict[_CmpOpStr, Callable[[T, T], bool]]
 
-type SeriesComparator = Callable[[pl.Series, pl.Series, Schema], pl.Series]
+_cmp_ops: _CmpLookup[Any] = {
+    "<": op.lt,
+    "≤": op.le,
+    "=": op.eq,
+    "≥": op.ge,
+    ">": op.gt,
+}
 
 
-class Compare(BaseTrait[()], ABC):
-    compare: ClassVar[SeriesComparator]
+class _Compare(Trait, ABC):
+    op_str: ClassVar[str]
+    spec: ClassVar[TraitSpec]
 
-    class Meta(TraitMeta):
-        _types: ColumnTypeSet
-
-        def __init__(self, types: ColumnTypeSet):
-            self._types = types
-
-        @property
-        def arity(self) -> int:
-            return 2
-
-        @property
-        def commutors(self) -> Sequence[bool]:
-            return True, True
-
-        @property
-        def supported_dtypes(self) -> Sequence[ColumnTypeSet]:
-            return self._types, self._types
-
-    def __init_subclass__(cls, *, types: ColumnTypeSet, compare: SeriesComparator, **kwargs: Any):
-        cls.meta = Compare.Meta(types=types)
-        cls.compare = compare
+    # noinspection PyMethodOverriding
+    def __init_subclass__(cls, *, op_str: _CmpOpStr, **kwargs: Any):
         super().__init_subclass__(**kwargs)
+        cls.op_str = op_str
 
-    def __str__(self):
-        return f"{self.sketch.schema.columns[0]} == {self.sketch.schema.columns[1]}"
-
-    @classmethod
-    def infer(cls, sketch: TraitSketch[Self], data: DataFrame) -> Self:
-        lhs, rhs = sketch.schema.columns
-        mask = cls.compare(data[lhs], data[rhs], sketch.schema)
-        score = mask.sum() / len(mask)
-        return cls(sketch=sketch, params=(), mask=pl.Series(mask), score=score)
-
-
-def default_eq(lhs: pl.Series, rhs: pl.Series, _schema: Schema) -> pl.Series:
-    """Default equality comparator which uses the equality operator."""
-    return lhs == rhs
+        cls.spec = TraitSpec(
+            id=f"{cls.__qualname__}",
+            name=f"{cls.__name__}",
+            kind=TraitKind.LOGICAL,
+            pattern=TraitPattern("{A}" f" {op_str} " "{B}"),
+            commutors=[{"A", "B"}],
+            typevars={"T": numeric() if op_str == "=" else comparable()},
+            typings={"A": "T", "B": "T"},
+        )
 
 
-def numeric_eq(lhs: pl.Series, rhs: pl.Series, schema: Schema) -> pl.Series:
-    """
-    Equality comparator for numeric types which uses the equality operator,
-    but in the case of floats uses np.isclose.
-    """
-    if set(schema.dtypes) & FLOAT_DTYPES:
-        logger.warning(f"Sketch {schema} contains floats, using fuzzy check with rtol=1.e-5, atol=1.e-8.")
-        return pl.Series(np.isclose(lhs, rhs))
-
-    return default_eq(lhs, rhs, schema)
+@final
+class Equal(_Compare, op_str="="): ...
 
 
-class EqualNumeric(Compare, types=NUMERIC_DTYPES, compare=numeric_eq):
-    pass
+@final
+class Less(_Compare, op_str="<"): ...
 
 
-class EqualString(Compare, types=frozenset([Utf8]), compare=default_eq):
-    pass
+@final
+class LessOrEqual(_Compare, op_str="≤"): ...
 
 
-class EqualTemporal(
-    Compare,
-    types=frozenset([pl.Date, pl.Datetime, pl.Time, pl.Duration]),
-    compare=default_eq,
-):
+@final
+class Greater(_Compare, op_str=">"): ...
+
+
+@final
+class GreaterOrEqual(_Compare, op_str="≥"): ...
+
+
+if __name__ == "__main__":
     pass

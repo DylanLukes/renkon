@@ -5,7 +5,7 @@ import polars as pl
 from polars import NUMERIC_DTYPES, DataFrame
 
 from renkon.core.model import ColumnTypeSet
-from renkon.core.trait import BaseTrait, TraitMeta, TraitSketch
+from renkon.core.old_trait import BaseTrait, TraitMeta, TraitSketch
 
 
 class Integral(BaseTrait[()]):
