@@ -20,15 +20,21 @@ def test_type_model_dump():
     assert union().model_dump() == "⊥ | ⊥"
 
 
-def test_type_model_validate():
+def test_type_model_validate_primitive():
     assert Type.model_validate("int") == int_()
     assert Type.model_validate("float") == float_()
     assert Type.model_validate("string") == str_()
     assert Type.model_validate("bool") == bool_()
+
+
+def test_type_model_validate_union():
     assert Type.model_validate("float | int") == union(int_(), float_())
     assert Type.model_validate("int | string") == union(int_(), str_())
     assert Type.model_validate("int | string | float") == union(int_(), str_(), float_())
     assert Type.model_validate("int | (string | float)") == union(int_(), str_(), float_())
+
+
+def test_type_model_validate_top():
     assert Type.model_validate("⊤") == any_()
     assert Type.model_validate("⊥") == none()
     assert Type.model_validate("⊤ | ⊤") == union(any_())
@@ -40,35 +46,38 @@ def test_type_model_validate():
 
 def test_type_model_validate_json():
     assert Type.model_validate_json(r'"bool"') == bool_()
+    assert Type.model_validate_json(r'"int"') == int_()
+    assert Type.model_validate_json(r'"float"') == float_()
+    assert Type.model_validate_json(r'"string"') == str_()
 
 
-def test_primitive_equality_reflexive():
+def test_primitive_equals_symmetry():
     assert int_() == int_()
     assert float_() == float_()
     assert str_() == str_()
     assert bool_() == bool_()
 
 
-def test_primitive_serialization():
+def test_primitive_model_dump():
     assert int_().model_dump() == "int"
     assert float_().model_dump() == "float"
     assert str_().model_dump() == "string"
     assert bool_().model_dump() == "bool"
 
 
-def test_primitive_validation():
+def test_primitive_model_validate():
     assert int_().model_validate("int") == int_()
     assert float_().model_validate("float") == float_()
     assert str_().model_validate("string") == str_()
     assert bool_().model_validate("bool") == bool_()
 
 
-def test_union_symmetry():
+def test_union_equals_symmetry():
     assert int_() | float_() == float_() | int_()
     assert int_() | float_() | str_() == str_() | float_() | int_()
 
 
-def test_union_flattening():
+def test_union_flatten():
     assert (int_() | (float_() | str_())).flatten() == union(int_(), float_(), str_())
     assert ((int_() | float_()) | str_()).flatten() == union(int_(), float_(), str_())
     assert union().flatten() == union()
@@ -104,16 +113,18 @@ def test_union_normalize_none():
     assert union().normalize() == none()
     assert union(none()).normalize() == none()
 
+
 def test_union_normalize_any():
     assert union(any_()).normalize() == any_()
     assert union(int_(), any_()).normalize() == any_()
 
-def test_union_equivalence():
+
+def test_union_is_equivalent():
     assert union(int_(), int_()).is_equivalent(int_())
     assert union(int_(), float_()).is_equivalent(union(int_(), float_()))
 
 
-def test_union_intersection():
+def test_union_intersect():
     assert union(int_(), float_()).intersect(union(int_(), str_())) == union(int_())
     assert union(int_(), float_()).intersect(union(str_(), bool_())) == union()
 

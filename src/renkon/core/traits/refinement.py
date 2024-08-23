@@ -23,4 +23,3 @@ class _Refinement(Trait, ABC):
     def __init_subclass__(cls, *, refines: UnionType, **kwargs: None):
 
 
-class NonNull(_Refinement, refines=):
