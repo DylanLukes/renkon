@@ -19,7 +19,8 @@ __all__ = [
     "float_",
     "str_",
     "bool_",
-    "bottom",
+    "any_",
+    "none",
     "union",
     "equatable",
     "comparable",
@@ -36,6 +37,6 @@ from renkon.core.model.type.base import (
     UnionType,
     TypeStr,
     is_type_str,
-    int_, float_, str_, bool_, bottom, union, equatable, comparable, numeric,
+    int_, float_, str_, bool_, any_, none, union, equatable, comparable, numeric,
 )
 from renkon.core.model.type.convert import tyconv_pl_to_rk, tyconv_rk_to_pl

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from renkon.core.model.type import Type, int_, float_, str_, bool_, union, bottom, equatable, comparable, numeric
+from renkon.core.model.type import Type, any_, int_, float_, str_, bool_, union, none, equatable, comparable, numeric
 
 
 # TODO: use hypothesis for more robust property-based testing
@@ -15,7 +15,8 @@ def test_type_model_dump():
     assert bool_().model_dump() == "bool"
     assert union(int_(), float_()).model_dump() == "float | int"
     assert union(int_(), str_()).model_dump() == "int | string"
-    assert bottom().model_dump() == "⊥"
+    assert any_().model_dump() == "⊤"
+    assert none().model_dump() == "⊥"
     assert union().model_dump() == "⊥ | ⊥"
 
 
@@ -28,7 +29,9 @@ def test_type_model_validate():
     assert Type.model_validate("int | string") == union(int_(), str_())
     assert Type.model_validate("int | string | float") == union(int_(), str_(), float_())
     assert Type.model_validate("int | (string | float)") == union(int_(), str_(), float_())
-    assert Type.model_validate("⊥") == bottom()
+    assert Type.model_validate("⊤") == any_()
+    assert Type.model_validate("⊥") == none()
+    assert Type.model_validate("⊤ | ⊤") == union(any_())
     assert Type.model_validate("⊥ | ⊥") == union()
     assert Type.model_validate("equatable") == equatable()
     assert Type.model_validate("comparable") == comparable()
@@ -71,19 +74,39 @@ def test_union_flattening():
     assert union().flatten() == union()
 
 
-def test_union_canonicalization():
-    assert (int_() | (float_() | str_())).canonicalize() == union(int_(), float_(), str_())
-    assert ((int_() | float_()) | str_()).canonicalize() == union(int_(), float_(), str_())
+def test_union_canonicalize_empty():
     assert union().canonicalize() == union()
 
 
-def test_union_normalization():
+def test_union_canonicalize_order_nesting():
+    assert (int_() | (float_() | str_())).canonicalize() == union(int_(), float_(), str_())
+    assert ((int_() | float_()) | str_()).canonicalize() == union(int_(), float_(), str_())
+
+
+def test_union_canonicalize_none():
+    assert union(none()).canonicalize() == union()
+    assert union(int_(), none()).canonicalize() == union(int_())
+
+
+def test_union_canonicalize_any():
+    assert union(any_()).canonicalize() == union(any_())
+    assert union(int_(), any_()).canonicalize() == union(any_())
+
+
+def test_union_normalize_order_nesting():
     assert union(int_(), int_()).normalize() == int_()
     assert union(int_(), float_()).normalize() == union(int_(), float_())
     assert (int_() | (float_() | str_())).normalize() == union(int_(), float_(), str_())
     assert ((int_() | float_()) | str_()).normalize() == union(int_(), float_(), str_())
-    assert union().normalize() == bottom()
 
+
+def test_union_normalize_none():
+    assert union().normalize() == none()
+    assert union(none()).normalize() == none()
+
+def test_union_normalize_any():
+    assert union(any_()).normalize() == any_()
+    assert union(int_(), any_()).normalize() == any_()
 
 def test_union_equivalence():
     assert union(int_(), int_()).is_equivalent(int_())

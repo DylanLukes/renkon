@@ -33,8 +33,18 @@ def bool_() -> BoolType:
     return BoolType()
 
 
+def top() -> TopType:
+    return TopType()
+
+
+any_ = top
+
+
 def bottom() -> BottomType:
     return BottomType()
+
+
+none = bottom
 
 
 def union(*types: Type) -> UnionType:
@@ -175,6 +185,37 @@ class Type(BaseModel, ABC, Hashable):
         )
 
 
+class TopType(Type):
+    def is_equal(self, other: Type) -> bool:
+        return isinstance(other, TopType)
+
+    def is_equivalent(self, other: Type) -> bool:
+        return self.is_equal(other)
+
+    def is_subtype(self, other: Type) -> bool:
+        return False
+
+    def is_supertype(self, other: Type) -> bool:
+        return self.is_equal(other)
+
+    def canonicalize(self) -> Self:
+        return self
+
+    def normalize(self) -> Type:
+        return self
+
+    def dump_string(self) -> str:
+        return "⊤"
+
+    def __init__(self, /, **data: Any) -> None:
+        if not data:
+            return
+        super().__init__(**data)
+
+    def __hash__(self) -> int:
+        return hash(TopType)
+
+
 class BottomType(Type):
     def is_equal(self, other: Type) -> bool:
         return isinstance(other, BottomType)
@@ -284,9 +325,14 @@ class UnionType(Type):
         return len(self.ts) == 1
 
     @property
-    def has_nested_union(self) -> bool:
+    def contains_top(self) -> bool:
+        """True if the union contains (at any depth) a TopType."""
+        return bool(any(isinstance(t, TopType) for t in self.flatten().ts))
+
+    @property
+    def contains_union(self) -> bool:
         """True if the union contains an immediate child Union."""
-        return any(isinstance(t, UnionType) for t in self.ts)
+        return bool(any(isinstance(t, UnionType) for t in self.ts))
 
     @override
     def is_equal(self, other: Type) -> bool:
@@ -309,14 +355,22 @@ class UnionType(Type):
     @override
     def canonicalize(self) -> UnionType:
         flat = self.flatten()
-        if flat.is_trivial_union and isinstance(flat.single(), BottomType):
-            return UnionType(ts=frozenset())
-        return flat
+        ts = flat.ts
+
+        # If a top type is present, leave only it.
+        if self.contains_top:
+            return UnionType(ts=frozenset({TopType()}))
+
+        # Remove any bottom types.
+        ts = filter(lambda t: not isinstance(t, BottomType), ts)
+        return UnionType(ts=frozenset(ts))
 
     @override
     def normalize(self) -> Type:
         canon = self.canonicalize()
 
+        if canon.contains_top:
+            return TopType()
         if canon.is_empty_union:
             return BottomType()
         if canon.is_trivial_union:
@@ -338,7 +392,7 @@ class UnionType(Type):
 
     def flatten(self) -> UnionType:
         """Recursively flatten nested unions."""
-        if not self.has_nested_union:
+        if not self.contains_union:
             return self
         ts: set[Type] = set()
         for t in self.ts:
@@ -383,8 +437,11 @@ class TreeToTypeTransformer(Transformer[Type]):
     def bool(self, _) -> BoolType:
         return bool_()
 
+    def top(self, _) -> Type:
+        return any_()
+
     def bottom(self, _) -> BottomType:
-        return bottom()
+        return none()
 
     def union(self, types: list[Type]) -> UnionType:
         return union(*types)

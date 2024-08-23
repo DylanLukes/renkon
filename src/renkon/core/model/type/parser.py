@@ -5,9 +5,10 @@ grammar = r"""
 
     type: paren
         | union
-        | primitive
-        | special
+        | top
         | bottom
+        | special
+        | primitive
 
     paren: "(" type ")"
 
@@ -25,8 +26,13 @@ grammar = r"""
         | "comparable" -> comparable
         | "numeric" -> numeric
 
+    top: "⊤" -> top
+        | "top" -> top
+        | "any" -> top
+
     bottom: "⊥" -> bottom
         | "bottom" -> bottom
+        | "none" -> bottom
 
 
     %import common.WS
