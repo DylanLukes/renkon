@@ -62,7 +62,7 @@ def numeric_eq(lhs: pl.Series, rhs: pl.Series, schema: Schema) -> pl.Series:
     Equality comparator for numeric types which uses the equality operator,
     but in the case of floats uses np.isclose.
     """
-    if set(schema.dtypes) & FLOAT_DTYPES:
+    if set(schema.types) & FLOAT_DTYPES:
         logger.warning(f"Sketch {schema} contains floats, using fuzzy check with rtol=1.e-5, atol=1.e-8.")
         return pl.Series(np.isclose(lhs, rhs))
 

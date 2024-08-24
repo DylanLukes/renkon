@@ -6,7 +6,7 @@ from renkon.core.model.type import float_, numeric
 from renkon.core.trait.base import Trait
 
 
-class Linear(Trait):
+class Linear2(Trait):
     spec = TraitSpec(
         id=f"{__qualname__}",
         name=f"{__name__}",

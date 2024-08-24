@@ -9,7 +9,7 @@ def check_type_compatibility(meta: TraitMeta, schema: Schema) -> bool:
     if len(schema) != meta.arity:
         return False
 
-    for dtype, supported_dtypes in zip(schema.dtypes, meta.supported_dtypes, strict=True):
+    for dtype, supported_dtypes in zip(schema.types, meta.supported_dtypes, strict=True):
         if dtype not in supported_dtypes:
             return False
 

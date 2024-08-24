@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from renkon.core.model.bitseries import BitSeries
 from renkon.core.model.trait.sketch import TraitSketch
 
-type TraitResultScore = Annotated[float, Gt(0.0), Lt(1.0)]
+type TraitScore = Annotated[float, Gt(0.0), Lt(1.0)]
 
 
 class TraitResult(BaseModel):
@@ -19,7 +19,7 @@ class TraitResult(BaseModel):
 
     sketch: TraitSketch
 
-    score: TraitResultScore
+    score: TraitScore
     match_mask: BitSeries
 
     params: dict[str, tuple[str, Any]]
