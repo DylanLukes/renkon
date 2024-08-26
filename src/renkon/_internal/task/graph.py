@@ -5,9 +5,9 @@ from multiprocessing import Event, Pool
 
 from loguru import logger
 
+from renkon._internal.dag import DAG
 from renkon._internal.task.result import Err, Ok, Result, Unk
 from renkon._internal.task.task import Task
-from renkon._internal.dag import DAG
 
 type TaskSpec[T] = tuple[str, Callable[..., T], list[str]]
 

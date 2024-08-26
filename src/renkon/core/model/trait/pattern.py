@@ -56,7 +56,7 @@ class TraitPattern(str):
     None
     """
 
-    __slots__ = ("params", "metavars")
+    __slots__ = ("metavars", "params")
 
     def __new__(cls, f_str: str):
         obj = super().__new__(cls, f_str)
@@ -97,7 +97,7 @@ class TraitPattern(str):
         return cs.chain_schema(
             [
                 cs.str_schema(),
-                cs.no_info_plain_validator_function(lambda s: cls(s)),
+                cs.no_info_plain_validator_function(cls),
             ]
         )
 

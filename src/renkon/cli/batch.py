@@ -9,6 +9,7 @@ This is likely a temporary feature but is useful for testing and for small-scale
 """
 
 import logging
+import operator
 import os
 import sys
 from base64 import b64encode
@@ -157,7 +158,7 @@ def batch(
 
         scored_results = [(sketch, trait, score_fn(trait)) for sketch, trait in results.items() if trait is not None]
 
-        for sketch, trait, _ in sorted(scored_results, key=lambda x: x[2], reverse=True):
+        for sketch, trait, _ in sorted(scored_results, key=operator.itemgetter(2), reverse=True):
             _trait_type = sketch.trait_type
             schema = sketch.schema
 

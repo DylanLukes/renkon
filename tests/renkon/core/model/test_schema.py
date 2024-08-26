@@ -5,8 +5,8 @@ from renkon.core.model.schema import Schema
 
 
 def test_schema():
-    schema = Schema({})
-    print(schema)
+    Schema({})
+
 
 def test_schema_as_model_field():
     pass

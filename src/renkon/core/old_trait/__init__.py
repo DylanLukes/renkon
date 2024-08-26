@@ -1,16 +1,16 @@
 __all__ = [
     "AnyTrait",
     "AnyTraitSketch",
-    "Trait",
-    "TraitSketch",
-    "TraitMeta",
     "BaseTrait",
+    "EqualNumeric",
+    "EqualString",
     "Linear",
     "Linear2",
     "Linear3",
     "Linear4",
-    "EqualNumeric",
-    "EqualString",
+    "Trait",
+    "TraitMeta",
+    "TraitSketch",
 ]
 
 from renkon.core.old_trait.base import AnyTrait, AnyTraitSketch, BaseTrait, Trait, TraitMeta, TraitSketch

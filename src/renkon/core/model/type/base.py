@@ -258,7 +258,7 @@ class PrimitiveType(RenkonType):
 
     @override
     def is_equal(self, other: RenkonType) -> bool:
-        return type(other) == type(self)
+        return type(other) is type(self)
 
     @override
     def is_equivalent(self, other: RenkonType) -> bool:
@@ -287,6 +287,7 @@ class PrimitiveType(RenkonType):
             return
         super().__init__(**data)
 
+    # noinspection PyMethodOverriding
     def __init_subclass__(cls, name: str, **kwargs: Any):
         super().__init_subclass__(**kwargs)
         cls.name = name

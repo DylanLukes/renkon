@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
     # Domain Modeling
     "annotated-types", # Annotated type annotations
-    "pydantic", # Data modeling and validation
+    "pydantic>=2.9.0b1", # Data modeling and validation
     "pydantic-settings", # Settings management
 
     # todo: may be able to remove
@@ -55,6 +55,9 @@ dependencies = [
     "uvicorn", # ASGI server
     "jinja2", # Templating
     "fasthx", # FastAPI extension for HTMX
+
+    # Shenanigans
+    "z3-solver"
 ]
 
 # These dependencies are helpful to install if using an IDE
@@ -123,6 +126,7 @@ check = "pyright {args:src/renkon tests/}"
 
 [tool.hatch.envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
+dependencies = ["ruff==0.6.2"]
 
 [tool.hatch.envs.hatch-test]
 extra-dependencies = ["httpx"]
@@ -138,6 +142,9 @@ markers = [
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=typings --ignore=scripts"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
 
 # Pyright
 # -------
@@ -157,7 +164,7 @@ pythonVersion = "3.12"
 
 [tool.ruff]
 extend = "ruff_defaults.toml"
-exclude = [".hatch", "scripts", "typings"]
+exclude = [".hatch", "scripts", "typings", "notebooks"]
 
 # Coverage
 # --------

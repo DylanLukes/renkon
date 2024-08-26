@@ -4,7 +4,7 @@
 from typing import ClassVar, Protocol, final
 
 import renkon.core.model.type as rk_type
-from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec, Schema
+from renkon.core.model import Schema, TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
 from renkon.core.model.type import RenkonType
 
 
@@ -47,8 +47,8 @@ class Trait(Protocol):
     def typings(self) -> dict[str, RenkonType | str]:
         return self.spec.typings
 
-    def can_sketch(self, schema: Schema, bindings: dict[str, str]) -> bool:
-        return False  # todo: implement
+    def can_sketch(self, _schema: Schema, _bindings: dict[str, str]) -> bool:
+        return False  # TODO: implement
 
     def sketch(self, **kwargs: RenkonType) -> TraitSketch:
         return TraitSketch.model_validate(

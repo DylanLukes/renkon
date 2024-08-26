@@ -1,4 +1,3 @@
-import sys
 from collections.abc import Sequence
 from typing import Self
 
@@ -14,9 +13,6 @@ type ColumnNames = tuple[ColumnName, ...]
 type ColumnType = RenkonType
 type ColumnTypes = tuple[ColumnType, ...]
 type ColumnTypeSet = frozenset[ColumnType]
-
-if sys.version_info <= (3, 6):
-    raise RuntimeError("Dictionaries are not guaranteed to preserve order before Python 3.6.")
 
 
 class Schema(dict[str, RenkonType]):

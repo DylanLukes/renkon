@@ -64,7 +64,7 @@ def permutations_with_commutativity[
         comm_items = tuple(perm[i] for i in range(len(perm)) if comm[i])
 
         # A kind key to put commutative items in canonical order.
-        sort_key: Callable[[T], int] | None = (lambda x: items.index(x)) if preserve_order else None
+        sort_key: Callable[[T], int] | None = (items.index) if preserve_order else None
 
         # Sort the commutative items into canonical order.
         comm_items_sort = tuple(sorted(comm_items, key=sort_key))

@@ -109,7 +109,7 @@ class BaseTrait[*ParamTs](Trait[*ParamTs], ABC):
     _mask: Series
     _score: float
 
-    __slots__ = ("_sketch", "_params", "_mask", "_score")
+    __slots__ = ("_mask", "_params", "_score", "_sketch")
 
     def __init__(
         self,
