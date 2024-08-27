@@ -173,7 +173,12 @@ allow-dunder-method-names = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S", "PLC1901", "PLC2701", "PLR2004", "PLR6301", "TID252"]
+"tests/**/*.py" = [
+    "S101",               # use of asserts
+    "PLC1901", "PLC2701", # compare to empty string, import private name
+    "PLR2004", "PLR6301", # magic value comparison, no-self-use
+    "TID252"              # relative imports
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["renkon"]
