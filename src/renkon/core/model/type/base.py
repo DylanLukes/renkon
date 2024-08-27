@@ -438,7 +438,6 @@ class UnionType(RenkonType):
 # region
 
 
-
 # noinspection PyMethodMayBeStatic
 class TreeToTypeTransformer(Transformer[RenkonType]):
     @staticmethod
