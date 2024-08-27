@@ -5,6 +5,7 @@ import inspect
 import logging
 import os
 import sys
+from typing import override
 
 from loguru import logger
 
@@ -48,6 +49,7 @@ def configure_logging(
 
 
 class InterceptHandler(logging.Handler):
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         # Get corresponding Loguru level if it exists.
         level: str | int

@@ -187,63 +187,79 @@ class RenkonType(BaseModel, ABC, Hashable):
 
 
 class TopType(RenkonType):
-    def is_equal(self, other: RenkonType) -> bool:
-        return isinstance(other, TopType)
-
-    def is_equivalent(self, other: RenkonType) -> bool:
-        return self.is_equal(other)
-
-    def is_subtype(self, other: RenkonType) -> bool:  # noqa: ARG002
-        return False
-
-    def is_supertype(self, other: RenkonType) -> bool:
-        return self.is_equal(other)
-
-    def canonicalize(self) -> Self:
-        return self
-
-    def normalize(self) -> RenkonType:
-        return self
-
-    def dump_string(self) -> str:
-        return "any"
-
     def __init__(self, /, **data: Any) -> None:
         if not data:
             return
         super().__init__(**data)
 
+    @override
+    def is_equal(self, other: RenkonType) -> bool:
+        return isinstance(other, TopType)
+
+    @override
+    def is_equivalent(self, other: RenkonType) -> bool:
+        return self.is_equal(other)
+
+    @override
+    def is_subtype(self, other: RenkonType) -> bool:
+        return False
+
+    @override
+    def is_supertype(self, other: RenkonType) -> bool:
+        return self.is_equal(other)
+
+    @override
+    def canonicalize(self) -> Self:
+        return self
+
+    @override
+    def normalize(self) -> RenkonType:
+        return self
+
+    @override
+    def dump_string(self) -> str:
+        return "any"
+
+    @override
     def __hash__(self) -> int:
         return hash(TopType)
 
 
 class BottomType(RenkonType):
-    def is_equal(self, other: RenkonType) -> bool:
-        return isinstance(other, BottomType)
-
-    def is_equivalent(self, other: RenkonType) -> bool:
-        return self.is_equal(other)
-
-    def is_subtype(self, other: RenkonType) -> bool:  # noqa: ARG002
-        return True
-
-    def is_supertype(self, other: RenkonType) -> bool:
-        return self.is_equal(other)
-
-    def canonicalize(self) -> Self:
-        return self
-
-    def normalize(self) -> RenkonType:
-        return self
-
-    def dump_string(self) -> str:
-        return "none"
-
     def __init__(self, /, **data: Any) -> None:
         if not data:
             return
         super().__init__(**data)
 
+    @override
+    def is_equal(self, other: RenkonType) -> bool:
+        return isinstance(other, BottomType)
+
+    @override
+    def is_equivalent(self, other: RenkonType) -> bool:
+        return self.is_equal(other)
+
+    @override
+    def is_subtype(self, other: RenkonType) -> bool:
+        return True
+
+    @override
+    def is_supertype(self, other: RenkonType) -> bool:
+        return self.is_equal(other)
+
+    @override
+    def canonicalize(self) -> Self:
+        return self
+
+    @override
+    def normalize(self) -> RenkonType:
+        return self
+
+    @override
+    def dump_string(self) -> str:
+        return "none"
+
+    @override
     def __hash__(self) -> int:
         return hash(BottomType)
 
@@ -422,42 +438,55 @@ class UnionType(RenkonType):
 # region
 
 
+
 # noinspection PyMethodMayBeStatic
 class TreeToTypeTransformer(Transformer[RenkonType]):
-    def type(self, type_: list[RenkonType]):
+    @staticmethod
+    def type(type_: list[RenkonType]):
         return type_[0]
 
-    def int(self, _) -> IntType:
+    @staticmethod
+    def int(_) -> IntType:
         return int_()
 
-    def float(self, _) -> FloatType:
+    @staticmethod
+    def float(_) -> FloatType:
         return float_()
 
-    def string(self, _) -> StringType:
+    @staticmethod
+    def string(_) -> StringType:
         return str_()
 
-    def bool(self, _) -> BoolType:
+    @staticmethod
+    def bool(_) -> BoolType:
         return bool_()
 
-    def top(self, _) -> RenkonType:
+    @staticmethod
+    def top(_) -> RenkonType:
         return any_()
 
-    def bottom(self, _) -> BottomType:
+    @staticmethod
+    def bottom(_) -> BottomType:
         return none()
 
-    def union(self, types: list[RenkonType]) -> UnionType:
+    @staticmethod
+    def union(types: list[RenkonType]) -> UnionType:
         return union(*types)
 
-    def equatable(self, _) -> UnionType:
+    @staticmethod
+    def equatable(_) -> UnionType:
         return equatable()
 
-    def comparable(self, _) -> UnionType:
+    @staticmethod
+    def comparable(_) -> UnionType:
         return comparable()
 
-    def numeric(self, _) -> UnionType:
+    @staticmethod
+    def numeric(_) -> UnionType:
         return numeric()
 
-    def paren(self, type_: list[RenkonType]) -> RenkonType:
+    @staticmethod
+    def paren(type_: list[RenkonType]) -> RenkonType:
         return type_[0]
 
 

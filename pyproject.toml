@@ -34,7 +34,7 @@ dependencies = [
     "scikit-learn", # Machine learning
     "scipy", # Scientific computing
     "polars", # Data frames
-#    "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
+    #    "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
     "pandera", # Data validation
     "pyarrow", # Columnar data format
 
@@ -165,6 +165,18 @@ pythonVersion = "3.12"
 [tool.ruff]
 extend = "ruff_defaults.toml"
 exclude = [".hatch", "scripts", "typings", "notebooks"]
+
+[tool.ruff.lint.pylint]
+allow-dunder-method-names = [
+    "__get_pydantic_core_schema__",
+    "__get_pydantic_json_schema__"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S", "PLC1901", "PLC2701", "PLR2004", "PLR6301", "TID252"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["renkon"]
 
 # Coverage
 # --------
