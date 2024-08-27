@@ -29,15 +29,21 @@ def test_sketch_linear2():
 
 def test_sketch_incorrect_typing():
     schema = Schema({"x": rk.int_(), "name": rk.str_()})
-    with pytest.raises(TypeError, match="incompatible type"):
+    with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound"):
         TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X": "x", "Y": "name"})
 
 
-def test_sketch_typevars():
+def test_sketch_typevar_incorrect_typing():
+    schema = Schema({"a": rk.float_(), "b": rk.float_()})
+    with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound .* of typevar"):
+        TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "a", "B": "b"})
+
+
+def test_sketch_typevar_instantiation():
     for ty1, ty2 in it.product(rk.equatable().ts, repeat=2):
         schema = Schema({"a": ty1, "b": ty2})
         if ty1 == ty2:
             TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "a", "B": "b"})
         else:
-            with pytest.raises(TypeError):
+            with pytest.raises(TypeError, match=r"Could not instantiate .* given concrete .*"):
                 TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "a", "B": "b"})

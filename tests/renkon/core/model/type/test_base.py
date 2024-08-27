@@ -29,7 +29,7 @@ def test_type_model_dump_primitive():
 def test_type_model_dump_union():
     assert union(int_(), float_()).model_dump() == "float | int"
     assert union(int_(), str_()).model_dump() == "int | string"
-    assert union().model_dump() == "⊥ | ⊥"
+    assert union().model_dump() == "none | none"
 
 
 def test_type_model_dump_any():
@@ -157,6 +157,9 @@ def test_union_intersect():
     assert union(int_(), float_()).intersect(union(int_(), str_())) == union(int_())
     assert union(int_(), float_()).intersect(union(str_(), bool_())) == union()
 
+
+def test_union_intersect_any():
+    assert union(any_()).intersect(union(int_(), str_())) == union(int_(), str_())
 
 def test_union_dump_python():
     assert union(int_(), float_()).model_dump() == "float | int"

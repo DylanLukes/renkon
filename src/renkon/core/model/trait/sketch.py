@@ -5,6 +5,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+import renkon.core.model.type as rk
 from renkon.core.model.schema import Schema
 from renkon.core.model.trait.spec import TraitSpec
 from renkon.core.model.type import RenkonType
@@ -25,6 +26,9 @@ class TraitSketch(BaseModel):
 
     # Inverted lookup from column name to metavariable
     _bindings_inv: dict[str, str] = {}
+
+    # Instantiations of typevars to concrete types
+    _typevar_insts: dict[str, RenkonType] = {}
 
     @model_validator(mode="after")
     def _populate_bindings_inv(self) -> Self:
@@ -58,17 +62,58 @@ class TraitSketch(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _populate_typevar_insts(self) -> Self:
+        """(Try to) instantiate each type variable to a concrete type."""
+
+        col_to_type = self.schema
+        mvar_to_col = self.bindings
+        mvar_to_typing = self.spec.typings
+        mvar_to_type = {mvar: col_to_type[col] for (mvar, col) in mvar_to_col.items()}
+
+        typevars = self.spec.typevars
+        typevar_insts: dict[str, RenkonType] = self._typevar_insts
+
+        for typevar_name, typevar_bound in typevars.items():
+            # Filter mvar_to_type to only entries that reference this type variable.
+            typevar_mvar_to_type = {
+                mvar: mvar_to_type[mvar]
+                for (mvar, mvar_typing) in mvar_to_typing.items()
+                if isinstance(mvar_typing, str) and mvar_typing == typevar_name
+            }
+
+            # Check that all the bounds are satisfied.
+            for mvar, mvar_type in typevar_mvar_to_type.items():
+                if not mvar_type.is_subtype(typevar_bound):
+                    msg = (f"Column '{mvar_to_col[mvar]} has incompatible type '{mvar_type}', "
+                           f"does not satisfy bound '{typevar_bound}' of typevar '{typevar_name}'.")
+                    raise TypeError(msg)
+
+            # Attempt to find a least upper bound to instantiate the typevar to.
+            lub_ty = rk.union(rk.any_())
+            for mvar_type in typevar_mvar_to_type.values():
+                lub_ty &= rk.union(mvar_type)
+            lub_ty = lub_ty.normalize()
+
+            if lub_ty == rk.none():
+                msg = f"Could not instantiate typevar '{typevar_name}' given concrete typings {typevar_mvar_to_type}"
+                raise TypeError(msg)
+
+            typevar_insts[typevar_name] = lub_ty
+
+        self._typevar_insts = typevar_insts
+        return self
+
+    @model_validator(mode="after")
     def _check_bindings_typings(self) -> Self:
-        # Check that the types in the provided schema match typings.
         for col, ty in self.schema.items():
-            metavar = self._bindings_inv[col]
-            req_ty = self.spec.typings[metavar]
-            match req_ty:
-                case RenkonType():
-                    if not ty.is_subtype(req_ty):
-                        msg = f"Column '{col}' has incompatible type '{ty}', expected '{req_ty}'."
-                        raise TypeError(msg)
-                case str():
-                    raise NotImplementedError
+            mvar = self._bindings_inv[col]
+            req_ty = self.spec.typings[mvar]
+
+            if isinstance(req_ty, str):
+                req_ty = self._typevar_insts[req_ty]
+
+            if not ty.is_subtype(req_ty):
+                msg = f"Column '{col}' has incompatible type '{ty}', does not satisfy bound '{req_ty}'."
+                raise TypeError(msg)
 
         return self

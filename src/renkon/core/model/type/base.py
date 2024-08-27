@@ -164,8 +164,11 @@ class RenkonType(BaseModel, ABC, Hashable):
             return super().__eq__(other)
         return self.is_equal(other)
 
+    def __and__(self, other: RenkonType) -> RenkonType:
+        return union(self).intersect(union(other)).normalize()
+
     def __or__(self, other: RenkonType) -> UnionType:
-        return UnionType(ts=frozenset({self, other})).canonicalize()
+        return union(self, other).canonicalize()
 
     @abstractmethod
     def __hash__(self) -> int: ...
@@ -333,21 +336,21 @@ class BoolType(PrimitiveType, name="bool"): ...
 class UnionType(RenkonType):
     ts: frozenset[RenkonType]
 
-    @property
     def is_empty_union(self) -> bool:
         return not self.ts
 
-    @property
     def is_trivial_union(self) -> bool:
         """True if the union is of one unique type."""
         return len(self.ts) == 1
 
-    @property
     def contains_top(self) -> bool:
         """True if the union contains (at any depth) a TopType."""
         return bool(any(isinstance(t, TopType) for t in self.flatten().ts))
 
-    @property
+    def contains_bottom(self) -> bool:
+        """True if the union contains (at any depth) a BottomType."""
+        return bool(any(isinstance(t, BottomType) for t in self.flatten().ts))
+
     def contains_union(self) -> bool:
         """True if the union contains an immediate child Union."""
         return bool(any(isinstance(t, UnionType) for t in self.ts))
@@ -376,7 +379,7 @@ class UnionType(RenkonType):
         ts = flat.ts
 
         # If a top type is present, leave only it.
-        if self.contains_top:
+        if self.contains_top():
             return UnionType(ts=frozenset({TopType()}))
 
         # Remove any bottom types.
@@ -387,11 +390,11 @@ class UnionType(RenkonType):
     def normalize(self) -> RenkonType:
         canon = self.canonicalize()
 
-        if canon.contains_top:
+        if canon.contains_top():
             return TopType()
-        if canon.is_empty_union:
+        if canon.is_empty_union():
             return BottomType()
-        if canon.is_trivial_union:
+        if canon.is_trivial_union():
             return canon.single()
         return canon
 
@@ -399,18 +402,23 @@ class UnionType(RenkonType):
         return UnionType(ts=self.ts.union(other.ts)).canonicalize()
 
     def intersect(self, other: UnionType) -> UnionType:
+        if self.contains_top():
+            return other.canonicalize()
+        if other.contains_top():
+            return self.canonicalize()
+
         return UnionType(ts=self.ts.intersection(other.ts)).canonicalize()
 
     def dump_string(self) -> str:
-        if self.is_empty_union:
-            return "⊥ | ⊥"
-        if self.is_trivial_union:
-            return f"{self.single().dump_string()} | ⊥"
+        if self.is_empty_union():
+            return "none | none"
+        if self.is_trivial_union():
+            return f"{self.single().dump_string()} | none"
         return " | ".join(sorted(t.dump_string() for t in self.ts))
 
     def flatten(self) -> UnionType:
         """Recursively flatten nested unions."""
-        if not self.contains_union:
+        if not self.contains_union():
             return self
         ts: set[RenkonType] = set()
         for t in self.ts:
@@ -421,16 +429,13 @@ class UnionType(RenkonType):
         return UnionType.model_validate({"ts": ts})
 
     def single(self) -> RenkonType:
-        if not self.is_trivial_union:
+        if not self.is_trivial_union():
             msg = "Union is not trivial, a single type"
             raise ValueError(msg)
         return next(iter(self.ts))
 
     def __hash__(self) -> int:
         return hash((type(self), self.ts))
-
-    def __and__(self, other: UnionType) -> UnionType:
-        return UnionType(ts=self.ts.intersection(other.ts)).canonicalize()
 
 
 # endregion
