@@ -36,7 +36,7 @@ class Trait(Protocol):
         return set(self.pattern.params)
 
     @property
-    def commutors(self) -> list[set[str]]:
+    def commutors(self) -> set[str]:
         return self.spec.commutors
 
     @property
@@ -51,12 +51,10 @@ class Trait(Protocol):
     #     return False  # TODO: implement
 
     def sketch(self, **kwargs: RenkonType) -> TraitSketch:
-        return TraitSketch.model_validate(
-            {
-                "trait": self.spec,
-                "metavar_bindings": kwargs,
-            }
-        )
+        return TraitSketch.model_validate({
+            "trait": self.spec,
+            "metavar_bindings": kwargs,
+        })
 
 
 @final

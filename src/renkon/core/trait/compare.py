@@ -9,7 +9,7 @@ from collections.abc import Callable
 from typing import Any, ClassVar, Literal, final
 
 from renkon.core.model import TraitKind, TraitPattern, TraitSpec
-from renkon.core.model.type import comparable, numeric, equatable
+from renkon.core.model.type import comparable, equatable
 from renkon.core.trait.base import Trait
 
 type _CmpOpStr = Literal["<", "≤", "=", "≥", ">"]
@@ -38,7 +38,7 @@ class _Compare(Trait, ABC):
             name=f"{cls.__name__}",
             kind=TraitKind.LOGICAL,
             pattern=TraitPattern("{A}" f" {op_str} " "{B}"),
-            commutors=[{"A", "B"}],
+            commutors={"A", "B"},
             typevars={"T": equatable() if op_str == "=" else comparable()},
             typings={"A": "T", "B": "T"},
         )

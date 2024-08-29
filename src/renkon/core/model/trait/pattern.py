@@ -94,12 +94,10 @@ class TraitPattern(str):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: GetCoreSchemaHandler) -> cs.CoreSchema:
-        return cs.chain_schema(
-            [
-                cs.str_schema(),
-                cs.no_info_plain_validator_function(cls),
-            ]
-        )
+        return cs.chain_schema([
+            cs.str_schema(),
+            cs.no_info_plain_validator_function(cls),
+        ])
 
     def format(
         self,

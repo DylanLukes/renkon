@@ -40,26 +40,24 @@ class TraitSpec(BaseModel):
     ...     }
     ... }''')
 
-    >>> trait = TraitSpec.model_validate(
-    ...     {
-    ...         "id": "renkon.core.doctest.traits.Equal",
-    ...         "name": "Equal",
-    ...         "kind": "logical",
-    ...         "pattern": "{A} = {B}",
-    ...         "commutors": [{"A", "B"}],
-    ...         "typevars": {
-    ...             "T": "equatable",
-    ...         },
-    ...         "typings": {"A": "T", "B": "T"},
-    ...     }
-    ... )
+    >>> trait = TraitSpec.model_validate({
+    ...     "id": "renkon.core.doctest.traits.Equal",
+    ...     "name": "Equal",
+    ...     "kind": "logical",
+    ...     "pattern": "{A} = {B}",
+    ...     "commutors": {"A", "B"},
+    ...     "typevars": {
+    ...         "T": "equatable",
+    ...     },
+    ...     "typings": {"A": "T", "B": "T"},
+    ... })
     """
 
     id: TraitId
     name: str
     kind: TraitKind
     pattern: TraitPattern
-    commutors: list[set[str]] = []
+    commutors: set[str] = set()
     typevars: dict[str, RenkonType] = {}
     typings: dict[str, Annotated[RenkonType | str, Field(union_mode="left_to_right")]] = {}
 
@@ -76,11 +74,10 @@ class TraitSpec(BaseModel):
         """Only column metavariables can commute."""
 
         # Ensure all commutors are valid metavars
-        for commutor_set in self.commutors:
-            for commutor in commutor_set:
-                if commutor not in self.metavars:
-                    msg = f"Commutor '{commutor}' not found in metavars."
-                    raise ValueError(msg)
+        for commutor in self.commutors:
+            if commutor not in self.metavars:
+                msg = f"Commutor '{commutor}' not found in metavars."
+                raise ValueError(msg)
 
         return self
 

@@ -25,15 +25,13 @@ def test_trait_spec_validate_json():
 
 
 def test_trait_spec_validate_concrete_typings():
-    trait_spec = TraitSpec.model_validate(
-        {
-            "id": "renkon.test.Linear2",
-            "name": "Test Linear",
-            "kind": "model",
-            "pattern": "{Y} = {a}*{X} + {b}",
-            "typings": {"X": "numeric", "Y": "numeric", "a": "float", "b": "float"},
-        }
-    )
+    trait_spec = TraitSpec.model_validate({
+        "id": "renkon.test.Linear2",
+        "name": "Test Linear",
+        "kind": "model",
+        "pattern": "{Y} = {a}*{X} + {b}",
+        "typings": {"X": "numeric", "Y": "numeric", "a": "float", "b": "float"},
+    })
 
     assert trait_spec.metavars == {"Y", "X"}
     assert trait_spec.params == {"a", "b"}
@@ -44,21 +42,19 @@ def test_trait_spec_validate_concrete_typings():
 
 
 def test_trait_spec_validate_typevar_typings():
-    trait_spec = TraitSpec.model_validate(
-        {
-            "id": "renkon.test.Equal",
-            "name": "Test Equal",
-            "kind": "logical",
-            "pattern": "{X} = {Y}",
-            "typevars": {
-                "T": "equatable",
-            },
-            "typings": {
-                "X": "T",
-                "Y": "T",
-            },
-        }
-    )
+    trait_spec = TraitSpec.model_validate({
+        "id": "renkon.test.Equal",
+        "name": "Test Equal",
+        "kind": "logical",
+        "pattern": "{X} = {Y}",
+        "typevars": {
+            "T": "equatable",
+        },
+        "typings": {
+            "X": "T",
+            "Y": "T",
+        },
+    })
 
     assert trait_spec.metavars == {"X", "Y"}
     assert trait_spec.params == set()
@@ -68,18 +64,16 @@ def test_trait_spec_validate_typevar_typings():
 
 
 def test_trait_spec_validate_mixed_typings():
-    trait_spec = TraitSpec.model_validate(
-        {
-            "id": "renkon.test.ApproxEqual",
-            "name": "Test Approx Equal",
-            "kind": "logical",
-            "pattern": "{X} ≈ {Y} (+/- {eps})",
-            "typevars": {
-                "T": "numeric",
-            },
-            "typings": {"X": "T", "Y": "T", "eps": "float"},
-        }
-    )
+    trait_spec = TraitSpec.model_validate({
+        "id": "renkon.test.ApproxEqual",
+        "name": "Test Approx Equal",
+        "kind": "logical",
+        "pattern": "{X} ≈ {Y} (+/- {eps})",
+        "typevars": {
+            "T": "numeric",
+        },
+        "typings": {"X": "T", "Y": "T", "eps": "float"},
+    })
 
     assert trait_spec.metavars == {"X", "Y"}
     assert trait_spec.params == {"eps"}

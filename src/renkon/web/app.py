@@ -20,12 +20,10 @@ app.mount("/static", StaticFiles(packages=[("renkon.web", "static")]), name="sta
 
 templates = Jinja2Templates(
     directory="templates",
-    loader=jinja2.ChoiceLoader(
-        [
-            jinja2.FileSystemLoader("templates"),
-            jinja2.PackageLoader("renkon.web", "templates"),
-        ]
-    ),
+    loader=jinja2.ChoiceLoader([
+        jinja2.FileSystemLoader("templates"),
+        jinja2.PackageLoader("renkon.web", "templates"),
+    ]),
 )
 jinja = Jinja(templates)
 
@@ -44,9 +42,9 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             word = "foo"
             words.append(word)
-            text = templates.get_template("simple-list.html.jinja").render(
-                {"items": [{"text": word} for word in words]}
-            )  # type: ignore
+            text = templates.get_template("simple-list.html.jinja").render({
+                "items": [{"text": word} for word in words]
+            })  # type: ignore
             await websocket.send_text(text)
             await sleep(1)
     except WebSocketDisconnect as dc:

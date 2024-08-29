@@ -17,56 +17,9 @@ from pydantic_core import core_schema as cs
 from renkon.core.model.type.parser import parser
 
 
-def int_() -> IntType:
-    return IntType()
-
-
-def float_() -> FloatType:
-    return FloatType()
-
-
-def str_() -> StringType:
-    return StringType()
-
-
-def bool_() -> BoolType:
-    return BoolType()
-
-
-def top() -> TopType:
-    return TopType()
-
-
-any_ = top
-
-
-def bottom() -> BottomType:
-    return BottomType()
-
-
-none = bottom
-
-
-def union(*types: RenkonType) -> UnionType:
-    return UnionType(ts=frozenset(types)).canonicalize()
-
-
-def equatable() -> UnionType:
-    return union(int_(), str_(), bool_())
-
-
-def comparable() -> UnionType:
-    return union(int_(), float_(), str_())
-
-
-def numeric() -> UnionType:
-    return union(int_(), float_())
-
-
 def is_type_str(s: str) -> TypeGuard[TypeStr]:
     try:
         RenkonType.parse_string(s)
-        return True
     except LarkError:
         return False
     else:
@@ -144,14 +97,26 @@ class RenkonType(BaseModel, ABC, Hashable):
             msg = f"Error parsing type string: {s!r}"
             raise ValueError(msg) from e
 
+    @classmethod
+    def numeric_types(cls) -> frozenset[RenkonType]:
+        return frozenset({IntType(), FloatType()})
+
+    @classmethod
+    def equatable_types(cls) -> frozenset[RenkonType]:
+        return frozenset({IntType(), StringType(), BoolType()})
+
+    @classmethod
+    def comparable_types(cls) -> frozenset[RenkonType]:
+        return frozenset({IntType(), FloatType(), StringType()})
+
     def is_numeric(self) -> bool:
-        return self.is_subtype(numeric())
+        return self.is_subtype(UnionType(ts=self.numeric_types()))
 
     def is_equatable(self) -> bool:
-        return self.is_subtype(equatable())
+        return self.is_subtype(UnionType(ts=self.equatable_types()))
 
     def is_comparable(self) -> bool:
-        return self.is_subtype(comparable())
+        return self.is_subtype(UnionType(ts=self.comparable_types()))
 
     def __str__(self) -> str:
         return self.dump_string()
@@ -165,10 +130,10 @@ class RenkonType(BaseModel, ABC, Hashable):
         return self.is_equal(other)
 
     def __and__(self, other: RenkonType) -> RenkonType:
-        return union(self).intersect(union(other)).normalize()
+        return UnionType(self).intersect(UnionType(other)).normalize()
 
     def __or__(self, other: RenkonType) -> UnionType:
-        return union(self, other).canonicalize()
+        return UnionType(self).union(UnionType(other)).canonicalize()
 
     @abstractmethod
     def __hash__(self) -> int: ...
@@ -336,6 +301,18 @@ class BoolType(PrimitiveType, name="bool"): ...
 class UnionType(RenkonType):
     ts: frozenset[RenkonType]
 
+    def __init__(self, /, *ts: RenkonType, **data: Any) -> None:
+        if ts and data:
+            msg = "UnionType may be initialized either from a list of types or from keyword arguments, not both."
+            raise ValueError(msg)
+
+        if not ts and not data:
+            data["ts"] = frozenset()
+        elif ts:
+            data["ts"] = frozenset(ts)
+
+        super().__init__(**data)
+
     def is_empty_union(self) -> bool:
         return not self.ts
 
@@ -399,7 +376,7 @@ class UnionType(RenkonType):
         return canon
 
     def union(self, other: UnionType) -> UnionType:
-        return UnionType(ts=self.ts.union(other.ts)).canonicalize()
+        return UnionType(ts=self.ts.union(other.canonicalize().ts)).canonicalize()
 
     def intersect(self, other: UnionType) -> UnionType:
         if self.contains_top():
@@ -407,7 +384,7 @@ class UnionType(RenkonType):
         if other.contains_top():
             return self.canonicalize()
 
-        return UnionType(ts=self.ts.intersection(other.ts)).canonicalize()
+        return UnionType(ts=self.ts.intersection(other.canonicalize().ts)).canonicalize()
 
     def dump_string(self) -> str:
         if self.is_empty_union():
@@ -451,43 +428,43 @@ class TreeToTypeTransformer(Transformer[RenkonType]):
 
     @staticmethod
     def int(_) -> IntType:
-        return int_()
+        return IntType()
 
     @staticmethod
     def float(_) -> FloatType:
-        return float_()
+        return FloatType()
 
     @staticmethod
     def string(_) -> StringType:
-        return str_()
+        return StringType()
 
     @staticmethod
     def bool(_) -> BoolType:
-        return bool_()
+        return BoolType()
 
     @staticmethod
     def top(_) -> RenkonType:
-        return any_()
+        return TopType()
 
     @staticmethod
     def bottom(_) -> BottomType:
-        return none()
+        return BottomType()
 
     @staticmethod
     def union(types: list[RenkonType]) -> UnionType:
-        return union(*types)
-
-    @staticmethod
-    def equatable(_) -> UnionType:
-        return equatable()
-
-    @staticmethod
-    def comparable(_) -> UnionType:
-        return comparable()
+        return UnionType(ts=frozenset(types)).canonicalize()
 
     @staticmethod
     def numeric(_) -> UnionType:
-        return numeric()
+        return UnionType(ts=frozenset(RenkonType.numeric_types()))
+
+    @staticmethod
+    def equatable(_) -> UnionType:
+        return UnionType(ts=frozenset(RenkonType.equatable_types()))
+
+    @staticmethod
+    def comparable(_) -> UnionType:
+        return UnionType(ts=frozenset(RenkonType.comparable_types()))
 
     @staticmethod
     def paren(type_: list[RenkonType]) -> RenkonType:

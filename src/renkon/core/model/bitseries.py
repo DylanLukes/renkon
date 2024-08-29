@@ -71,16 +71,15 @@ class _BitSeriesPydanticAnnotation:
     def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: GetCoreSchemaHandler) -> CoreSchema:
         typed_dict_schema = TypeAdapter(_BitSeriesFields).core_schema
 
-        json_schema = cs.chain_schema(
-            [typed_dict_schema, cs.no_info_plain_validator_function(_validate_bitseries_from_fields)]
-        )
+        json_schema = cs.chain_schema([
+            typed_dict_schema,
+            cs.no_info_plain_validator_function(_validate_bitseries_from_fields),
+        ])
 
-        py_schema = cs.chain_schema(
-            [
-                cs.is_instance_schema(Series),
-                cs.no_info_plain_validator_function(_validate_bitseries_from_series),
-            ]
-        )
+        py_schema = cs.chain_schema([
+            cs.is_instance_schema(Series),
+            cs.no_info_plain_validator_function(_validate_bitseries_from_series),
+        ])
 
         serializer = cs.plain_serializer_function_ser_schema(_serialize_bitseries_to_fields)
 

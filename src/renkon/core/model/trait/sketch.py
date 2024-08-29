@@ -84,8 +84,10 @@ class TraitSketch(BaseModel):
             # Check that all the bounds are satisfied.
             for mvar, mvar_type in typevar_mvar_to_type.items():
                 if not mvar_type.is_subtype(typevar_bound):
-                    msg = (f"Column '{mvar_to_col[mvar]} has incompatible type '{mvar_type}', "
-                           f"does not satisfy bound '{typevar_bound}' of typevar '{typevar_name}'.")
+                    msg = (
+                        f"Column '{mvar_to_col[mvar]} has incompatible type '{mvar_type}', "
+                        f"does not satisfy bound '{typevar_bound}' of typevar '{typevar_name}'."
+                    )
                     raise TypeError(msg)
 
             # Attempt to find a least upper bound to instantiate the typevar to.

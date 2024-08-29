@@ -38,12 +38,10 @@ def test_add_task() -> None:
 def test_add_tasks() -> None:
     g: TaskGraph[str] = TaskGraph()
 
-    g.add_tasks(
-        [
-            ("a", mk_foo, []),
-            ("b", mk_bar, []),
-        ]
-    )
+    g.add_tasks([
+        ("a", mk_foo, []),
+        ("b", mk_bar, []),
+    ])
 
 
 def test_no_duplicate_task_names() -> None:
@@ -58,13 +56,11 @@ def test_no_duplicate_task_names() -> None:
 def test_run_line() -> None:
     g: TaskGraph[str] = TaskGraph()
 
-    g.add_tasks(
-        [
-            ("a", mk_foo, []),
-            ("b", mk_bar, ["a"]),
-            ("c", mk_baz, ["b"]),
-        ]
-    )
+    g.add_tasks([
+        ("a", mk_foo, []),
+        ("b", mk_bar, ["a"]),
+        ("c", mk_baz, ["b"]),
+    ])
 
     g.run()
 
@@ -77,14 +73,12 @@ def test_run_line() -> None:
 def test_run_diamond() -> None:
     g: TaskGraph[str] = TaskGraph()
 
-    g.add_tasks(
-        [
-            ("a", mk_foo, []),
-            ("b", mk_bar, ["a"]),
-            ("c", mk_baz, ["a"]),
-            ("d", mk_qux, ["b", "c"]),
-        ]
-    )
+    g.add_tasks([
+        ("a", mk_foo, []),
+        ("b", mk_bar, ["a"]),
+        ("c", mk_baz, ["a"]),
+        ("d", mk_qux, ["b", "c"]),
+    ])
 
     g.run()
 
@@ -98,13 +92,11 @@ def test_run_diamond() -> None:
 def test_run_prune_line() -> None:
     g: TaskGraph[str] = TaskGraph()
 
-    g.add_tasks(
-        [
-            ("a", mk_foo, []),
-            ("b", fail, ["a"]),
-            ("c", mk_bar, ["b"]),
-        ]
-    )
+    g.add_tasks([
+        ("a", mk_foo, []),
+        ("b", fail, ["a"]),
+        ("c", mk_bar, ["b"]),
+    ])
 
     g.run()
 
@@ -117,17 +109,15 @@ def test_run_prune_line() -> None:
 def test_run_prune_complex() -> None:
     g: TaskGraph[str] = TaskGraph()
 
-    g.add_tasks(
-        [
-            ("a", mk_foo, []),
-            ("b", mk_bar, ["a"]),
-            ("c", mk_foo, []),
-            ("d", mk_foo, ["b", "c"]),
-            ("e", fail, ["d"]),
-            ("f", mk_foo, ["e"]),
-            ("g", mk_foo, ["a", "f"]),
-        ]
-    )
+    g.add_tasks([
+        ("a", mk_foo, []),
+        ("b", mk_bar, ["a"]),
+        ("c", mk_foo, []),
+        ("d", mk_foo, ["b", "c"]),
+        ("e", fail, ["d"]),
+        ("f", mk_foo, ["e"]),
+        ("g", mk_foo, ["a", "f"]),
+    ])
 
     g.run()
 

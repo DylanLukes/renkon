@@ -161,6 +161,7 @@ def test_union_intersect():
 def test_union_intersect_any():
     assert union(any_()).intersect(union(int_(), str_())) == union(int_(), str_())
 
+
 def test_union_dump_python():
     assert union(int_(), float_()).model_dump() == "float | int"
 

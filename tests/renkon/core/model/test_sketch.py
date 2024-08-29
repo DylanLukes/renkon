@@ -24,13 +24,13 @@ def test_sketch_bindings_extra():
 
 def test_sketch_linear2():
     schema = Schema({"time": rk.float_(), "open tabs": rk.float_()})
-    TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X": "time", "Y": "open tabs"})
+    TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X_1": "time", "Y": "open tabs"})
 
 
 def test_sketch_incorrect_typing():
     schema = Schema({"x": rk.int_(), "name": rk.str_()})
     with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound"):
-        TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X": "x", "Y": "name"})
+        TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X_1": "x", "Y": "name"})
 
 
 def test_sketch_typevar_incorrect_typing():

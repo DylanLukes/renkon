@@ -4,13 +4,11 @@ from polars import DataFrame
 from renkon.core.repo import Registry
 from renkon.core.repo.repository import Repository
 
-DATA = DataFrame(
-    {
-        "a": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "b": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
-        "c": [True, False, True, False, True, False, True, False, True, False],
-    }
-)
+DATA = DataFrame({
+    "a": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "b": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+    "c": [True, False, True, False, True, False, True, False, True, False],
+})
 
 
 def test_round_trip(repo: Repository) -> None:

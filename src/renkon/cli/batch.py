@@ -61,11 +61,9 @@ def setup_simple_logging() -> None:
                     "sink": RichHandler(
                         console=Console(
                             file=sys.stdout,
-                            theme=Theme(
-                                {
-                                    "logging.level.trace": "bold green",
-                                }
-                            ),
+                            theme=Theme({
+                                "logging.level.trace": "bold green",
+                            }),
                         ),
                         markup=False,
                         show_path=True,
@@ -212,15 +210,13 @@ def batch(
             outlier_mask = trait.mask.not_()
             outlier_pct = outlier_mask.sum() / outlier_mask.len() if trait else None
 
-            rows.append(
-                {
-                    "sketch": repr(sketch),
-                    "trait": str(trait),
-                    "score": trait.score,
-                    "outliers_b64": b64encode(np.packbits(outlier_mask)).decode("ascii") if trait else None,
-                    "outliers_pct": outlier_pct,
-                }
-            )
+            rows.append({
+                "sketch": repr(sketch),
+                "trait": str(trait),
+                "score": trait.score,
+                "outliers_b64": b64encode(np.packbits(outlier_mask)).decode("ascii") if trait else None,
+                "outliers_pct": outlier_pct,
+            })
 
         # See the comment on sys.stdout's typeshed stubs for why this is valid (unless overriden).
         # if not isinstance(sys.stdout, TextIOWrapper):

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path, PurePath
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import aiosql
-from aiosql.queries import Queries
 from pydantic import BaseModel
 
 from renkon.core.repo.registry.base import FileType, Registry
@@ -47,7 +46,7 @@ class TableRow(BaseModel):
         )
 
 
-class TypedQueries(Queries):
+class TypedQueries(Protocol):
     """
     Hack to type the queries used by the registry. This allows us to define a typed interface
     for the queries supported by the registry, and also to support mocking use of the queries in
@@ -89,7 +88,6 @@ queries: TypedQueries = cast(
     TypedQueries,
     aiosql.from_path(  # type: ignore
         sql_path=Path(__file__).with_name("queries.sql"),
-        queries_cls=cast(type[Queries], TypedQueries),
         driver_adapter="sqlite3",
     ),
 )

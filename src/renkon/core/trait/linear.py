@@ -11,6 +11,16 @@ class Linear2(Trait):
         id=f"{__qualname__}",
         name=f"{__name__}",
         kind=TraitKind.MODEL,
-        pattern=TraitPattern("{Y} = {a}*{X} + {b}"),
-        typings={"X": numeric(), "Y": numeric(), "a": float_(), "b": float_()},
+        pattern=TraitPattern("{Y} = {b_1}*{X_1} + {b_0}"),
+        typings={"X_1": numeric(), "Y": numeric(), **{b: float_() for b in ("b_0", "b_1")}},
+    )
+
+
+class Linear3(Trait):
+    spec = TraitSpec(
+        id=f"{__qualname__}",
+        name=f"{__name__}",
+        kind=TraitKind.MODEL,
+        pattern=TraitPattern("{Y} = {b_2}*{X_2} + {b_1}*{X_1} + {b_0}"),
+        typings={"X_2": numeric(), "X_1": numeric(), "Y": numeric(), **{b: float_() for b in ("b_0", "b_1", "b_2")}},
     )
