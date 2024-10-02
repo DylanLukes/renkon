@@ -1,8 +1,12 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
+import itertools as it
+
+import pytest
 
 from renkon.core.model.type import (
+    PrimitiveType,
     RenkonType,
     any_,
     bool_,
@@ -17,6 +21,11 @@ from renkon.core.model.type import (
 )
 
 # TODO: use hypothesis for more robust property-based testing
+
+
+@pytest.fixture
+def primitive_types() -> set[PrimitiveType]:
+    return {int_(), float_(), str_(), bool_()}
 
 
 def test_type_model_dump_primitive():
@@ -165,12 +174,16 @@ def test_union_intersect_any():
 def test_union_dump_python():
     assert union(int_(), float_()).model_dump() == "float | int"
 
+def test_subtype_primitive_reflexive(primitive_types: set[PrimitiveType]):
+    for (ty1, ty2) in it.product(primitive_types, repeat=2):
+        if ty1 == ty2:
+            assert ty1.is_subtype(ty2)
+            assert ty2.is_subtype(ty1)
 
-def test_subtype():
-    # Primitive/ Primitive
-    assert int_().is_subtype(int_())
-    assert not int_().is_subtype(float_())
+def test_subtype_int_float():
+    assert int_().is_subtype(float_())
 
+def test_subtype_union():
     # Primitive / Union
     assert int_().is_subtype(union(int_(), float_()))
     assert not int_().is_subtype(union(float_(), str_()))
@@ -185,7 +198,7 @@ def test_subtype():
     assert not union(int_(), bool_()).is_subtype(union(int_(), union(str_(), float_())))
 
 
-def test_numeric():
+def test_is_numeric():
     assert int_().is_numeric()
     assert float_().is_numeric()
     assert not str_().is_numeric()
@@ -196,7 +209,7 @@ def test_numeric():
     assert not union(str_(), union(int_(), float_())).is_numeric()
 
 
-def test_equatable():
+def test_is_equatable():
     assert int_().is_equatable()
     assert str_().is_equatable()
     assert bool_().is_equatable()
@@ -208,7 +221,7 @@ def test_equatable():
     assert not union(str_(), union(int_(), float_())).is_equatable()
 
 
-def test_comparable():
+def test_is_comparable():
     assert int_().is_comparable()
     assert float_().is_comparable()
     assert str_().is_comparable()

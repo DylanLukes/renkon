@@ -13,16 +13,17 @@ from renkon.core.model.type import RenkonType
 
 class TraitSketch(BaseModel):
     """
-    Represents a sketch of a trait with holes filled.
+    Sketches out a unit of inference work
 
-    :param spec: the trait being sketched.
-    :param schema: schema (names -> types) of the data
-    :param bindings: bindings (metavariables -> actual column names)
+    :ivar spec: the trait being sketched.
+    :ivar bindings: bindings (metavariables -> input column names)
+    :ivar schema: schema (input column names -> types)
     """
 
     spec: TraitSpec
-    schema: Schema  # pyright: ignore [reportIncompatibleMethodOverride]
     bindings: dict[str, str]
+    schema: Schema  # pyright: ignore [reportIncompatibleMethodOverride]
+
 
     # Inverted lookup from column name to metavariable
     _bindings_inv: dict[str, str] = {}

@@ -109,6 +109,18 @@ class RenkonType(BaseModel, ABC, Hashable):
     def comparable_types(cls) -> frozenset[RenkonType]:
         return frozenset({IntType(), FloatType(), StringType()})
 
+    def is_int(self) -> bool:
+        return type(self) is IntType
+
+    def is_float(self) -> bool:
+        return type(self) is FloatType
+
+    def is_str(self) -> bool:
+        return type(self) is StringType
+
+    def is_bool(self) -> bool:
+        return type(self) is BoolType
+
     def is_numeric(self) -> bool:
         return self.is_subtype(UnionType(ts=self.numeric_types()))
 
@@ -281,7 +293,9 @@ class PrimitiveType(RenkonType):
         return hash(self.name)
 
 
-class IntType(PrimitiveType, name="int"): ...
+class IntType(PrimitiveType, name="int"):
+    def is_subtype(self, other: RenkonType) -> bool:
+        return type(other) is FloatType or super().is_subtype(other)
 
 
 class FloatType(PrimitiveType, name="float"): ...

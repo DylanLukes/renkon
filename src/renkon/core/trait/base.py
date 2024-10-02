@@ -1,15 +1,68 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from typing import ClassVar, Protocol, final
+from __future__ import annotations
 
-import renkon.core.model.type as rk_type
-from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSketch, TraitSpec
-from renkon.core.model.type import RenkonType
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
+
+from pydantic import TypeAdapter
+
+from renkon.core.model import InstanceTraitSpec
+
+if TYPE_CHECKING:
+    from polars import DataFrame
+
+    from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSpec
+    from renkon.core.model.type import RenkonType
+
+
+@dataclass
+class TraitResult:
+    trait: Trait
+    params: dict[str, Any]
 
 
 class Trait(Protocol):
-    spec: ClassVar[TraitSpec]
+    """
+    Represents a single potential trait of a dataset pending inference.
+    """
+
+    @classmethod
+    @abstractmethod
+    def instantiate(cls, typevar_bindings: dict[str, RenkonType]) -> Self:
+        """
+        Instantiate this Trait with the given types. The resulting trait
+        should always be such that :py:func:`is_monomorphized` is true.
+
+        :param typevar_bindings: A mapping from trait typevars to Renkon types.
+        :returns: a (monormophized) Trait instance.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def infer(self, data: DataFrame, column_bindings: dict[str, str]) -> TraitResult:
+        """
+        :param data: The data to infer from.
+        :param bindings: A map from trait metavariables to data column names.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def spec(self) -> TraitSpec:
+        """
+        Every Trait *instance* has a specification that describes the Trait
+        almost fully, short of the inference behavior.
+
+        In most cases, this is derived from the `base_spec` class variable of
+        :class:`BaseSpecTrait`. However, Traits instances may also be created
+        directly or by other means, so long as they implement this protocol.
+        """
+        raise NotImplementedError
+
+    # Convenience Delegate Queries
 
     @property
     def id(self) -> TraitId:
@@ -17,7 +70,7 @@ class Trait(Protocol):
 
     @property
     def name(self) -> str:
-        return self.spec.name
+        return self.spec.label
 
     @property
     def kind(self) -> TraitKind:
@@ -47,27 +100,59 @@ class Trait(Protocol):
     def typings(self) -> dict[str, RenkonType | str]:
         return self.spec.typings
 
-    # def can_sketch(self, _schema: Schema, _bindings: dict[str, str]) -> bool:
-    #     return False  # TODO: implement
-
-    def sketch(self, **kwargs: RenkonType) -> TraitSketch:
-        return TraitSketch.model_validate({
-            "trait": self.spec,
-            "metavar_bindings": kwargs,
-        })
+    # Validation Queries
+    def is_monomorphized(self) -> bool:
+        """:returns: True if this Trait has no polymorphic type variables."""
+        return not self.spec.typevars
 
 
-@final
-class Linear2(Trait):
-    spec = TraitSpec(
-        id="Linear2",
-        name="Linear Regression",
-        kind=TraitKind.MODEL,
-        pattern=TraitPattern("{Y} = {a}*{X} + {b}"),
-        typings={
-            "X": rk_type.numeric(),
-            "Y": rk_type.numeric(),
-            "a": rk_type.float_(),
-            "b": rk_type.float_(),
-        },
-    )
+class BaseSpecTrait(Trait, ABC):
+    """
+    Trait defined in terms of a base TraitSpec, which is refined by
+    some process during instantiation.
+    """
+
+    base_spec: ClassVar[TraitSpec]
+    _inst_spec: InstanceTraitSpec
+
+    def __init__(self, spec: TraitSpec):
+        """
+        In general, __init__ should not be called directly. It enforces several
+        properties of the specification provided to it.
+        """
+        self._inst_spec = TypeAdapter(InstanceTraitSpec).validate_python(spec)
+
+    @classmethod
+    def instantiate(cls, typevar_bindings: dict[str, RenkonType]) -> Self:
+        inst_typevars: dict[str, RenkonType] = dict(cls.base_spec.typevars)
+        inst_typings: dict[str, RenkonType | str] = dict(cls.base_spec.typings)
+
+        # Substitute the type bindings.
+        for mvar, ty in inst_typings.items():
+            match ty:
+                case RenkonType():
+                    continue
+                case str():
+                    inst_typings[mvar] = typevar_bindings[ty]
+
+        # Remove the substituted type variables.
+        for tv in typevar_bindings:
+            if tv in typevar_bindings:
+                inst_typevars.pop(tv)
+
+        inst_typings = {
+            k: ty if isinstance(ty, RenkonType) else typevar_bindings[k] for k, ty in cls.base_spec.typings.items()
+        }
+
+        inst_spec = cls.base_spec.model_copy(
+            update={
+                "typevars": inst_typevars,
+                "typings": inst_typings,
+            }
+        )
+
+        return cls(inst_spec)
+
+    @property
+    def spec(self) -> TraitSpec:
+        return self._inst_spec

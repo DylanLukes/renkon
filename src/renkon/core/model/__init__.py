@@ -4,6 +4,7 @@
 
 __all__ = [
     "BitSeries",
+    "InstanceTraitSpec",
     "RenkonType",
     "Schema",
     "TraitId",
@@ -12,10 +13,19 @@ __all__ = [
     "TraitResult",
     "TraitScore",
     "TraitSketch",
-    "TraitSpec",
+    "TraitSpec"
 ]
 
 from renkon.core.model.bitseries import BitSeries
 from renkon.core.model.schema import Schema
-from renkon.core.model.trait import TraitId, TraitKind, TraitPattern, TraitResult, TraitScore, TraitSketch, TraitSpec
+from renkon.core.model.trait import (
+    InstanceTraitSpec,
+    TraitId,
+    TraitKind,
+    TraitPattern,
+    TraitResult,
+    TraitScore,
+    TraitSketch,
+    TraitSpec,
+)
 from renkon.core.model.type import RenkonType

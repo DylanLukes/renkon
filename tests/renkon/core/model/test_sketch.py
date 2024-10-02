@@ -13,37 +13,37 @@ from renkon.core.trait import Equal, Linear2
 def test_sketch_bindings_missing():
     schema = Schema({"x": rk.int_(), "y": rk.int_()})
     with pytest.raises(ValueError, match="missing in bindings"):
-        TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "x"})
+        TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "x"})
 
 
 def test_sketch_bindings_extra():
     schema = Schema({"x": rk.int_(), "y": rk.int_()})
     with pytest.raises(ValueError, match="do not occur in pattern"):
-        TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "x", "B": "y", "C": "z"})
+        TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "x", "B": "y", "C": "z"})
 
 
 def test_sketch_linear2():
     schema = Schema({"time": rk.float_(), "open tabs": rk.float_()})
-    TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X_1": "time", "Y": "open tabs"})
+    TraitSketch(spec=Linear2.base_spec, schema=schema, bindings={"X_1": "time", "Y": "open tabs"})
 
 
 def test_sketch_incorrect_typing():
     schema = Schema({"x": rk.int_(), "name": rk.str_()})
     with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound"):
-        TraitSketch(spec=Linear2.spec, schema=schema, bindings={"X_1": "x", "Y": "name"})
+        TraitSketch(spec=Linear2.base_spec, schema=schema, bindings={"X_1": "x", "Y": "name"})
 
 
 def test_sketch_typevar_incorrect_typing():
     schema = Schema({"a": rk.float_(), "b": rk.float_()})
     with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound .* of typevar"):
-        TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "a", "B": "b"})
+        TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})
 
 
 def test_sketch_typevar_instantiation():
     for ty1, ty2 in it.product(rk.equatable().ts, repeat=2):
         schema = Schema({"a": ty1, "b": ty2})
         if ty1 == ty2:
-            TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "a", "B": "b"})
+            TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})
         else:
             with pytest.raises(TypeError, match=r"Could not instantiate .* given concrete .*"):
-                TraitSketch(spec=Equal.spec, schema=schema, bindings={"A": "a", "B": "b"})
+                TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})

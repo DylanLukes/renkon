@@ -21,35 +21,37 @@ classifiers = [
 ]
 dependencies = [
     # Domain Modeling
+    # ------------------------------
     "annotated-types", # Annotated type annotations
     "pydantic>=2.9.0b1", # Data modeling and validation
     "pydantic-settings", # Settings management
 
-    # todo: may be able to remove
-    "bitarray", # Bit arrays
-
     # Data Processing
+    # ------------------------------
     "aiosql", # SQL
     "numpy", # Numerical computing
     "scikit-learn", # Machine learning
     "scipy", # Scientific computing
     "polars", # Data frames
-    #    "pandas", # Data frames (not used, but needed for stubs in typings to not be Unknown)
     "pandera", # Data validation
     "pyarrow", # Columnar data format
 
-    # Infrastructure
+    # Logging
+    # ------------------------------
     # todo replace with structlog
     "loguru", # Logging
 
-    # Miscellaneous
+    # Parsing
+    # ------------------------------
     "lark-parser", # Parsing
 
     # CLI Interface
+    # ------------------------------
     "click", # CLI
     "rich", # Pretty console output
 
     # Web Interface
+    # ------------------------------
     # todo replace with Django (for Channels) maybe?
     "fastapi", # Web framework
     "uvicorn", # ASGI server
@@ -57,6 +59,7 @@ dependencies = [
     "fasthx", # FastAPI extension for HTMX
 
     # Shenanigans
+    # ------------------------------
     "z3-solver"
 ]
 

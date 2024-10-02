@@ -25,9 +25,9 @@ class _Refinement(Trait, ABC):
         if not isinstance(base_type, RenkonType):
             base_type = RenkonType.model_validate(base_type)
 
-        cls.spec = TraitSpec(
-            id=f"{cls.__qualname__}",
-            name=f"{cls.__name__}",
+        cls.base_spec = TraitSpec(
+            id=f"{cls.__name__}",
+            label=f"{cls.__qualname__}",
             kind=TraitKind.REFINEMENT,
             pattern=TraitPattern("{X}: " f"{base_type}/{cls.__name__}"),
             typings={"X": base_type},

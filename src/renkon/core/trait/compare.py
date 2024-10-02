@@ -26,16 +26,15 @@ _cmp_ops: _CmpLookup[Any] = {
 
 class _Compare(Trait, ABC):
     op_str: ClassVar[str]
-    spec: ClassVar[TraitSpec]
 
     # noinspection PyMethodOverriding
     def __init_subclass__(cls, *, op_str: _CmpOpStr, **kwargs: Any):
         super().__init_subclass__(**kwargs)
-        cls.op_str = op_str
 
-        cls.spec = TraitSpec(
-            id=f"{cls.__qualname__}",
-            name=f"{cls.__name__}",
+        cls.op_str = op_str
+        cls.base_spec = TraitSpec(
+            id=f"{cls.__module__}.{cls.__qualname__}",
+            label=f"{cls.__qualname__}",
             kind=TraitKind.LOGICAL,
             pattern=TraitPattern("{A}" f" {op_str} " "{B}"),
             commutors={"A", "B"},
@@ -64,5 +63,4 @@ class Greater(_Compare, op_str=">"): ...
 class GreaterOrEqual(_Compare, op_str="≥"): ...
 
 
-if __name__ == "__main__":
-    pass
+# TODO: special case comparisons between numeric types?
