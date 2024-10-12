@@ -10,19 +10,10 @@ __all__ = [
     "TraitResult",
     "TraitSketch",
     "TraitSpec",
-    "any_",
-    "bool_",
-    "comparable",
-    "equatable",
-    "float_",
-    "int_",
-    "none",
-    "numeric",
-    "str_",
     "trait",
+    "type",
 ]
 
-from renkon.core import trait
+from renkon.core import trait, type
 from renkon.core.model.schema import Schema
 from renkon.core.model.trait import TraitId, TraitKind, TraitPattern, TraitResult, TraitSketch, TraitSpec
-from renkon.core.model.type import any_, bool_, comparable, equatable, float_, int_, none, numeric, str_

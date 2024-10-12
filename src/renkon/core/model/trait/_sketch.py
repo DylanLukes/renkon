@@ -5,24 +5,29 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
-import renkon.core.model.type as rk
+from renkon.core import type as rkty
 from renkon.core.model.schema import Schema
-from renkon.core.model.trait.spec import TraitSpec
-from renkon.core.model.type import RenkonType
+from renkon.core.model.trait._spec import TraitSpec
+from renkon.core.type import RenkonType
 
 
 class TraitSketch(BaseModel):
     """
-    Sketches out a unit of inference work
+    A sketch consists of a specification describing a Trait, and a schema
+    describing an input data frame, as well as bindings between them.
+
+    This model performs several validations to ensure that the bindings are
+    valid for the given spec and schema.
+
 
     :ivar spec: the trait being sketched.
-    :ivar bindings: bindings (metavariables -> input column names)
-    :ivar schema: schema (input column names -> types)
+    :ivar schema: schema of input data, a mapping from column names to types.
+    :ivar bindings: bindings from spec metavars to column names in the schema.
     """
 
     spec: TraitSpec
-    bindings: dict[str, str]
     schema: Schema  # pyright: ignore [reportIncompatibleMethodOverride]
+    bindings: dict[str, str]
 
 
     # Inverted lookup from column name to metavariable
@@ -64,8 +69,6 @@ class TraitSketch(BaseModel):
 
     @model_validator(mode="after")
     def _populate_typevar_insts(self) -> Self:
-        """(Try to) instantiate each type variable to a concrete type."""
-
         col_to_type = self.schema
         mvar_to_col = self.bindings
         mvar_to_typing = self.spec.typings
@@ -92,12 +95,12 @@ class TraitSketch(BaseModel):
                     raise TypeError(msg)
 
             # Attempt to find a least upper bound to instantiate the typevar to.
-            lub_ty = rk.union(rk.any_())
+            lub_ty = rkty.Union(rkty.Top())
             for mvar_type in typevar_mvar_to_type.values():
-                lub_ty &= rk.union(mvar_type)
+                lub_ty &= rkty.Union(mvar_type)
             lub_ty = lub_ty.normalize()
 
-            if lub_ty == rk.none():
+            if lub_ty == rkty.Bottom():
                 msg = f"Could not instantiate typevar '{typevar_name}' given concrete typings {typevar_mvar_to_type}"
                 raise TypeError(msg)
 

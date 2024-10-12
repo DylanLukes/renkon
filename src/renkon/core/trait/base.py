@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
 
 from pydantic import TypeAdapter
 
-from renkon.core.model import InstanceTraitSpec
+from renkon.core.model import MonoTraitSpec
+from renkon.core.type import RenkonType
 
 if TYPE_CHECKING:
     from polars import DataFrame
 
     from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSpec
-    from renkon.core.model.type import RenkonType
 
 
 @dataclass
@@ -101,9 +101,16 @@ class Trait(Protocol):
         return self.spec.typings
 
     # Validation Queries
-    def is_monomorphized(self) -> bool:
-        """:returns: True if this Trait has no polymorphic type variables."""
-        return not self.spec.typevars
+    # ------------------
+
+    def is_monomorphic(self) -> bool:
+        """
+        Check that this Trait is a monomorphized trait with only concrete types,
+        and all type variables eliminated.
+
+        :returns: True if this Trait has no polymorphic type variables.
+        """
+        return not self.spec.typevars and all(isinstance(ty, RenkonType) for ty in self.typings.values())
 
 
 class BaseSpecTrait(Trait, ABC):
@@ -113,14 +120,14 @@ class BaseSpecTrait(Trait, ABC):
     """
 
     base_spec: ClassVar[TraitSpec]
-    _inst_spec: InstanceTraitSpec
+    _inst_spec: MonomorphicTraitSpec
 
     def __init__(self, spec: TraitSpec):
         """
         In general, __init__ should not be called directly. It enforces several
         properties of the specification provided to it.
         """
-        self._inst_spec = TypeAdapter(InstanceTraitSpec).validate_python(spec)
+        self._inst_spec = TypeAdapter(MonomorphicTraitSpec).validate_python(spec)
 
     @classmethod
     def instantiate(cls, typevar_bindings: dict[str, RenkonType]) -> Self:

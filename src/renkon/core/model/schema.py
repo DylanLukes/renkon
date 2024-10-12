@@ -5,7 +5,7 @@ from polars.type_aliases import SchemaDict as PolarsSchemaDict
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema as cs
 
-from renkon.core.model.type import RenkonType, tyconv_pl_to_rk, tyconv_rk_to_pl
+from renkon.core.type import RenkonType, tyconv_pl_to_rk, tyconv_rk_to_pl
 
 type ColumnName = str
 type ColumnNames = tuple[ColumnName, ...]

@@ -5,42 +5,43 @@ import itertools as it
 
 import pytest
 
-import renkon.api as rk
+from renkon.core import type as rkty
 from renkon.core.model import Schema, TraitSketch
 from renkon.core.trait import Equal, Linear2
+from renkon.core.type import RenkonType
 
 
 def test_sketch_bindings_missing():
-    schema = Schema({"x": rk.int_(), "y": rk.int_()})
+    schema = Schema({"x": rkty.Int(), "y": rkty.Int()})
     with pytest.raises(ValueError, match="missing in bindings"):
         TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "x"})
 
 
 def test_sketch_bindings_extra():
-    schema = Schema({"x": rk.int_(), "y": rk.int_()})
+    schema = Schema({"x": rkty.Int(), "y": rkty.Int()})
     with pytest.raises(ValueError, match="do not occur in pattern"):
         TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "x", "B": "y", "C": "z"})
 
 
 def test_sketch_linear2():
-    schema = Schema({"time": rk.float_(), "open tabs": rk.float_()})
+    schema = Schema({"time": rkty.Float(), "open tabs": rkty.Float()})
     TraitSketch(spec=Linear2.base_spec, schema=schema, bindings={"X_1": "time", "Y": "open tabs"})
 
 
 def test_sketch_incorrect_typing():
-    schema = Schema({"x": rk.int_(), "name": rk.str_()})
+    schema = Schema({"x": rkty.Int(), "name": rkty.String()})
     with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound"):
         TraitSketch(spec=Linear2.base_spec, schema=schema, bindings={"X_1": "x", "Y": "name"})
 
 
 def test_sketch_typevar_incorrect_typing():
-    schema = Schema({"a": rk.float_(), "b": rk.float_()})
+    schema = Schema({"a": rkty.Float(), "b": rkty.Float()})
     with pytest.raises(TypeError, match="incompatible type .* does not satisfy bound .* of typevar"):
         TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})
 
 
 def test_sketch_typevar_instantiation():
-    for ty1, ty2 in it.product(rk.equatable().ts, repeat=2):
+    for ty1, ty2 in it.product(rkty.Union(*RenkonType.equatable_types()).ts, repeat=2):
         schema = Schema({"a": ty1, "b": ty2})
         if ty1 == ty2:
             TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})

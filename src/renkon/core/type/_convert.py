@@ -3,47 +3,47 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import polars as pl
-from polars.datatypes import DataType as PolarsDataType
+from polars import datatypes as pldt
 
-from renkon.core.model import type as rk
-from renkon.core.model.type.base import RenkonType
+from renkon.core import type as rkty
+from renkon.core.type import RenkonType
 
 
-def tyconv_pl_to_rk(pl_ty: PolarsDataType) -> RenkonType:
+def tyconv_pl_to_rk(pl_ty: pldt.DataType) -> RenkonType:
     """
     Convert a Polars data type to a Renkon data type.
     """
     if pl_ty.is_integer():
-        return rk.IntType()
+        return rkty.Int()
 
     if pl_ty.is_float():
-        return rk.FloatType()
+        return rkty.Float()
 
     if pl_ty.is_(pl.String):
-        return rk.StringType()
+        return rkty.String()
 
     if pl_ty.is_(pl.Boolean):
-        return rk.BoolType()
+        return rkty.Bool()
 
     msg = f"Unsupported Polars data type: {pl_ty}"
     raise ValueError(msg)
 
 
-def tyconv_rk_to_pl(rk_ty: RenkonType) -> PolarsDataType:
+def tyconv_rk_to_pl(rk_ty: RenkonType) -> pldt.DataType:
     """
     Convert a Renkon data type to a Polars data type.
     """
 
-    if rk_ty.is_equal(rk.int_()):
+    if rk_ty.is_equal(rkty.Int()):
         return pl.Int64()
 
-    if rk_ty.is_equal(rk.float_()) or rk_ty.is_equal(rk.int_() | rk.float_()):
+    if rk_ty.is_equal(rkty.Float()) or rk_ty.is_equal(rkty.Int() | rkty.Float()):
         return pl.Float64()
 
-    if rk_ty.is_equal(rk.str_()):
+    if rk_ty.is_equal(rkty.String()):
         return pl.Utf8()
 
-    if rk_ty.is_equal(rk.bool_()):
+    if rk_ty.is_equal(rkty.Bool()):
         return pl.Boolean()
 
     msg = f"Unsupported Renkon data type: {rk_ty}"
