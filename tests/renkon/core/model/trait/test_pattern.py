@@ -4,7 +4,7 @@
 import pytest
 from pydantic import TypeAdapter
 
-from renkon.core.model import TraitPattern
+from renkon.core.trait import TraitPattern
 
 
 def test_trait_pattern_validation_errors():

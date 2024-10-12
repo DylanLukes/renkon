@@ -15,5 +15,4 @@ __all__ = [
 ]
 
 from renkon.core import trait, type
-from renkon.core.model.schema import Schema
-from renkon.core.model.trait import TraitId, TraitKind, TraitPattern, TraitResult, TraitSketch, TraitSpec
+from renkon.core.schema import Schema

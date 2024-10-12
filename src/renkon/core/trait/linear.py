@@ -1,8 +1,7 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from renkon.core.model import TraitKind, TraitPattern, TraitSpec
-from renkon.core.trait.base import Trait
+from renkon.core.trait import Trait, TraitKind, TraitPattern, TraitSpec
 
 # TODO: implement reusable base
 # class _Linear(Trait):

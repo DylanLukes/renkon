@@ -6,8 +6,8 @@ from typing import Annotated, Any
 from annotated_types import Gt, Lt
 from pydantic import BaseModel
 
-from renkon.core.model.bitseries import BitSeries
-from renkon.core.model.trait._sketch import TraitSketch
+from renkon._internal.bitseries import BitSeries
+from renkon.core.trait._sketch import TraitSketch
 
 type TraitScore = Annotated[float, Gt(0.0), Lt(1.0)]
 

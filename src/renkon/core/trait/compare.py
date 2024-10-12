@@ -8,8 +8,7 @@ from abc import ABC
 from collections.abc import Callable
 from typing import Any, ClassVar, Literal, final
 
-from renkon.core.model import TraitKind, TraitPattern, TraitSpec
-from renkon.core.trait.base import Trait
+from renkon.core.trait import Trait, TraitKind, TraitPattern, TraitSpec
 
 type _CmpOpStr = Literal["<", "≤", "=", "≥", ">"]
 type _CmpLookup[T] = dict[_CmpOpStr, Callable[[T, T], bool]]

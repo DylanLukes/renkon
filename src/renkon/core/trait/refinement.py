@@ -13,8 +13,7 @@ conformance of the column's data. For example, _how close_ to being integral.
 from abc import ABC
 from typing import ClassVar, final
 
-from renkon.core.model.trait import TraitKind, TraitPattern, TraitSpec
-from renkon.core.trait.base import Trait
+from renkon.core.trait import Trait, TraitKind, TraitPattern, TraitSpec
 from renkon.core.type import RenkonType
 
 

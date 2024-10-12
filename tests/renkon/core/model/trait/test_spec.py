@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+from renkon.core.trait import TraitSpec
 from renkon.core.type import RenkonType
-from renkon.core.model.trait import TraitSpec
 
 
 def test_trait_spec_validate_json():

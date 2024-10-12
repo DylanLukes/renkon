@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
 
 from pydantic import TypeAdapter
 
-from renkon.core.model import MonoTraitSpec
+from renkon.core.trait import TraitSpec
 from renkon.core.type import RenkonType
 
 if TYPE_CHECKING:
     from polars import DataFrame
 
-    from renkon.core.model import TraitId, TraitKind, TraitPattern, TraitSpec
+    from renkon.core.trait import TraitId, TraitKind, TraitPattern
 
 
 @dataclass
@@ -120,14 +120,14 @@ class BaseSpecTrait(Trait, ABC):
     """
 
     base_spec: ClassVar[TraitSpec]
-    _inst_spec: MonomorphicTraitSpec
+    _inst_spec: TraitSpec
 
     def __init__(self, spec: TraitSpec):
         """
         In general, __init__ should not be called directly. It enforces several
         properties of the specification provided to it.
         """
-        self._inst_spec = TypeAdapter(MonomorphicTraitSpec).validate_python(spec)
+        self._inst_spec = TypeAdapter(TraitSpec).validate_python(spec)  # TODO: make Mono?
 
     @classmethod
     def instantiate(cls, typevar_bindings: dict[str, RenkonType]) -> Self:

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from renkon.core.model.schema import Schema
+from renkon.core.schema import Schema
 
 
 def test_schema():

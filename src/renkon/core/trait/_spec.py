@@ -7,8 +7,8 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
-from renkon.core.model.trait._kind import TraitKind
-from renkon.core.model.trait._pattern import TraitPattern
+from renkon.core.trait._kind import TraitKind
+from renkon.core.trait._pattern import TraitPattern
 from renkon.core.type import RenkonType
 
 type TraitId = str

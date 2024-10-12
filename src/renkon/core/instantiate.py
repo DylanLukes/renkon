@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from renkon.core.model import Schema, TraitSketch, TraitSpec, MonoTraitSpec, ConcreteTraitSpec
+from renkon.core.schema import Schema
+from renkon.core.trait import ConcreteTraitSpec, MonoTraitSpec, TraitSketch, TraitSpec
 
 
 def monomorphize(base_spec: TraitSpec, schema: Schema) -> list[MonoTraitSpec]:

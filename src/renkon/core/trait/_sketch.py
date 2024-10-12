@@ -6,8 +6,8 @@ from typing import Self
 from pydantic import BaseModel, model_validator
 
 from renkon.core import type as rkty
-from renkon.core.model.schema import Schema
-from renkon.core.model.trait._spec import TraitSpec
+from renkon.core.schema import Schema
+from renkon.core.trait._spec import TraitSpec
 from renkon.core.type import RenkonType
 
 

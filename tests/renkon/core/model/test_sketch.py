@@ -6,8 +6,8 @@ import itertools as it
 import pytest
 
 from renkon.core import type as rkty
-from renkon.core.model import Schema, TraitSketch
-from renkon.core.trait import Equal, Linear2
+from renkon.core.schema import Schema
+from renkon.core.trait import Equal, Linear2, TraitSketch
 from renkon.core.type import RenkonType
 
 
