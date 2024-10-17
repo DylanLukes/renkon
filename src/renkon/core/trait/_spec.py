@@ -56,19 +56,17 @@ class TraitSpec(BaseModel, Hashable):
     ...     }
     ... }''')
 
-    >>> trait = TraitSpec.model_validate(
-    ...     {
-    ...         "label": "Equal",
-    ...         "id": "renkon.core.doctest.traits.Equal",
-    ...         "kind": "logical",
-    ...         "pattern": "{A} = {B}",
-    ...         "commutors": {"A", "B"},
-    ...         "typevars": {
-    ...             "T": "equatable",
-    ...         },
-    ...         "typings": {"A": "T", "B": "T"},
-    ...     }
-    ... )
+    >>> trait = TraitSpec.model_validate({
+    ...     "label": "Equal",
+    ...     "id": "renkon.core.doctest.traits.Equal",
+    ...     "kind": "logical",
+    ...     "pattern": "{A} = {B}",
+    ...     "commutors": {"A", "B"},
+    ...     "typevars": {
+    ...         "T": "equatable",
+    ...     },
+    ...     "typings": {"A": "T", "B": "T"},
+    ... })
     """
 
     model_config = ConfigDict(
@@ -96,8 +94,6 @@ class TraitSpec(BaseModel, Hashable):
 
     # Methods
     # -------
-
-
 
     # Validators
     # ----------
@@ -163,6 +159,7 @@ def _check_trait_monomorphic(spec: TraitSpec):
 
 type MonoTraitSpec = Annotated[TraitSpec, AfterValidator(_check_trait_monomorphic)]
 
+
 def _check_trait_concrete(spec: TraitSpec):
     _check_trait_monomorphic(spec)
 
@@ -173,5 +170,6 @@ def _check_trait_concrete(spec: TraitSpec):
         raise ValueError(msg)
 
     return spec
+
 
 type ConcreteTraitSpec = Annotated[TraitSpec, AfterValidator(_check_trait_concrete)]

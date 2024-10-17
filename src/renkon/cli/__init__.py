@@ -1,7 +1,6 @@
 import click
 
 from renkon.__about__ import __version__
-from renkon.cli.batch import batch
 from renkon.cli.web import web
 
 
@@ -11,7 +10,6 @@ def cli() -> None:
     pass
 
 
-cli.add_command(batch)
 cli.add_command(web)
 
 if __name__ == "__main__":

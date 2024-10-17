@@ -3,16 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 __all__ = [
     "ConcreteTraitSpec",
-    "Equal",
-    "Greater",
-    "GreaterOrEqual",
-    "Less",
-    "LessOrEqual",
-    "Linear2",
     "MonoTraitSpec",
-    "NonNegative",
-    "NonNull",
-    "NonZero",
     "Trait",
     "TraitId",
     "TraitKind",
@@ -20,7 +11,7 @@ __all__ = [
     "TraitResult",
     "TraitScore",
     "TraitSketch",
-    "TraitSpec"
+    "TraitSpec",
 ]
 
 from renkon.core.trait._kind import TraitKind
@@ -29,6 +20,3 @@ from renkon.core.trait._result import TraitResult, TraitScore
 from renkon.core.trait._sketch import TraitSketch
 from renkon.core.trait._spec import ConcreteTraitSpec, MonoTraitSpec, TraitId, TraitSpec
 from renkon.core.trait._trait import Trait
-from renkon.core.trait.compare import Equal, Greater, GreaterOrEqual, Less, LessOrEqual
-from renkon.core.trait.linear import Linear2
-from renkon.core.trait.refinement import NonNegative, NonNull, NonZero

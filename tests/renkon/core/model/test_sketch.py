@@ -7,8 +7,9 @@ import pytest
 
 from renkon.core import type as rkty
 from renkon.core.schema import Schema
-from renkon.core.trait import Equal, Linear2, TraitSketch
+from renkon.core.trait import TraitSketch
 from renkon.core.type import RenkonType
+from renkon.traits import Equal, Linear2
 
 
 def test_sketch_bindings_missing():

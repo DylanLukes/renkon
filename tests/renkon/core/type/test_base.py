@@ -5,9 +5,7 @@ import itertools as it
 
 import pytest
 
-from renkon.core.type import Primitive, RenkonType, Union, Int, Float, String, Bool, Bottom, Top
-from renkon.core import type as rk
-
+from renkon.core.type import Bool, Bottom, Float, Int, Primitive, RenkonType, String, Top, Union
 
 
 @pytest.fixture
@@ -161,14 +159,17 @@ def test_union_intersect_any():
 def test_union_dump_python():
     assert Union(Int(), Float()).model_dump() == "float | int"
 
+
 def test_subtype_primitive_reflexive(primitive_types: set[Primitive]):
-    for (ty1, ty2) in it.product(primitive_types, repeat=2):
+    for ty1, ty2 in it.product(primitive_types, repeat=2):
         if ty1 == ty2:
             assert ty1.is_subtype(ty2)
             assert ty2.is_subtype(ty1)
 
+
 def test_subtype_int_float():
     assert Int().is_subtype(Float())
+
 
 def test_subtype_union():
     # Primitive / Union

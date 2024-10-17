@@ -6,15 +6,15 @@ from renkon.core.schema import Schema
 from renkon.core.trait import ConcreteTraitSpec, MonoTraitSpec, TraitSketch, TraitSpec
 
 
-def monomorphize(base_spec: TraitSpec, schema: Schema) -> list[MonoTraitSpec]:
+def monomorphize(_base_spec: TraitSpec, _schema: Schema) -> list[MonoTraitSpec]:
     pass
 
 
-def concretize(mono_spec: MonoTraitSpec, schema: Schema) -> list[ConcreteTraitSpec]:
+def concretize(_mono_spec: MonoTraitSpec, _schema: Schema) -> list[ConcreteTraitSpec]:
     pass
 
 
-def sketch_all(base_spec: TraitSpec, schema: Schema) -> list[TraitSketch]:
+def sketch_all(_base_spec: TraitSpec, _schema: Schema) -> list[TraitSketch]:
     """
     Finds all valid instantiations of a given BaseSpecTrait class for the types columns in the given schema.
     """

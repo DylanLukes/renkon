@@ -4,15 +4,18 @@
 
 __all__ = [
     "Schema",
+    "Trait",
     "TraitId",
     "TraitKind",
     "TraitPattern",
     "TraitResult",
     "TraitSketch",
     "TraitSpec",
-    "trait",
+    "traits",
     "type",
 ]
 
-from renkon.core import trait, type
+from renkon import traits
+from renkon.core import type
 from renkon.core.schema import Schema
+from renkon.core.trait import Trait, TraitId, TraitKind, TraitPattern, TraitResult, TraitSketch, TraitSpec

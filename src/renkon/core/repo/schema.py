@@ -10,7 +10,9 @@ from typing import cast
 import polars as pl
 import pyarrow as pa
 from polars import DataFrame
-from polars.type_aliases import SchemaDict
+
+# noinspection PyProtectedMember
+from polars._typing import SchemaDict
 
 
 def to_arrow_schema_bytes(schema: SchemaDict) -> bytes:

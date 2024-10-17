@@ -1,7 +1,8 @@
 from collections.abc import Sequence
 from typing import Self
 
-from polars.type_aliases import SchemaDict as PolarsSchemaDict
+# noinspection PyProtectedMember
+from polars._typing import SchemaDict as PolarsSchemaDict
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema as cs
 

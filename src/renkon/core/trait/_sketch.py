@@ -29,7 +29,6 @@ class TraitSketch(BaseModel):
     schema: Schema  # pyright: ignore [reportIncompatibleMethodOverride]
     bindings: dict[str, str]
 
-
     # Inverted lookup from column name to metavariable
     _bindings_inv: dict[str, str] = {}
 
