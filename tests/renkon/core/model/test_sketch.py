@@ -42,7 +42,7 @@ def test_sketch_typevar_incorrect_typing():
 
 
 def test_sketch_typevar_instantiation():
-    for ty1, ty2 in it.product(rkty.Union(*RenkonType.equatable_types()).ts, repeat=2):
+    for ty1, ty2 in it.product(rkty.Union(*RenkonType.equatable_types()).members, repeat=2):
         schema = Schema({"a": ty1, "b": ty2})
         if ty1 == ty2:
             TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})

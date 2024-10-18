@@ -5,8 +5,8 @@
 import polars as pl
 from polars import datatypes as pldt
 
-from renkon.core import type as rkty
-from renkon.core.type import RenkonType
+from renkon.core.type import _type as rkty
+from renkon.core.type._type import RenkonType
 
 
 def tyconv_pl_to_rk(pl_ty: pldt.DataType) -> RenkonType:

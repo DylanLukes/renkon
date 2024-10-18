@@ -19,7 +19,7 @@ class TraitResult(BaseModel):
     """
 
     spec: TraitSpec
-    schema: Schema
+    schema: Schema  # pyright: ignore [reportIncompatibleMethodOverride]
     bindings: dict[str, str]
 
     score: TraitScore

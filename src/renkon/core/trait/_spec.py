@@ -9,7 +9,7 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validat
 
 from renkon.core.trait._kind import TraitKind
 from renkon.core.trait._pattern import TraitPattern
-from renkon.core.type import RenkonType
+from renkon.core.type import RenkonType, is_concrete
 
 type TraitId = str
 
@@ -164,7 +164,7 @@ def _check_trait_concrete(spec: TraitSpec):
     _check_trait_monomorphic(spec)
 
     tys: list[RenkonType] = list(spec.typings.values())
-    non_concrete_tys = [ty for ty in tys if not ty.is_concrete()]
+    non_concrete_tys = [ty for ty in tys if not is_concrete(ty)]
     if non_concrete_tys:
         msg = f"Concrete traits' typings must be concrete types: {non_concrete_tys}"
         raise ValueError(msg)

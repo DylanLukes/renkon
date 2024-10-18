@@ -4,24 +4,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
+from typing import TYPE_CHECKING, ClassVar, Protocol, Self
 
 from pydantic import TypeAdapter
 
-from renkon.core.trait import TraitSpec
+from renkon.core.trait import TraitResult, TraitSpec
 from renkon.core.type import RenkonType
 
 if TYPE_CHECKING:
     from polars import DataFrame
 
     from renkon.core.trait import TraitId, TraitKind, TraitPattern
-
-
-@dataclass
-class TraitResult:
-    trait: Trait
-    params: dict[str, Any]
 
 
 class Trait(Protocol):

@@ -4,8 +4,27 @@
 import itertools as it
 
 import pytest
+from pydantic import TypeAdapter
 
-from renkon.core.type import Bool, Bottom, Float, Int, Primitive, RenkonType, String, Top, Union
+from renkon.core.type import (
+    Bool,
+    Bottom,
+    Comparable,
+    Equatable,
+    Float,
+    Int,
+    Numeric,
+    Primitive,
+    RenkonType,
+    String,
+    Top,
+    Union,
+    is_comparable,
+    is_equatable,
+    is_numeric,
+)
+
+ta = TypeAdapter(RenkonType)
 
 
 @pytest.fixture
@@ -14,63 +33,63 @@ def primitive_types() -> set[Primitive]:
 
 
 def test_type_model_dump_primitive():
-    assert Int().model_dump() == "int"
-    assert Float().model_dump() == "float"
-    assert String().model_dump() == "string"
-    assert Bool().model_dump() == "bool"
+    assert ta.dump_python(Int()) == "int"
+    assert ta.dump_python(Float()) == "float"
+    assert ta.dump_python(String()) == "string"
+    assert ta.dump_python(Bool()) == "bool"
 
 
 def test_type_model_dump_union():
-    assert Union(Int(), Float()).model_dump() == "float | int"
-    assert Union(Int(), String()).model_dump() == "int | string"
-    assert Union().model_dump() == "none | none"
+    assert ta.dump_python(Union(Int(), Float())) == "float | int"
+    assert ta.dump_python(Union(Int(), String())) == "int | string"
+    assert ta.dump_python(Union()) == "none | none"
 
 
 def test_type_model_dump_any():
-    assert Top().model_dump() == "any"
+    assert ta.dump_python(Top()) == "any"
 
 
 def test_type_model_dump_none():
-    assert Bottom().model_dump() == "none"
+    assert ta.dump_python(Bottom()) == "none"
 
 
 def test_type_model_validate_primitive():
-    assert RenkonType.model_validate("int") == Int()
-    assert RenkonType.model_validate("float") == Float()
-    assert RenkonType.model_validate("string") == String()
-    assert RenkonType.model_validate("bool") == Bool()
+    assert ta.validate_python("int") == Int()
+    assert ta.validate_python("float") == Float()
+    assert ta.validate_python("string") == String()
+    assert ta.validate_python("bool") == Bool()
 
 
 def test_type_model_validate_union():
-    assert RenkonType.model_validate("float | int") == Union(Int(), Float())
-    assert RenkonType.model_validate("int | string") == Union(Int(), String())
-    assert RenkonType.model_validate("int | string | float") == Union(Int(), String(), Float())
-    assert RenkonType.model_validate("int | (string | float)") == Union(Int(), String(), Float())
+    assert ta.validate_python("float | int") == Union(Int(), Float())
+    assert ta.validate_python("int | string") == Union(Int(), String())
+    assert ta.validate_python("int | string | float") == Union(Int(), String(), Float())
+    assert ta.validate_python("int | (string | float)") == Union(Int(), String(), Float())
 
 
 def test_type_model_validate_any():
-    assert RenkonType.model_validate("any") == Top()
-    assert RenkonType.model_validate("⊤") == Top()  # noqa: RUF001
-    assert RenkonType.model_validate("⊤ | ⊤") == Union(Top())  # noqa: RUF001
+    assert ta.validate_python("any") == Top()
+    assert ta.validate_python("⊤") == Top()  # noqa: RUF001
+    assert ta.validate_python("⊤ | ⊤") == Union(Top())  # noqa: RUF001
 
 
 def test_type_model_validate_none():
-    assert RenkonType.model_validate("none") == Bottom()
-    assert RenkonType.model_validate("⊥") == Bottom()
-    assert RenkonType.model_validate("⊥ | ⊥") == Union()
+    assert ta.validate_python("none") == Bottom()
+    assert ta.validate_python("⊥") == Bottom()
+    assert ta.validate_python("⊥ | ⊥") == Union()
 
 
 def test_type_model_validate_specials():
-    assert RenkonType.model_validate("equatable") == Union(*RenkonType.equatable_types())
-    assert RenkonType.model_validate("comparable") == Union(*RenkonType.comparable_types())
-    assert RenkonType.model_validate("numeric") == Union(*RenkonType.numeric_types())
+    assert ta.validate_python("equatable") == Equatable()
+    assert ta.validate_python("comparable") == Comparable()
+    assert ta.validate_python("numeric") == Numeric()
 
 
 def test_type_model_validate_json():
-    assert RenkonType.model_validate_json(r'"bool"') == Bool()
-    assert RenkonType.model_validate_json(r'"int"') == Int()
-    assert RenkonType.model_validate_json(r'"float"') == Float()
-    assert RenkonType.model_validate_json(r'"string"') == String()
+    assert ta.validate_json(r'"bool"') == Bool()
+    assert ta.validate_json(r'"int"') == Int()
+    assert ta.validate_json(r'"float"') == Float()
+    assert ta.validate_json(r'"string"') == String()
     # TODO: write types for validating JSON
 
 
@@ -82,17 +101,17 @@ def test_primitive_equals_different_instances():
 
 
 def test_primitive_model_dump():
-    assert Int().model_dump() == "int"
-    assert Float().model_dump() == "float"
-    assert String().model_dump() == "string"
-    assert Bool().model_dump() == "bool"
+    assert ta.dump_python(Int()) == "int"
+    assert ta.dump_python(Float()) == "float"
+    assert ta.dump_python(String()) == "string"
+    assert ta.dump_python(Bool()) == "bool"
 
 
 def test_primitive_model_validate():
-    assert Int().model_validate("int") == Int()
-    assert Float().model_validate("float") == Float()
-    assert String().model_validate("string") == String()
-    assert Bool().model_validate("bool") == Bool()
+    assert ta.validate_python("int") == Int()
+    assert ta.validate_python("float") == Float()
+    assert ta.validate_python("string") == String()
+    assert ta.validate_python("bool") == Bool()
 
 
 def test_union_equals_symmetry():
@@ -157,7 +176,7 @@ def test_union_intersect_any():
 
 
 def test_union_dump_python():
-    assert Union(Int(), Float()).model_dump() == "float | int"
+    assert ta.dump_python(Union(Int(), Float())) == "float | int"
 
 
 def test_subtype_primitive_reflexive(primitive_types: set[Primitive]):
@@ -187,37 +206,37 @@ def test_subtype_union():
 
 
 def test_is_numeric():
-    assert Int().is_numeric()
-    assert Float().is_numeric()
-    assert not String().is_numeric()
-    assert not Bool().is_numeric()
-    assert Union(Int(), Float()).is_numeric()
-    assert not Union(Int(), String()).is_numeric()
-    assert not Union(String(), Bool()).is_numeric()
-    assert not Union(String(), Union(Int(), Float())).is_numeric()
+    assert is_numeric(Int())
+    assert is_numeric(Float())
+    assert not is_numeric(String())
+    assert not is_numeric(Bool())
+    assert is_numeric(Union(Int(), Float()))
+    assert not is_numeric(Union(Int(), String()))
+    assert not is_numeric(Union(String(), Bool()))
+    assert not is_numeric(Union(String(), Union(Int(), Float())))
 
 
 def test_is_equatable():
-    assert Int().is_equatable()
-    assert String().is_equatable()
-    assert Bool().is_equatable()
-    assert not Float().is_equatable()
-    assert Union(Int(), String()).is_equatable()
-    assert not Union(Int(), Float()).is_equatable()
-    assert not Union(String(), Float()).is_equatable()
-    assert Union(String(), Union(Int(), Bool())).is_equatable()
-    assert not Union(String(), Union(Int(), Float())).is_equatable()
+    assert is_equatable(Int())
+    assert is_equatable(String())
+    assert is_equatable(Bool())
+    assert not is_equatable(Float())
+    assert is_equatable(Union(Int(), String()))
+    assert not is_equatable(Union(Int(), Float()))
+    assert not is_equatable(Union(String(), Float()))
+    assert is_equatable(Union(String(), Union(Int(), Bool())))
+    assert not is_equatable(Union(String(), Union(Int(), Float())))
 
 
 def test_is_comparable():
-    assert Int().is_comparable()
-    assert Float().is_comparable()
-    assert String().is_comparable()
-    assert not Bool().is_comparable()
-    assert Union(Int(), Float()).is_comparable()
-    assert Union(Int(), String()).is_comparable()
-    assert Union(String(), Float()).is_comparable()
-    assert Union(String(), Union(Int(), Float())).is_comparable()
-    assert not Union(String(), Union(Int(), Bool())).is_comparable()
-    assert not Union(String(), Union(Bool(), Float())).is_comparable()
-    assert not Union(String(), Union(Bool(), Bool())).is_comparable()
+    assert is_comparable(Int())
+    assert is_comparable(Float())
+    assert is_comparable(String())
+    assert not is_comparable(Bool())
+    assert is_comparable(Union(Int(), Float()))
+    assert is_comparable(Union(Int(), String()))
+    assert is_comparable(Union(String(), Float()))
+    assert is_comparable(Union(String(), Union(Int(), Float())))
+    assert not is_comparable(Union(String(), Union(Int(), Bool())))
+    assert not is_comparable(Union(String(), Union(Bool(), Float())))
+    assert not is_comparable(Union(String(), Union(Bool(), Bool())))

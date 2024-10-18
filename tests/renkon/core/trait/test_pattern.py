@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 import pytest
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter
 
 from renkon.core.trait import TraitPattern
 
 
 def test_trait_pattern_validation_errors():
     ta = TypeAdapter(TraitPattern)
+
     pattern = ta.validate_python("{Y} = {a}*{X} + {b}")
     assert pattern.metavars == ["Y", "X"]
     assert pattern.params == ["a", "b"]
@@ -44,3 +45,12 @@ def test_trait_pattern_format():
 
     # missing fields left as template fields when missing="partial"
     assert pattern.format(Y="money", a=3, missing="partial") == "money = 3*{X} + {b}"
+
+
+def test_trait_pattern_as_base_model_field():
+    class Model(BaseModel):
+        pattern: TraitPattern
+
+    expected = Model.model_construct(pattern=TraitPattern("{Y} = {a}*{X} + {b}"))
+    observed = Model.model_validate({"pattern": "{Y} = {a}*{X} + {b}"})
+    assert expected == observed

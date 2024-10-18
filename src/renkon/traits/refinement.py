@@ -13,11 +13,14 @@ conformance of the column's data. For example, _how close_ to being integral.
 from abc import ABC
 from typing import ClassVar, final
 
-from renkon.core.trait import Trait, TraitKind, TraitPattern, TraitSpec
+from polars import DataFrame
+
+from renkon.core.trait import BaseSpecTrait, TraitKind, TraitPattern, TraitSpec
+from renkon.core.trait._trait import TraitResult
 from renkon.core.type import RenkonType
 
 
-class _Refinement(Trait, ABC):
+class _Refinement(BaseSpecTrait, ABC):
     refines: ClassVar[RenkonType]
 
     # noinspection PyMethodOverriding
@@ -35,16 +38,24 @@ class _Refinement(Trait, ABC):
 
 
 @final
-class NonNull(_Refinement, base_type="any"): ...
+class NonNull(_Refinement, base_type="any"):
+    def infer(self, data: DataFrame, column_bindings: dict[str, str]) -> TraitResult:
+        raise NotImplementedError
 
 
 @final
-class NonNegative(_Refinement, base_type="numeric"): ...
+class NonNegative(_Refinement, base_type="numeric"):
+    def infer(self, data: DataFrame, column_bindings: dict[str, str]) -> TraitResult:
+        raise NotImplementedError
 
 
 @final
-class NonZero(_Refinement, base_type="numeric"): ...
+class NonZero(_Refinement, base_type="numeric"):
+    def infer(self, data: DataFrame, column_bindings: dict[str, str]) -> TraitResult:
+        raise NotImplementedError
 
 
 @final
-class Integral(_Refinement, base_type="float"): ...
+class Integral(_Refinement, base_type="float"):
+    def infer(self, data: DataFrame, column_bindings: dict[str, str]) -> TraitResult:
+        raise NotImplementedError

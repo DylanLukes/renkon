@@ -50,7 +50,7 @@ def _validate_bitseries_from_fields(b: _BitSeriesFields) -> BitSeries:
 
     buf = pa.py_buffer(data)  # type: ignore
     arr = pa.Array.from_buffers(pa.bool_(), length=count, buffers=[None, buf])  # type: ignore
-    s = pl.Series(arr, dtype=pl.Boolean)
+    s = pl.Series(arr, dtype=pl.Boolean)  # type: ignore
 
     return _validate_bitseries_from_series(s)
 
