@@ -3,6 +3,8 @@ sudo apt install -y -V ca-certificates lsb-release wget
 wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 
+sudo apt update
+
 # Based on: https://arrow.apache.org/install/
 sudo apt install -y -V libre2-dev
 sudo apt install -y -V libzstd-dev
@@ -19,6 +21,4 @@ sudo apt install -y -V libarrow-flight-sql-glib-dev # For Apache Arrow Flight SQ
 sudo apt install -y -V libgandiva-dev # For Gandiva C++
 sudo apt install -y -V libgandiva-glib-dev # For Gandiva GLib (C)
 sudo apt install -y -V libparquet-dev # For Apache Parquet C++
-
-# Not present on GitHub Actions ubuntu-latest runner.
-# sudo apt install -y -V libparquet-glib-dev # For Apache Parquet GLib (C)
+sudo apt install -y -V libparquet-glib-dev # For Apache Parquet GLib (C)
