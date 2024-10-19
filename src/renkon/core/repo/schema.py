@@ -11,11 +11,8 @@ import polars as pl
 import pyarrow as pa
 from polars import DataFrame
 
-# noinspection PyProtectedMember
-from polars._typing import SchemaDict
 
-
-def to_arrow_schema_bytes(schema: SchemaDict) -> bytes:
+def to_arrow_schema_bytes(schema: pl.Schema) -> bytes:
     """
     Serialize a schema to bytes.
     """
@@ -23,14 +20,12 @@ def to_arrow_schema_bytes(schema: SchemaDict) -> bytes:
     return cast(bytes, arrow_schema.serialize().to_pybytes())
 
 
-def from_arrow_schema_bytes(blob: bytes) -> SchemaDict:
+def from_arrow_schema_bytes(blob: bytes) -> pl.Schema:
     """
     Deserialize a schema from bytes.
     """
     arrow_schema = pa.ipc.read_schema(pa.py_buffer(blob))
-    return dict(
-        cast(
-            DataFrame,
-            pl.from_arrow(pa.table([[]] * len(arrow_schema), schema=arrow_schema)),
-        ).schema
-    )
+    return cast(
+        DataFrame,
+        pl.from_arrow(pa.table([[]] * len(arrow_schema), schema=arrow_schema)),
+    ).schema

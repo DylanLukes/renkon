@@ -3,13 +3,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import polars as pl
-from polars import datatypes as pldt
 
 from renkon.core.type import _type as rkty
 from renkon.core.type._type import RenkonType
 
 
-def tyconv_pl_to_rk(pl_ty: pldt.DataType) -> RenkonType:
+def tyconv_pl_to_rk(pl_ty: pl.DataType) -> RenkonType:
     """
     Convert a Polars data type to a Renkon data type.
     """
@@ -29,7 +28,7 @@ def tyconv_pl_to_rk(pl_ty: pldt.DataType) -> RenkonType:
     raise ValueError(msg)
 
 
-def tyconv_rk_to_pl(rk_ty: RenkonType) -> pldt.DataType:
+def tyconv_rk_to_pl(rk_ty: RenkonType) -> pl.DataType:
     """
     Convert a Renkon data type to a Polars data type.
     """

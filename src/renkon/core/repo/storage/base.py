@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Protocol
 from renkon.core.repo import Registry
 
 if TYPE_CHECKING:
-    from polars import DataFrame
-    from polars.type_aliases import SchemaDict
+    from polars import DataFrame, Schema
 
     from renkon.core.repo.registry.base import FileType
 
@@ -51,7 +50,7 @@ class Storage(Protocol):  # pragma: no cover
 
         path: PurePath
         filetype: FileType
-        schema: SchemaDict
+        schema: Schema
         rows: int = -1
         size: int = -1
 

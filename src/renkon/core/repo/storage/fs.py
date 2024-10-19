@@ -55,7 +55,7 @@ class FileSystemStorage(Storage):
 
         match path.suffix:
             case ".parquet":
-                schema = pl.read_parquet_schema(full_path)
+                schema = pl.Schema(pl.read_parquet_schema(full_path))
                 row_count = pl.scan_parquet(full_path).select(pl.len()).collect().item()
                 file_size = full_path.stat().st_size
 
@@ -67,7 +67,7 @@ class FileSystemStorage(Storage):
                     size=file_size,
                 )
             case ".arrow":
-                schema = pl.read_ipc_schema(full_path)
+                schema = pl.Schema(pl.read_ipc_schema(full_path))
                 row_count = pl.scan_ipc(full_path).select(pl.len()).collect().item()
                 file_size = full_path.stat().st_size
 

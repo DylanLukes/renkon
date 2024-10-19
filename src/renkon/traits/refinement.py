@@ -14,6 +14,7 @@ from abc import ABC
 from typing import ClassVar, final
 
 from polars import DataFrame
+from pydantic import TypeAdapter
 
 from renkon.core.trait import BaseSpecTrait, TraitKind, TraitPattern, TraitSpec
 from renkon.core.trait._trait import TraitResult
@@ -26,7 +27,7 @@ class _Refinement(BaseSpecTrait, ABC):
     # noinspection PyMethodOverriding
     def __init_subclass__(cls, *, base_type: RenkonType | str, **kwargs: None):
         if not isinstance(base_type, RenkonType):
-            base_type = RenkonType.model_validate(base_type)
+            base_type = TypeAdapter(RenkonType).validate_python(base_type)
 
         cls.base_spec = TraitSpec(
             id=f"{cls.__name__}",

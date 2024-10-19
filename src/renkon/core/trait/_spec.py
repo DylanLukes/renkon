@@ -144,6 +144,9 @@ class TraitSpec(BaseModel, Hashable):
         return self
 
 
+# TODO: FIX CRAP BELOW
+
+
 def _check_trait_monomorphic(spec: TraitSpec):
     if spec.typevars:
         msg = f"Concrete trait specs must not contain abstract type variables: {spec.typevars.keys()}"
@@ -163,8 +166,8 @@ type MonoTraitSpec = Annotated[TraitSpec, AfterValidator(_check_trait_monomorphi
 def _check_trait_concrete(spec: TraitSpec):
     _check_trait_monomorphic(spec)
 
-    tys: list[RenkonType] = list(spec.typings.values())
-    non_concrete_tys = [ty for ty in tys if not is_concrete(ty)]
+    types: list[RenkonType] = list(spec.typings.values())  # pyright: ignore [reportAssignmentType]
+    non_concrete_tys = [ty for ty in types if not is_concrete(ty)]
     if non_concrete_tys:
         msg = f"Concrete traits' typings must be concrete types: {non_concrete_tys}"
         raise ValueError(msg)

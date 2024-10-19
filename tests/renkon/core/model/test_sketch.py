@@ -8,7 +8,7 @@ import pytest
 from renkon.core import type as rkty
 from renkon.core.schema import Schema
 from renkon.core.trait import TraitSketch
-from renkon.core.type import RenkonType
+from renkon.core.type import Equatable
 from renkon.traits import Equal, Linear2
 
 
@@ -42,7 +42,7 @@ def test_sketch_typevar_incorrect_typing():
 
 
 def test_sketch_typevar_instantiation():
-    for ty1, ty2 in it.product(rkty.Union(*RenkonType.equatable_types()).members, repeat=2):
+    for ty1, ty2 in it.product(Equatable().members, repeat=2):
         schema = Schema({"a": ty1, "b": ty2})
         if ty1 == ty2:
             TraitSketch(spec=Equal.base_spec, schema=schema, bindings={"A": "a", "B": "b"})

@@ -7,18 +7,18 @@ from renkon.core.trait import ConcreteTraitSpec, MonoTraitSpec, TraitSketch, Tra
 
 
 def monomorphize(_base_spec: TraitSpec, _schema: Schema) -> list[MonoTraitSpec]:
-    pass
+    raise NotImplementedError
 
 
 def concretize(_mono_spec: MonoTraitSpec, _schema: Schema) -> list[ConcreteTraitSpec]:
-    pass
+    raise NotImplementedError
 
 
 def sketch_all(_base_spec: TraitSpec, _schema: Schema) -> list[TraitSketch]:
     """
     Finds all valid instantiations of a given BaseSpecTrait class for the types columns in the given schema.
     """
-    return []
+    raise NotImplementedError
 
 
 # def instantiate_sketch(sketch: TraitSketch) -> Trait:

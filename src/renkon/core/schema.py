@@ -1,11 +1,10 @@
 from collections.abc import Sequence
 from typing import Self
 
-# noinspection PyProtectedMember
-from polars._typing import SchemaDict as PolarsSchemaDict
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema as cs
 
+from renkon._internal.polars import PolarsSchemaDict
 from renkon.core.type import RenkonType, tyconv_pl_to_rk, tyconv_rk_to_pl
 
 type ColumnName = str

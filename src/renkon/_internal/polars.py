@@ -1,6 +1,10 @@
 # Polars expr for median_absolute_deviation:
+from collections.abc import Mapping
 
 import polars as pl
+
+type PolarsDataType = pl.DataTypeClass | pl.DataType
+type PolarsSchemaDict = Mapping[str, PolarsDataType]
 
 
 @pl.api.register_expr_namespace("rk")

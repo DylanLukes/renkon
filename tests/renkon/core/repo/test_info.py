@@ -2,6 +2,7 @@ from pathlib import PurePath
 from typing import TYPE_CHECKING
 
 import pytest
+from polars import Schema
 from pydantic import ValidationError
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ def test_from_tuple_valid_filetype() -> None:
             path="foo",
             name="bar",
             filetype=file_type,
-            schema_=to_arrow_schema_bytes({}),
+            schema_=to_arrow_schema_bytes(Schema()),
             rows=0,
             size=0,
         ).to_entry()
@@ -38,14 +39,14 @@ def test_from_tuple_invalid_filetype() -> None:
             path="foo",
             name="bar",
             filetype="invalid",  # type: ignore[arg-type]
-            schema_=to_arrow_schema_bytes({}),
+            schema_=to_arrow_schema_bytes(Schema()),
             rows=0,
             size=0,
         ).to_entry()
 
 
 def test_from_stat() -> None:
-    stat = Storage.Stat(path=PurePath("foo"), filetype="parquet", schema={}, rows=0, size=0)
+    stat = Storage.Stat(path=PurePath("foo"), filetype="parquet", schema=Schema(), rows=0, size=0)
     info = stat.to_entry(name="bar")
 
     assert info.name == "bar"

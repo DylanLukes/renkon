@@ -10,7 +10,7 @@ type FileType = Literal["parquet", "arrow"]
 if TYPE_CHECKING:
     from pathlib import PurePath
 
-    from polars.type_aliases import SchemaDict
+    from polars import Schema
 
 
 class Registry(Protocol):
@@ -23,7 +23,7 @@ class Registry(Protocol):
         path: PurePath
         name: str
         filetype: FileType
-        schema: SchemaDict
+        schema: Schema
         rows: int
         size: int
 

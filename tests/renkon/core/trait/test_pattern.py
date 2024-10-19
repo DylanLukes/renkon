@@ -54,3 +54,15 @@ def test_trait_pattern_as_base_model_field():
     expected = Model.model_construct(pattern=TraitPattern("{Y} = {a}*{X} + {b}"))
     observed = Model.model_validate({"pattern": "{Y} = {a}*{X} + {b}"})
     assert expected == observed
+
+
+def test_trait_pattern_dump_python():
+    ta = TypeAdapter(TraitPattern)
+    pattern = ta.validate_python("{Y} = {a}*{X} + {b}")
+    assert ta.dump_python(pattern) == "{Y} = {a}*{X} + {b}"
+
+
+def test_trait_pattern_dump_json():
+    ta = TypeAdapter(TraitPattern)
+    pattern = ta.validate_python("{Y} = {a}*{X} + {b}")
+    assert ta.dump_json(pattern) == b'"{Y} = {a}*{X} + {b}"'

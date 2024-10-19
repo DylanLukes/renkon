@@ -23,6 +23,7 @@ from renkon.core.type import (
     is_equatable,
     is_numeric,
 )
+from renkon.core.type._type import COMPARABLE_TYPES, EQUATABLE_TYPES, NUMERIC_TYPES
 
 ta = TypeAdapter(RenkonType)
 
@@ -51,6 +52,17 @@ def test_type_model_dump_any():
 
 def test_type_model_dump_none():
     assert ta.dump_python(Bottom()) == "none"
+
+
+def test_type_model_validate_instance():
+    assert ta.validate_python(Int()) == Int()
+    assert ta.validate_python(Float()) == Float()
+    assert ta.validate_python(String()) == String()
+    assert ta.validate_python(Bool()) == Bool()
+    assert ta.validate_python(Union(Int(), Float())) == Union(Int(), Float())
+    assert ta.validate_python(Union()) == Union()
+    assert ta.validate_python(Bottom()) == Bottom()
+    assert ta.validate_python(Top()) == Top()
 
 
 def test_type_model_validate_primitive():
@@ -177,6 +189,17 @@ def test_union_intersect_any():
 
 def test_union_dump_python():
     assert ta.dump_python(Union(Int(), Float())) == "float | int"
+
+
+def test_union_specials_equivalent_and_equal():
+    assert Union(EQUATABLE_TYPES).is_equivalent(Equatable())
+    assert Union(EQUATABLE_TYPES).is_equal(Equatable())
+
+    assert Union(COMPARABLE_TYPES).is_equivalent(Comparable())
+    assert Union(COMPARABLE_TYPES).is_equal(Comparable())
+
+    assert Union(NUMERIC_TYPES).is_equivalent(Numeric())
+    assert Union(NUMERIC_TYPES).is_equal(Numeric())
 
 
 def test_subtype_primitive_reflexive(primitive_types: set[Primitive]):

@@ -98,11 +98,14 @@ class RenkonType(ABC):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: Any, handler: GetCoreSchemaHandler, /) -> cs.CoreSchema:
-        return cs.chain_schema(
-            [
-                cs.str_schema(),
-                cs.no_info_plain_validator_function(cls.parse_string),
-            ],
+        from_str_schema = cs.chain_schema([
+            cs.str_schema(),
+            cs.no_info_plain_validator_function(cls.parse_string),
+        ])
+
+        return cs.json_or_python_schema(
+            python_schema=cs.union_schema([from_str_schema, cs.is_instance_schema(cls)]),
+            json_schema=from_str_schema,
             serialization=cs.plain_serializer_function_ser_schema(lambda t: t.dump_string()),
         )
 
@@ -370,17 +373,17 @@ COMPARABLE_TYPES = frozenset({Int(), Float(), String()})
 
 
 class Numeric(Union):
-    def __init__(self):
+    def __init__(self, /):
         super().__init__(*NUMERIC_TYPES)
 
 
 class Equatable(Union):
-    def __init__(self):
+    def __init__(self, /):
         super().__init__(*EQUATABLE_TYPES)
 
 
 class Comparable(Union):
-    def __init__(self):
+    def __init__(self, /):
         super().__init__(*COMPARABLE_TYPES)
 
 
