@@ -44,6 +44,7 @@ jobs:
         shell: bash
 
       - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
         run: ./.github/scripts/setup_ubuntu.sh
         shell: bash
 
