@@ -30,11 +30,7 @@ dependencies = [
     # Data Processing
     # ------------------------------
     "aiosql", # SQL
-    "numpy", # Numerical computing
-    "scikit-learn", # Machine learning
-    "scipy", # Scientific computing
     "polars", # Data frames
-    "pandera", # Data validation
     "pyarrow", # Columnar data format
 
     # Logging
@@ -58,10 +54,6 @@ dependencies = [
     "uvicorn", # ASGI server
     "jinja2", # Templating
     "fasthx", # FastAPI extension for HTMX
-
-    # Shenanigans
-    # ------------------------------
-    "z3-solver"
 ]
 
 # These dependencies are helpful to install if using an IDE
