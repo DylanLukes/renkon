@@ -40,13 +40,13 @@ jobs:
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install apache-arrow
         shell: bash
+        run: brew install apache-arrow
 
       - name: Install system dependencies (Ubuntu)
         if: runner.os == 'Linux'
-        run: ./.github/scripts/setup_ubuntu.sh
         shell: bash
+        run: echo "..."
 
       - name: Install Hatch
         run: | 
