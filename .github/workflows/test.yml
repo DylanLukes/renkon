@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  STABLE_PYTHON_VERSION: '3.13'
+  STABLE_PYTHON_VERSION: '3.12'
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
 
@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        python-version: [ '3.13' ]
+        python-version: [ '3.12' ]
 
     steps:
       - uses: actions/checkout@v3
@@ -60,7 +60,7 @@ jobs:
           key: hatch-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Create Hatch environments
-        run: hatch env create
+        run: hatch -v env create
 
       - if: runner.os == 'macOS'
         run: echo "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion)" >> $GITHUB_ENV

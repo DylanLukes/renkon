@@ -7,7 +7,7 @@ name = "renkon"
 dynamic = ["version"]
 description = 'Robust likely invariant analysis over columnar data'
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"  # change when pyarrow has 3.13 wheels?
 license = "BSD-3-Clause"
 keywords = []
 authors = [
@@ -16,6 +16,7 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
@@ -160,7 +161,7 @@ typeCheckingMode = "strict"
 reportMissingImports = true
 reportMissingTypeStubs = true
 
-pythonVersion = "3.13"
+pythonVersion = "3.12"
 
 # Ruff
 # ----

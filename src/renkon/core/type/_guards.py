@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
 #
 # SPDX-License-Identifier: BSD-3-Clause
-from typing import TypeIs
+from typing import TypeGuard
 
 from renkon.core.type._type import (
     Bool,
@@ -21,7 +21,7 @@ def is_concrete(ty: RenkonType) -> bool:
     return isinstance(ty, Primitive)
 
 
-def is_union_of_concrete(ty: RenkonType) -> TypeIs[Union]:
+def is_union_of_concrete(ty: RenkonType) -> TypeGuard[Union]:
     return is_union(ty) and all(is_concrete(m) for m in ty.members)
 
 
@@ -29,23 +29,23 @@ def is_abstract(ty: RenkonType) -> bool:
     return not is_concrete(ty)
 
 
-def is_int(ty: RenkonType) -> TypeIs[Int]:
+def is_int(ty: RenkonType) -> TypeGuard[Int]:
     return isinstance(ty, Int)
 
 
-def is_float(ty: RenkonType) -> TypeIs[Float]:
+def is_float(ty: RenkonType) -> TypeGuard[Float]:
     return isinstance(ty, Float)
 
 
-def is_str(ty: RenkonType) -> TypeIs[String]:
+def is_str(ty: RenkonType) -> TypeGuard[String]:
     return isinstance(ty, String)
 
 
-def is_bool(ty: RenkonType) -> TypeIs[Bool]:
+def is_bool(ty: RenkonType) -> TypeGuard[Bool]:
     return isinstance(ty, Bool)
 
 
-def is_union(ty: RenkonType) -> TypeIs[Union]:
+def is_union(ty: RenkonType) -> TypeGuard[Union]:
     return isinstance(ty, Union)
 
 
