@@ -19,4 +19,6 @@ sudo apt install -y -V libarrow-flight-sql-glib-dev # For Apache Arrow Flight SQ
 sudo apt install -y -V libgandiva-dev # For Gandiva C++
 sudo apt install -y -V libgandiva-glib-dev # For Gandiva GLib (C)
 sudo apt install -y -V libparquet-dev # For Apache Parquet C++
-sudo apt install -y -V libparquet-glib-dev # For Apache Parquet GLib (C)
+
+# Not present on GitHub Actions ubuntu-latest runner.
+# sudo apt install -y -V libparquet-glib-dev # For Apache Parquet GLib (C)
