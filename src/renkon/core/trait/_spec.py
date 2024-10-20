@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 from collections.abc import Hashable
-from enum import StrEnum
 from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
@@ -14,20 +13,10 @@ from renkon.core.type import RenkonType, is_concrete
 type TraitId = str
 
 
-class TraitSpecState(StrEnum):
-    """
-    State of the trait in the inference pipeline. As a specification is passed
-    through the pipeline, various changes occur until it is in a state suitable
-    to feed directly into the inference engine.
-    """
-
-    # TODO: implement here
-
-
 class TraitSpec(BaseModel, Hashable):
     """
     Models the declarative specification for a trait. This can be seen as all
-    of the data about a Trait that can be serialized. A Trait instance can be
+    the data about a Trait that can be serialized. A Trait instance can be
     reconstructed from a TraitSpec provided the id attribute is a fully qualified
     import name for the corresponding Trait class.
 
@@ -56,17 +45,19 @@ class TraitSpec(BaseModel, Hashable):
     ...     }
     ... }''')
 
-    >>> trait = TraitSpec.model_validate({
-    ...     "label": "Equal",
-    ...     "id": "renkon.core.doctest.traits.Equal",
-    ...     "kind": "logical",
-    ...     "pattern": "{A} = {B}",
-    ...     "commutors": {"A", "B"},
-    ...     "typevars": {
-    ...         "T": "equatable",
-    ...     },
-    ...     "typings": {"A": "T", "B": "T"},
-    ... })
+    >>> trait = TraitSpec.model_validate(
+    ...     {
+    ...         "label": "Equal",
+    ...         "id": "renkon.core.doctest.traits.Equal",
+    ...         "kind": "logical",
+    ...         "pattern": "{A} = {B}",
+    ...         "commutors": {"A", "B"},
+    ...         "typevars": {
+    ...             "T": "equatable",
+    ...         },
+    ...         "typings": {"A": "T", "B": "T"},
+    ...     }
+    ... )
     """
 
     model_config = ConfigDict(
