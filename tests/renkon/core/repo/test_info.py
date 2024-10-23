@@ -8,8 +8,8 @@ from pydantic import ValidationError
 if TYPE_CHECKING:
     from renkon.core.repo.registry.base import FileType
 
+from renkon.core.repo._schema import to_arrow_schema_bytes
 from renkon.core.repo.registry.sqlite import TableRow
-from renkon.core.repo.schema import to_arrow_schema_bytes
 from renkon.core.repo.storage.base import Storage
 
 

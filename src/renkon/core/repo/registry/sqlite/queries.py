@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 import aiosql
 from pydantic import BaseModel
 
+from renkon.core.repo._schema import from_arrow_schema_bytes
 from renkon.core.repo.registry.base import FileType, Registry
-from renkon.core.repo.schema import from_arrow_schema_bytes
 
 if TYPE_CHECKING:
     import sqlite3

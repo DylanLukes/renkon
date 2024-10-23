@@ -6,8 +6,8 @@ import pytest
 from loguru import logger
 from polars import DataFrame
 
+from renkon.core.repo._repo import Repository
 from renkon.core.repo.registry import Registry, SQLiteRegistry
-from renkon.core.repo.repository import Repository
 from renkon.core.repo.storage import FileSystemStorage, Storage
 from renkon.settings import Settings
 

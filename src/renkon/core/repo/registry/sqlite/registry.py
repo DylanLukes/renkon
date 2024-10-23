@@ -7,10 +7,10 @@ from pathlib import Path
 from sqlite3 import Connection as SQLiteConnection
 from typing import TYPE_CHECKING, Any, Literal, Protocol, Self
 
+from renkon.core.repo._schema import to_arrow_schema_bytes
 from renkon.core.repo.registry.base import Registry
 from renkon.core.repo.registry.sqlite import TableRow
 from renkon.core.repo.registry.sqlite.queries import queries
-from renkon.core.repo.schema import to_arrow_schema_bytes
 
 if TYPE_CHECKING:
     from renkon.core.repo.registry import LookupKey, SearchKey

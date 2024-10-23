@@ -4,11 +4,11 @@
 from collections.abc import Hashable
 from typing import Annotated, Self
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from renkon.core.trait._kind import TraitKind
 from renkon.core.trait._pattern import TraitPattern
-from renkon.core.type import RenkonType, is_concrete
+from renkon.core.type import RenkonType
 
 type TraitId = str
 
@@ -45,19 +45,17 @@ class TraitSpec(BaseModel, Hashable):
     ...     }
     ... }''')
 
-    >>> trait = TraitSpec.model_validate(
-    ...     {
-    ...         "label": "Equal",
-    ...         "id": "renkon.core.doctest.traits.Equal",
-    ...         "kind": "logical",
-    ...         "pattern": "{A} = {B}",
-    ...         "commutors": {"A", "B"},
-    ...         "typevars": {
-    ...             "T": "equatable",
-    ...         },
-    ...         "typings": {"A": "T", "B": "T"},
-    ...     }
-    ... )
+    >>> trait = TraitSpec.model_validate({
+    ...     "label": "Equal",
+    ...     "id": "renkon.core.doctest.traits.Equal",
+    ...     "kind": "logical",
+    ...     "pattern": "{A} = {B}",
+    ...     "commutors": {"A", "B"},
+    ...     "typevars": {
+    ...         "T": "equatable",
+    ...     },
+    ...     "typings": {"A": "T", "B": "T"},
+    ... })
     """
 
     model_config = ConfigDict(
@@ -133,37 +131,3 @@ class TraitSpec(BaseModel, Hashable):
                 msg = f"Type variable typing '{value}' for '{key}' not found in typevars."
                 raise ValueError(msg)
         return self
-
-
-# TODO: FIX CRAP BELOW
-
-
-def _check_trait_monomorphic(spec: TraitSpec):
-    if spec.typevars:
-        msg = f"Concrete trait specs must not contain abstract type variables: {spec.typevars.keys()}"
-        raise ValueError(msg)
-
-    tv_tys = {k: ty for k, ty in spec.typings.items() if not isinstance(ty, RenkonType)}
-    if tv_tys:
-        msg = f"Concrete traits' typings must refer to Renkon types (not type variables): {tv_tys}"
-        raise ValueError(msg)
-
-    return spec
-
-
-type MonoTraitSpec = Annotated[TraitSpec, AfterValidator(_check_trait_monomorphic)]
-
-
-def _check_trait_concrete(spec: TraitSpec):
-    _check_trait_monomorphic(spec)
-
-    types: list[RenkonType] = list(spec.typings.values())  # pyright: ignore [reportAssignmentType]
-    non_concrete_tys = [ty for ty in types if not is_concrete(ty)]
-    if non_concrete_tys:
-        msg = f"Concrete traits' typings must be concrete types: {non_concrete_tys}"
-        raise ValueError(msg)
-
-    return spec
-
-
-type ConcreteTraitSpec = Annotated[TraitSpec, AfterValidator(_check_trait_concrete)]

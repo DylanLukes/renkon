@@ -88,25 +88,14 @@ renkon = "renkon.cli:cli"
 [tool.hatch.version]
 path = "src/renkon/__about__.py"
 
+[tool.hatch.envs.default]
+installer = "uv"
+
 [tool.hatch.envs.default.scripts]
 lint = [
     "hatch fmt --preview",
     "hatch run types:check"
 ]
-
-#[[tool.hatch.build.hooks.blood-scripts.script]]
-#out_dir = "out"
-#commands = [
-#    "echo 'Hello, world!' > hello.txt",
-#    "echo 'Goodbye, world!' > goodbye.txt",
-#]
-#artifacts = [
-#    "hello.txt",
-#    "goodbye.txt",
-#]
-
-#[tool.hatch.build.hooks.custom]
-#path = "scripts/hatch_build.py"
 
 # Hatch Environments
 # ------------------
@@ -125,7 +114,6 @@ config-path = "ruff_defaults.toml"
 dependencies = ["ruff==0.6.2"]
 
 [tool.hatch.envs.hatch-test]
-extra-dependencies = ["httpx"]
 
 
 # Pytest
@@ -140,6 +128,15 @@ markers = [
 addopts = "--doctest-modules --ignore=typings --ignore=scripts"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
+filterwarnings = [
+    "error",
+    # Deprecated in Pydantic v2, should be gone with v3.
+    "ignore:Field name \"schema\" .* shadows .* \"BaseModel\":UserWarning",
+
+    # From lark-parser, Python 3.12+
+    "ignore:module 'sre_parse':DeprecationWarning",
+    "ignore:module 'sre_constants':DeprecationWarning"
 ]
 
 # Pyright
@@ -170,7 +167,7 @@ allow-dunder-method-names = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-    "S101",               # use of asserts
+    "S101", # use of asserts
     "PLC1901", "PLC2701", # compare to empty string, import private name
     "PLR2004", "PLR6301", # magic value comparison, no-self-use
     "TID252"              # relative imports

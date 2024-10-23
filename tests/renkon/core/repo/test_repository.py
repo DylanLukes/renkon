@@ -2,7 +2,7 @@ import pytest
 from polars import DataFrame
 
 from renkon.core.repo import Registry
-from renkon.core.repo.repository import Repository
+from renkon.core.repo._repo import Repository
 
 DATA = DataFrame({
     "a": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],

@@ -60,9 +60,9 @@ class TraitSketch(BaseModel):
 
     @model_validator(mode="after")
     def _check_bindings_values(self) -> Self:
-        for mvar, col in self.bindings.items():
-            if col not in self.schema.columns:
-                msg = f"Cannot bind '{mvar}' to '{col} not found in {list(self.schema.columns)}"
+        for mvar, col_name in self.bindings.items():
+            if col_name not in self.schema.names:
+                msg = f"Cannot bind '{mvar}' to '{col_name} not found in {list(self.schema.names)}"
                 raise ValueError(msg)
         return self
 
