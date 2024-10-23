@@ -111,7 +111,7 @@ check = "pyright {args:src/renkon tests/}"
 
 [tool.hatch.envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
-dependencies = ["ruff==0.6.2"]
+dependencies = ["ruff==0.7.0"]
 
 [tool.hatch.envs.hatch-test]
 
