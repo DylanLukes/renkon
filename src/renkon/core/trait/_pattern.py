@@ -58,6 +58,9 @@ class TraitPattern(str):
 
     __slots__ = ("metavars", "params")
 
+    metavars: list[str]
+    params: list[str]
+
     def __new__(cls, f_str: str):
         obj = super().__new__(cls, f_str)
         obj.metavars = []

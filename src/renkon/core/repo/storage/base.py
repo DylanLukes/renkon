@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import PurePath
 from typing import TYPE_CHECKING, Protocol
 
-from renkon.core.repo import Registry
+from renkon.core.repo.registry.base import Registry
 
 if TYPE_CHECKING:
     from polars import DataFrame, Schema

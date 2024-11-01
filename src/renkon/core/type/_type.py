@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Hashable, Iterable
-from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, final, overload, override
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, cast, final, overload, override
 
 from lark import Lark, Transformer
 from lark.exceptions import LarkError
@@ -13,6 +13,8 @@ from pydantic_core import core_schema as cs
 
 if TYPE_CHECKING:
     from pydantic import GetCoreSchemaHandler
+
+type RenkonTypeLiteralStr = Literal["int", "float", "bool", "str", "comparable", "equatable", "numeric"]
 
 
 class RenkonType(ABC):
@@ -58,14 +60,14 @@ class RenkonType(ABC):
         ...
 
     @abstractmethod
-    def dump_string(self) -> str:
+    def dumps(self) -> str:
         """
         Dump a string representation of the type.
         """
         ...
 
     @classmethod
-    def parse_string(cls, s: str) -> RenkonType:
+    def loads(cls, s: str) -> RenkonType:
         """
         Parse a string representation of the type.
         """
@@ -78,10 +80,10 @@ class RenkonType(ABC):
             raise ValueError(msg) from e
 
     def __str__(self) -> str:
-        return self.dump_string()
+        return self.dumps()
 
     def __repr__(self) -> str:
-        return f"Type({self.dump_string()})"
+        return f"Type({self.dumps()})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RenkonType):
@@ -100,13 +102,13 @@ class RenkonType(ABC):
     def __get_pydantic_core_schema__(cls, _source_type: Any, handler: GetCoreSchemaHandler, /) -> cs.CoreSchema:
         from_str_schema = cs.chain_schema([
             cs.str_schema(),
-            cs.no_info_plain_validator_function(cls.parse_string),
+            cs.no_info_plain_validator_function(cls.loads),
         ])
 
         return cs.json_or_python_schema(
             python_schema=cs.union_schema([from_str_schema, cs.is_instance_schema(cls)]),
             json_schema=from_str_schema,
-            serialization=cs.plain_serializer_function_ser_schema(lambda t: t.dump_string()),
+            serialization=cs.plain_serializer_function_ser_schema(lambda t: t.dumps()),
         )
 
 
@@ -141,7 +143,7 @@ class Top(RenkonType):
         return self
 
     @override
-    def dump_string(self) -> str:
+    def dumps(self) -> str:
         return "any"
 
     @override
@@ -180,7 +182,7 @@ class Bottom(RenkonType):
         return self
 
     @override
-    def dump_string(self) -> str:
+    def dumps(self) -> str:
         return "none"
 
     @override
@@ -216,7 +218,7 @@ class Primitive(RenkonType):
         return self
 
     @override
-    def dump_string(self) -> str:
+    def dumps(self) -> str:
         return self.name
 
     def __init__(self, /, **data: Any) -> None:
@@ -338,12 +340,12 @@ class Union(RenkonType):
 
         return Union(self.members.intersection(other.canonicalize().members)).canonicalize()
 
-    def dump_string(self) -> str:
+    def dumps(self) -> str:
         if self.is_empty_union():
             return "none | none"
         if self.is_trivial_union():
-            return f"{self.single().dump_string()} | none"
-        return " | ".join(sorted(t.dump_string() for t in self.members))
+            return f"{self.single().dumps()} | none"
+        return " | ".join(sorted(t.dumps() for t in self.members))
 
     def flatten(self) -> Union:
         """Recursively flatten nested unions."""

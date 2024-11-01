@@ -81,9 +81,6 @@ class TraitSpec(BaseModel, Hashable):
     def params(self) -> set[str]:
         return set(self.pattern.params)
 
-    # Methods
-    # -------
-
     # Validators
     # ----------
 
