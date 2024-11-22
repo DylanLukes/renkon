@@ -111,7 +111,7 @@ check = "pyright {args:src/renkon tests/}"
 
 [tool.hatch.envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
-dependencies = ["ruff==0.7.0"]
+dependencies = ["ruff==0.7.2"]
 
 [tool.hatch.envs.hatch-test]
 
@@ -133,7 +133,6 @@ filterwarnings = [
     "error",
     # Deprecated in Pydantic v2, should be gone with v3.
     "ignore:Field name \"schema\" .* shadows .* \"BaseModel\":UserWarning",
-
     # From lark-parser, Python 3.12+
     "ignore:module 'sre_parse':DeprecationWarning",
     "ignore:module 'sre_constants':DeprecationWarning"
@@ -144,7 +143,7 @@ filterwarnings = [
 
 [tool.pyright]
 include = ["./src", "./tests"]
-stubPath = "./typings/stubs/"
+#stubPath = "./typings/stubs/"  # re-enable if sklearn/networkx require it later...
 
 typeCheckingMode = "strict"
 reportMissingImports = true

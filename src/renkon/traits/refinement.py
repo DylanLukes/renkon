@@ -33,7 +33,7 @@ class _Refinement(BaseSpecTrait, ABC):
             id=f"{cls.__name__}",
             label=f"{cls.__qualname__}",
             kind=TraitKind.REFINEMENT,
-            pattern=TraitPattern("{X}: " f"{base_type}/{cls.__name__}"),
+            pattern=TraitPattern(f"{{X}}: {base_type}/{cls.__name__}"),
             typings={"X": base_type},
         )
 

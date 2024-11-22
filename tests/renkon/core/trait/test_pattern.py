@@ -11,8 +11,8 @@ def test_trait_pattern_validation_errors():
     ta = TypeAdapter(TraitPattern)
 
     pattern = ta.validate_python("{Y} = {a}*{X} + {b}")
-    assert pattern.metavars == ["Y", "X"]
-    assert pattern.params == ["a", "b"]
+    assert pattern.metavars == {"Y", "X"}
+    assert pattern.params == {"a", "b"}
 
     with pytest.raises(ValueError, match="must be named"):
         ta.validate_python("{} = {a}*{X} + {b}")

@@ -38,7 +38,7 @@ class _Compare(BaseSpecTrait, ABC):
             id=f"{cls.__module__}.{cls.__qualname__}",
             label=f"{cls.__qualname__}",
             kind=TraitKind.LOGICAL,
-            pattern=TraitPattern("{A}" f" {op_str} " "{B}"),
+            pattern=TraitPattern(f"{{A}} {op_str} {{B}}"),
             commutors={"A", "B"},
             typevars={"T": Equatable() if op_str == "=" else Comparable()},
             typings={"A": "T", "B": "T"},

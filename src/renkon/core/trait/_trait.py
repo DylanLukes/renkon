@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, ClassVar, Protocol, Self
 
 from pydantic import TypeAdapter
 
-from renkon.core.trait import TraitResult, TraitSpec
+from renkon.core.trait._spec import ConcreteTraitSpec
 from renkon.core.type import RenkonType
 
 if TYPE_CHECKING:
     from polars import DataFrame
 
-    from renkon.core.trait import TraitId, TraitKind, TraitPattern
+    from renkon.core.trait import TraitId, TraitKind, TraitPattern, TraitResult, TraitSpec
 
 
 class Trait(Protocol):
@@ -44,7 +44,7 @@ class Trait(Protocol):
 
     @property
     @abstractmethod
-    def spec(self) -> TraitSpec:
+    def spec(self) -> ConcreteTraitSpec:
         """
         Every Trait *instance* has a specification that describes the Trait
         almost fully, short of the inference behavior.
@@ -113,14 +113,14 @@ class BaseSpecTrait(Trait, ABC):
     """
 
     base_spec: ClassVar[TraitSpec]
-    _inst_spec: TraitSpec
+    _inst_spec: ConcreteTraitSpec
 
-    def __init__(self, spec: TraitSpec):
+    def __init__(self, spec: ConcreteTraitSpec):
         """
         In general, __init__ should not be called directly. It enforces several
         properties of the specification provided to it.
         """
-        self._inst_spec = TypeAdapter(TraitSpec).validate_python(spec)  # TODO: make Mono?
+        self._inst_spec = TypeAdapter(ConcreteTraitSpec).validate_python(spec)  # TODO: make Mono?
 
     @classmethod
     def instantiate(cls, typevar_bindings: dict[str, RenkonType]) -> Self:
@@ -149,10 +149,10 @@ class BaseSpecTrait(Trait, ABC):
                 "typevars": inst_typevars,
                 "typings": inst_typings,
             }
-        )
+        ).as_concrete_spec()
 
         return cls(inst_spec)
 
     @property
-    def spec(self) -> TraitSpec:
+    def spec(self) -> ConcreteTraitSpec:
         return self._inst_spec

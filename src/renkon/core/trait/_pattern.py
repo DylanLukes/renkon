@@ -58,13 +58,13 @@ class TraitPattern(str):
 
     __slots__ = ("metavars", "params")
 
-    metavars: list[str]
-    params: list[str]
+    metavars: set[str]
+    params: set[str]
 
     def __new__(cls, f_str: str):
         obj = super().__new__(cls, f_str)
-        obj.metavars = []
-        obj.params = []
+        obj.metavars = set()
+        obj.params = set()
 
         if not is_format_string(f_str):
             msg = "format string '{value}' must be a valid f-string."
@@ -86,9 +86,9 @@ class TraitPattern(str):
             seen.add(field_name)
 
             if is_metavariable_name(field_name):
-                obj.metavars.append(field_name)
+                obj.metavars.add(field_name)
             elif is_parameter_name(field_name):
-                obj.params.append(field_name)
+                obj.params.add(field_name)
             else:
                 msg = f"format string field '{field_name}' must start with a letter."
                 raise ValueError(msg)
@@ -114,18 +114,18 @@ class TraitPattern(str):
             raise ValueError(msg)
 
         if extra == "forbid":
-            extra_fields = set(mapping.keys()) - set(self.metavars + self.params)
+            extra_fields = set(mapping.keys()) - (self.metavars | self.params)
             if extra_fields:
                 msg = f"extra fields are forbidden: {extra_fields}."
                 raise ValueError(msg)
 
         if missing == "forbid":
-            missing_fields = set(self.metavars + self.params) - set(mapping.keys())
+            missing_fields = (self.metavars | self.params) - set(mapping.keys())
             if missing_fields:
                 msg = f"missing fields are forbidden: {missing_fields}."
                 raise ValueError(msg)
 
         if missing == "partial":
-            mapping = {k: mapping.get(k, "{" + k + "}") for k in self.metavars + self.params}
+            mapping = {k: mapping.get(k, "{" + k + "}") for k in self.metavars | self.params}
 
         return self.format_map(mapping)

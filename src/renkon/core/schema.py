@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-present Dylan Lukes <lukes.dylan@gmail.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
 from collections import OrderedDict
 from collections.abc import Iterable, Mapping
 from typing import Self
